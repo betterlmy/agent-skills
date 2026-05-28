@@ -1,0 +1,4 @@
+interface:
+  display_name: "Skill Engineer"
+  short_description: "Create and review production skills"
+  default_prompt: "Use $skill-engineer to design or review a production-ready agent skill."

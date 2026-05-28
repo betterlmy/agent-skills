@@ -1,8 +1,35 @@
-# playwright-cli-cdp
+# agent-skills
 
 [![skills.sh](https://skills.sh/b/betterlmy/agent-skills)](https://skills.sh/betterlmy/agent-skills)
 
 [中文文档](README.zh-CN.md)
+
+Agent skills maintained by `betterlmy`.
+
+## Skills
+
+| Skill | Purpose |
+|---|---|
+| [`playwright-cli-cdp`](skills/playwright-cli-cdp/SKILL.md) | CDP-only browser control with `playwright-cli` |
+| [`skill-engineer`](skills/skill-engineer/SKILL.md) | Create, improve, review, and evaluate production-ready agent skills |
+
+## skill-engineer
+
+`skill-engineer` combines a concise skill-writing standard with production review and evaluation workflows. It helps agents create new skills, make existing skills production-ready, audit trigger descriptions and bundled resources, and decide when a skill needs scripts, references, assets, metadata, packaging, or forward testing.
+
+Install only this skill:
+
+```bash
+npx skills add betterlmy/agent-skills --skill skill-engineer
+```
+
+Install globally for Codex:
+
+```bash
+npx skills add betterlmy/agent-skills --skill skill-engineer -a codex -g -y
+```
+
+## playwright-cli-cdp
 
 `playwright-cli-cdp` is a CDP-only agent skill for controlling Chrome-family browsers through Chrome DevTools Protocol (CDP) with `playwright-cli`.
 
@@ -85,6 +112,11 @@ For Windows PowerShell and WSL2 details, see [`skills/playwright-cli-cdp/SKILL.m
 
 ```text
 skills/
+  skill-engineer/
+    SKILL.md
+    agents/
+    references/
+    scripts/
   playwright-cli-cdp/
     SKILL.md
     scripts/

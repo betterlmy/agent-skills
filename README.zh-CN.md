@@ -1,8 +1,35 @@
-# playwright-cli-cdp
+# agent-skills
 
 [![skills.sh](https://skills.sh/b/betterlmy/agent-skills)](https://skills.sh/betterlmy/agent-skills)
 
 [English README](README.md)
+
+`betterlmy` 维护的 agent skills 仓库。
+
+## Skills
+
+| Skill | 用途 |
+|---|---|
+| [`playwright-cli-cdp`](skills/playwright-cli-cdp/SKILL.md) | 用 `playwright-cli` 通过 CDP 控制浏览器 |
+| [`skill-engineer`](skills/skill-engineer/SKILL.md) | 创建、改进、review 和评估生产可用的 agent skill |
+
+## skill-engineer
+
+`skill-engineer` 把简洁的 skill 写作标准、生产级 review 和评估流程结合在一起。它帮助 agent 创建新 skill、把已有 skill 改到生产可用、审查触发描述和 bundled resources，并判断一个 skill 是否需要 scripts、references、assets、metadata、打包或前向测试。
+
+只安装这个 skill：
+
+```bash
+npx skills add betterlmy/agent-skills --skill skill-engineer
+```
+
+全局安装到 Codex：
+
+```bash
+npx skills add betterlmy/agent-skills --skill skill-engineer -a codex -g -y
+```
+
+## playwright-cli-cdp
 
 `playwright-cli-cdp` 是一个只面向 CDP 的 agent skill，用 Chrome DevTools Protocol (CDP) 和 `playwright-cli` 控制 Chrome 系浏览器。
 
@@ -85,6 +112,11 @@ Windows PowerShell 和 WSL2 的细节见 [`skills/playwright-cli-cdp/SKILL.md`](
 
 ```text
 skills/
+  skill-engineer/
+    SKILL.md
+    agents/
+    references/
+    scripts/
   playwright-cli-cdp/
     SKILL.md
     scripts/
