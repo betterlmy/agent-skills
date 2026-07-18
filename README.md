@@ -4,14 +4,28 @@
 
 [中文文档](README.zh-CN.md)
 
-Agent skills maintained by `betterlmy`.
+A collection of agent skills maintained by `betterlmy`, covering repository guidance, code engineering, diagrams, frontend development, browser automation, presentations, RAG, and skill development.
 
 ## Available Skills
 
 | Skill | Purpose | Install |
-|---|---|---|
-| [`skill-engineer`](skills/skill-engineer/SKILL.md) | Create, improve, review, and evaluate production-ready agent skills | `npx skills add betterlmy/agent-skills --skill skill-engineer` |
+| --- | --- | --- |
+| [`agents-md-expert`](skills/agents-md-expert/SKILL.md) | Create, review, and improve repository-level `AGENTS.md` instructions | `npx skills add betterlmy/agent-skills --skill agents-md-expert` |
+| [`code-review-skill`](skills/code-review-skill/SKILL.md) | Review architecture, security, performance, code quality, and common bugs across major ecosystems | `npx skills add betterlmy/agent-skills --skill code-review-skill` |
+| [`codegraph`](skills/codegraph/SKILL.md) | Index local repositories and analyze symbols, call relationships, impact, and affected tests | `npx skills add betterlmy/agent-skills --skill codegraph` |
+| [`drawio-skill`](skills/drawio-skill/SKILL.md) | Create, edit, review, validate, and export Draw.io diagrams | `npx skills add betterlmy/agent-skills --skill drawio-skill` |
+| [`find-skills`](skills/find-skills/SKILL.md) | Discover and install skills from the open agent skills ecosystem | `npx skills add betterlmy/agent-skills --skill find-skills` |
+| [`frontend-design`](skills/frontend-design/SKILL.md) | Build distinctive, production-grade frontend interfaces with strong visual design | `npx skills add betterlmy/agent-skills --skill frontend-design` |
+| [`go-dev`](skills/go-dev/SKILL.md) | Apply Go conventions for services, APIs, GORM models, DAO code, SQL, logging, and configuration | `npx skills add betterlmy/agent-skills --skill go-dev` |
+| [`go-mcp-builder`](skills/go-mcp-builder/SKILL.md) | Build Go MCP servers with `mcp-go` and Streamable HTTP | `npx skills add betterlmy/agent-skills --skill go-mcp-builder` |
+| [`mermaid-diagrams`](skills/mermaid-diagrams/SKILL.md) | Create software diagrams with Mermaid, including flowcharts, sequence diagrams, ERDs, and C4 models | `npx skills add betterlmy/agent-skills --skill mermaid-diagrams` |
 | [`playwright-cli-cdp`](skills/playwright-cli-cdp/SKILL.md) | Control Chrome-family browsers through CDP with `playwright-cli` | `npx skills add betterlmy/agent-skills --skill playwright-cli-cdp` |
+| [`pptx`](skills/pptx/SKILL.md) | Create, read, edit, validate, and render PowerPoint presentations | `npx skills add betterlmy/agent-skills --skill pptx` |
+| [`rag-agent-builder`](skills/rag-agent-builder/SKILL.md) | Build RAG applications with embeddings, vector databases, retrieval, and evaluation | `npx skills add betterlmy/agent-skills --skill rag-agent-builder` |
+| [`skill-engineer`](skills/skill-engineer/SKILL.md) | Create, improve, review, and evaluate production-ready agent skills | `npx skills add betterlmy/agent-skills --skill skill-engineer` |
+| [`vercel-react-best-practices`](skills/vercel-react-best-practices/SKILL.md) | Apply Vercel's React and Next.js performance optimization guidance | `npx skills add betterlmy/agent-skills --skill vercel-react-best-practices` |
+
+## Installation
 
 Install a skill globally for Codex:
 
@@ -25,103 +39,57 @@ Install a skill globally for Claude Code:
 npx skills add betterlmy/agent-skills --skill <skill-name> -a claude-code -g -y
 ```
 
-## skill-engineer
+Omit `--skill <skill-name>` to use the interactive selection provided by the Skills CLI.
 
-`skill-engineer` is a production-oriented skill for creating and reviewing agent skills.
+## Skill Categories
 
-Use it when you want an agent to:
+### Repository and Code Engineering
 
-- Create a new skill with a clear name, trigger description, and resource layout.
-- Review an existing skill for production risks, over-triggering, hidden assumptions, and missing validation.
-- Improve a draft skill by deciding what belongs in `SKILL.md`, `references/`, `scripts/`, `assets/`, or `agents/openai.yaml`.
-- Evaluate an important skill with realistic prompts, baseline comparison, and trigger checks.
+- `agents-md-expert` keeps repository instructions accurate, scoped, actionable, and verifiable.
+- `code-review-skill` provides cross-language review guidance for architecture, security, performance, quality, and correctness.
+- `codegraph` wraps CodeGraph workflows for repository indexing, symbol discovery, call analysis, and change-impact analysis.
+- `go-dev` defines conventions for Go code, gRPC, Gin HTTP APIs, GORM, DAO layers, SQL, configuration, and logging.
+- `go-mcp-builder` provides a complete workflow for Go MCP servers based on `mark3labs/mcp-go` and Streamable HTTP.
+- `vercel-react-best-practices` contains prioritized React and Next.js performance rules from Vercel Engineering.
 
-What it includes:
+### Design and Diagrams
 
-| File | Contents |
-|---|---|
-| [`SKILL.md`](skills/skill-engineer/SKILL.md) | Main workflow for creating, reviewing, improving, and evaluating production-ready skills |
-| [`review-rubric.md`](skills/skill-engineer/references/review-rubric.md) | Severity model and review checklist for existing skills |
-| [`eval-workflow.md`](skills/skill-engineer/references/eval-workflow.md) | Lightweight-to-full evaluation workflow for skill behavior and triggering |
-| [`audit_skill.py`](skills/skill-engineer/scripts/audit_skill.py) | Static audit script for basic production-readiness checks |
+- `drawio-skill` supports Draw.io architecture diagrams, flowcharts, ER/UML/sequence diagrams, visual QA, and Office-safe export.
+- `frontend-design` guides the implementation of polished web interfaces and avoids generic generated aesthetics.
+- `mermaid-diagrams` covers version-controlled software diagrams using Mermaid syntax.
 
-Example prompt:
+### Automation and Content
 
-```text
-Use skill-engineer to review this skill and tell me whether it is production-ready: /path/to/my-skill
-```
+- `playwright-cli-cdp` launches or reuses local Chrome debugging endpoints and drives attached browsers exclusively through CDP.
+- `pptx` handles PowerPoint creation, extraction, editing, layout validation, rendering, templates, notes, and comments.
+- `rag-agent-builder` provides examples and utilities for document Q&A, knowledge bases, enterprise search, retrieval, and evaluation.
 
-## playwright-cli-cdp
+### Skill Development
 
-`playwright-cli-cdp` is a CDP-only agent skill for controlling Chrome-family browsers through Chrome DevTools Protocol (CDP) with `playwright-cli`.
-
-It gives coding agents a repeatable browser workflow: start or reuse a local CDP endpoint, attach with `playwright-cli attach --cdp=...`, inspect pages, interact with UI, capture browser state, and run raw CDP commands without switching to Playwright-managed browser launches.
-
-Use it when you want an agent to:
-
-- Operate a real Chrome, Chromium, or Edge debugging endpoint.
-- Inspect pages and troubleshoot UI state from a terminal session.
-- Capture browser storage, console logs, network activity, screenshots, video, or traces.
-- Generate Playwright locators or TypeScript test code from a real browser session.
-- Execute raw Chrome DevTools Protocol commands when high-level automation is not enough.
-
-Guardrails:
-
-- CDP-only: avoids `playwright-cli open`, Playwright-managed browser launches, Firefox/WebKit launches, extension attach, and Playwright test debug attach workflows.
-- Keeps CDP local by default and does not bind the debugging endpoint to `0.0.0.0` unless explicitly requested.
-- Does not close, kill, restart, or detach an existing CDP browser session unless the user asks for cleanup.
-- CDP can expose cookies, storage, page content, and network traffic. Review third-party skills before installing or running them.
-
-Quick start:
-
-```text
-Use playwright-cli-cdp to open https://example.com through CDP and inspect the page title.
-```
-
-Default flow:
-
-```bash
-cd skills/playwright-cli-cdp
-bash scripts/check-environment.sh
-bash scripts/open-chrome-remote.sh https://example.com
-bash scripts/playwright-cdp.sh -s=cdp attach --cdp=http://127.0.0.1:9222
-bash scripts/playwright-cdp.sh -s=cdp snapshot
-```
-
-Reference guides:
-
-| File | Contents |
-|---|---|
-| [`cdp-startup.md`](skills/playwright-cli-cdp/references/cdp-startup.md) | CDP startup, cross-platform Chrome launch, port conflict troubleshooting |
-| [`cdp-recipes.md`](skills/playwright-cli-cdp/references/cdp-recipes.md) | Raw CDP protocol commands: Runtime, Network, Performance, Emulation, Security, Coverage |
-| [`element-attributes.md`](skills/playwright-cli-cdp/references/element-attributes.md) | Inspecting `id`, `class`, `data-*`, and computed style via `eval` |
-| [`request-mocking.md`](skills/playwright-cli-cdp/references/request-mocking.md) | Route commands and advanced mocking patterns with `run-code` |
-| [`running-code.md`](skills/playwright-cli-cdp/references/running-code.md) | Geolocation, permissions, media emulation, frames, file download, clipboard, and more |
-| [`storage-state.md`](skills/playwright-cli-cdp/references/storage-state.md) | Cookie, localStorage, sessionStorage, IndexedDB, and state save/load reference |
-| [`test-generation.md`](skills/playwright-cli-cdp/references/test-generation.md) | Collecting generated Playwright code, adding assertions, `toMatchAriaSnapshot` patterns |
-| [`tracing.md`](skills/playwright-cli-cdp/references/tracing.md) | Trace output format, use cases, comparison with video and screenshot |
-| [`video-recording.md`](skills/playwright-cli-cdp/references/video-recording.md) | Basic recording, scripted demos, and the Overlay API |
+- `find-skills` helps identify installable skills for a requested capability.
+- `skill-engineer` supports production-oriented skill creation, review, packaging, validation, and realistic evaluation.
 
 ## Repository Layout
 
 ```text
 skills/
-  skill-engineer/
+  <skill-name>/
     SKILL.md
-    agents/
-    references/
-    scripts/
-  playwright-cli-cdp/
-    SKILL.md
-    references/
-    scripts/
+    agents/       # optional agent metadata
+    assets/       # optional reusable assets
+    evals/        # optional evaluation cases and results
+    examples/     # optional examples
+    references/   # optional detailed guidance
+    scripts/      # optional executable helpers
+    templates/    # optional templates
+    tests/        # optional tests
 ```
 
-`SKILL.md` contains the agent-facing workflow. `scripts/` contains executable helpers. `references/` contains detailed guides that the agent loads only when needed.
+Each skill has a `SKILL.md` entry point. Supporting resources are bundled only when the skill needs them; individual skill directories may use different subsets of the optional folders above.
 
 ## Related Links
 
-- [Skills directory](https://www.skills.sh/)
+- [Skills directory](https://skills.sh/)
 - [Skills CLI](https://github.com/vercel-labs/skills)
 - [Claude Code Skills](https://code.claude.com/docs/en/skills)
 - [Claude Code Agent SDK Skills](https://code.claude.com/docs/en/agent-sdk/skills)
