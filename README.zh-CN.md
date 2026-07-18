@@ -4,7 +4,7 @@
 
 [English README](README.md)
 
-`betterlmy` 维护的 agent skills 集合，覆盖仓库协作规范、代码工程、图表、前端开发、浏览器自动化、演示文稿、RAG 和 Skill 开发。
+`betterlmy` 维护的 agent skills 集合，覆盖仓库协作规范、代码工程、图表、前端开发、浏览器自动化、RAG 和 Skill 开发。
 
 ## 可用 Skills
 
@@ -19,7 +19,6 @@
 | [`go-mcp-builder`](skills/go-mcp-builder/SKILL.md) | 使用 `mcp-go` 和 Streamable HTTP 构建 Go MCP Server | `npx skills add betterlmy/agent-skills --skill go-mcp-builder` |
 | [`mermaid-diagrams`](skills/mermaid-diagrams/SKILL.md) | 使用 Mermaid 创建流程图、时序图、ER 图和 C4 模型等软件图表 | `npx skills add betterlmy/agent-skills --skill mermaid-diagrams` |
 | [`playwright-cli-cdp`](skills/playwright-cli-cdp/SKILL.md) | 使用 `playwright-cli` 通过 CDP 控制 Chrome 系浏览器 | `npx skills add betterlmy/agent-skills --skill playwright-cli-cdp` |
-| [`pptx`](skills/pptx/SKILL.md) | 创建、读取、编辑、验证和渲染 PowerPoint 演示文稿 | `npx skills add betterlmy/agent-skills --skill pptx` |
 | [`rag-agent-builder`](skills/rag-agent-builder/SKILL.md) | 使用嵌入、向量数据库、检索和评估能力构建 RAG 应用 | `npx skills add betterlmy/agent-skills --skill rag-agent-builder` |
 | [`skill-engineer`](skills/skill-engineer/SKILL.md) | 创建、改进、审查和评估生产可用的 agent skills | `npx skills add betterlmy/agent-skills --skill skill-engineer` |
 
@@ -57,7 +56,6 @@ npx skills add betterlmy/agent-skills --skill <skill-name> -a claude-code -g -y
 ### 自动化与内容
 
 - `playwright-cli-cdp` 启动或复用本地 Chrome 调试端点，并仅通过 CDP 操作已连接的浏览器。
-- `pptx` 处理 PowerPoint 创建、内容提取、编辑、布局验证、渲染、模板、备注和评论。
 - `rag-agent-builder` 提供文档问答、知识库、企业搜索、检索与评估相关示例和工具。
 
 ### Skill 开发

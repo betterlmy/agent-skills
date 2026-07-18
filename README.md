@@ -4,7 +4,7 @@
 
 [中文文档](README.zh-CN.md)
 
-A collection of agent skills maintained by `betterlmy`, covering repository guidance, code engineering, diagrams, frontend development, browser automation, presentations, RAG, and skill development.
+A collection of agent skills maintained by `betterlmy`, covering repository guidance, code engineering, diagrams, frontend development, browser automation, RAG, and skill development.
 
 ## Available Skills
 
@@ -19,7 +19,6 @@ A collection of agent skills maintained by `betterlmy`, covering repository guid
 | [`go-mcp-builder`](skills/go-mcp-builder/SKILL.md) | Build Go MCP servers with `mcp-go` and Streamable HTTP | `npx skills add betterlmy/agent-skills --skill go-mcp-builder` |
 | [`mermaid-diagrams`](skills/mermaid-diagrams/SKILL.md) | Create software diagrams with Mermaid, including flowcharts, sequence diagrams, ERDs, and C4 models | `npx skills add betterlmy/agent-skills --skill mermaid-diagrams` |
 | [`playwright-cli-cdp`](skills/playwright-cli-cdp/SKILL.md) | Control Chrome-family browsers through CDP with `playwright-cli` | `npx skills add betterlmy/agent-skills --skill playwright-cli-cdp` |
-| [`pptx`](skills/pptx/SKILL.md) | Create, read, edit, validate, and render PowerPoint presentations | `npx skills add betterlmy/agent-skills --skill pptx` |
 | [`rag-agent-builder`](skills/rag-agent-builder/SKILL.md) | Build RAG applications with embeddings, vector databases, retrieval, and evaluation | `npx skills add betterlmy/agent-skills --skill rag-agent-builder` |
 | [`skill-engineer`](skills/skill-engineer/SKILL.md) | Create, improve, review, and evaluate production-ready agent skills | `npx skills add betterlmy/agent-skills --skill skill-engineer` |
 
@@ -57,7 +56,6 @@ Omit `--skill <skill-name>` to use the interactive selection provided by the Ski
 ### Automation and Content
 
 - `playwright-cli-cdp` launches or reuses local Chrome debugging endpoints and drives attached browsers exclusively through CDP.
-- `pptx` handles PowerPoint creation, extraction, editing, layout validation, rendering, templates, notes, and comments.
 - `rag-agent-builder` provides examples and utilities for document Q&A, knowledge bases, enterprise search, retrieval, and evaluation.
 
 ### Skill Development
