@@ -15,7 +15,6 @@
 | [`codegraph`](skills/codegraph/SKILL.md) | 索引本地代码库并分析符号、调用关系、改动影响和受影响测试 | `npx skills add betterlmy/agent-skills --skill codegraph` |
 | [`drawio-skill`](skills/drawio-skill/SKILL.md) | 创建、编辑、审查、验证和导出 Draw.io 图表 | `npx skills add betterlmy/agent-skills --skill drawio-skill` |
 | [`find-skills`](skills/find-skills/SKILL.md) | 从开放的 agent skills 生态中发现并安装 Skill | `npx skills add betterlmy/agent-skills --skill find-skills` |
-| [`frontend-design`](skills/frontend-design/SKILL.md) | 构建具有鲜明视觉设计和生产质量的前端界面 | `npx skills add betterlmy/agent-skills --skill frontend-design` |
 | [`go-dev`](skills/go-dev/SKILL.md) | 规范 Go 服务、API、GORM Model、DAO、SQL、日志和配置开发 | `npx skills add betterlmy/agent-skills --skill go-dev` |
 | [`go-mcp-builder`](skills/go-mcp-builder/SKILL.md) | 使用 `mcp-go` 和 Streamable HTTP 构建 Go MCP Server | `npx skills add betterlmy/agent-skills --skill go-mcp-builder` |
 | [`mermaid-diagrams`](skills/mermaid-diagrams/SKILL.md) | 使用 Mermaid 创建流程图、时序图、ER 图和 C4 模型等软件图表 | `npx skills add betterlmy/agent-skills --skill mermaid-diagrams` |
@@ -23,7 +22,6 @@
 | [`pptx`](skills/pptx/SKILL.md) | 创建、读取、编辑、验证和渲染 PowerPoint 演示文稿 | `npx skills add betterlmy/agent-skills --skill pptx` |
 | [`rag-agent-builder`](skills/rag-agent-builder/SKILL.md) | 使用嵌入、向量数据库、检索和评估能力构建 RAG 应用 | `npx skills add betterlmy/agent-skills --skill rag-agent-builder` |
 | [`skill-engineer`](skills/skill-engineer/SKILL.md) | 创建、改进、审查和评估生产可用的 agent skills | `npx skills add betterlmy/agent-skills --skill skill-engineer` |
-| [`vercel-react-best-practices`](skills/vercel-react-best-practices/SKILL.md) | 应用 Vercel 的 React 和 Next.js 性能优化指南 | `npx skills add betterlmy/agent-skills --skill vercel-react-best-practices` |
 
 ## 安装
 
@@ -50,12 +48,10 @@ npx skills add betterlmy/agent-skills --skill <skill-name> -a claude-code -g -y
 - `codegraph` 封装代码库索引、符号定位、调用分析和改动影响分析工作流。
 - `go-dev` 规定 Go 代码、gRPC、Gin HTTP API、GORM、DAO、SQL、配置和日志规范。
 - `go-mcp-builder` 提供基于 `mark3labs/mcp-go` 与 Streamable HTTP 的 Go MCP Server 完整开发流程。
-- `vercel-react-best-practices` 收录 Vercel Engineering 按影响级别组织的 React 与 Next.js 性能规则。
 
 ### 设计与图表
 
 - `drawio-skill` 支持 Draw.io 架构图、流程图、ER/UML/时序图、视觉检查及 Office 安全导出。
-- `frontend-design` 指导实现精致的 Web 界面，避免通用、模板化的生成式视觉风格。
 - `mermaid-diagrams` 覆盖使用 Mermaid 语法维护可版本控制的软件图表。
 
 ### 自动化与内容

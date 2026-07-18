@@ -13,6 +13,8 @@ CodeGraph CLI wrapper
   codegraph.sh index <project> [--force] [--quiet] [--verbose]
   codegraph.sh sync <project> [--quiet]
   codegraph.sh status <project> [--no-json]
+  codegraph.sh explore <project> <query...> [--max-files N]
+  codegraph.sh node <project> [name] [--file FILE] [--offset N] [--limit N] [--symbols-only]
   codegraph.sh query <project> <search> [--limit N] [--kind KIND] [--no-json]
   codegraph.sh files <project> [--filter DIR] [--pattern GLOB] [--format tree|flat|grouped] [--max-depth N] [--no-metadata] [--no-json]
   codegraph.sh callers <project> <symbol> [--limit N] [--no-json]
@@ -40,13 +42,25 @@ codegraph_bin() {
         printf '%s\n' "$CODEGRAPH_BIN"
         return
     fi
-    command -v codegraph || fail "找不到 codegraph。请先运行 npm i -g @colbymchenry/codegraph，或设置 CODEGRAPH_BIN。"
+    command -v codegraph || fail "找不到 codegraph。请先获得用户同意后安装 CLI，或设置 CODEGRAPH_BIN。"
 }
 
 require_project() {
     local project="${1:-}"
     [[ -n "$project" ]] || fail "缺少 project 参数。"
     printf '%s\n' "$project"
+}
+
+ensure_index_ignored() {
+    local project="$1"
+    command -v git >/dev/null 2>&1 || return 0
+    git -C "$project" rev-parse --is-inside-work-tree >/dev/null 2>&1 || return 0
+
+    local probe
+    probe="$(cd "$project" && pwd -P)/.codegraph/.ignore-check"
+    if ! git -C "$project" check-ignore -q --no-index -- "$probe"; then
+        fail "项目未忽略 .codegraph/。请先获得用户同意并在适用的 .gitignore 中加入 .codegraph/ 或 **/.codegraph/。"
+    fi
 }
 
 cmd="${1:-help}"
@@ -62,36 +76,37 @@ case "$cmd" in
     check)
         "$bin" --version
     ;;
-    
+
     raw)
         [[ "$#" -gt 0 ]] || fail "raw 需要传入 codegraph 原生命令参数。"
         exec "$bin" "$@"
     ;;
-    
+
     init)
         project="$(require_project "${1:-}")"
         shift || true
+        ensure_index_ignored "$project"
         exec "$bin" init "$@" "$project"
     ;;
-    
+
     uninit)
         project="$(require_project "${1:-}")"
         shift || true
         exec "$bin" uninit "$@" "$project"
     ;;
-    
+
     index)
         project="$(require_project "${1:-}")"
         shift || true
         exec "$bin" index "$@" "$project"
     ;;
-    
+
     sync)
         project="$(require_project "${1:-}")"
         shift || true
         exec "$bin" sync "$@" "$project"
     ;;
-    
+
     status)
         project="$(require_project "${1:-}")"
         shift || true
@@ -105,11 +120,25 @@ case "$cmd" in
             shift
         done
         if [[ "$no_json" == "1" ]]; then
-            exec "$bin" status "${args[@]}" "$project"
+            exec "$bin" status ${args[@]+"${args[@]}"} "$project"
         fi
-        exec "$bin" status "${args[@]}" --json "$project"
+        exec "$bin" status ${args[@]+"${args[@]}"} --json "$project"
     ;;
-    
+
+    explore)
+        project="$(require_project "${1:-}")"
+        shift || true
+        [[ "$#" -gt 0 ]] || fail "explore 缺少 query 参数。"
+        exec "$bin" explore --path "$project" "$@"
+    ;;
+
+    node)
+        project="$(require_project "${1:-}")"
+        shift || true
+        [[ "$#" -gt 0 ]] || fail "node 需要 symbol、file 或其他查询参数。"
+        exec "$bin" node --path "$project" "$@"
+    ;;
+
     query)
         project="$(require_project "${1:-}")"
         shift || true
@@ -136,11 +165,11 @@ case "$cmd" in
             shift
         done
         if [[ "$no_json" == "1" ]]; then
-            exec "$bin" query --path "$project" "${args[@]}" "$search"
+            exec "$bin" query --path "$project" ${args[@]+"${args[@]}"} "$search"
         fi
-        exec "$bin" query --path "$project" "${args[@]}" --json "$search"
+        exec "$bin" query --path "$project" ${args[@]+"${args[@]}"} --json "$search"
     ;;
-    
+
     files)
         project="$(require_project "${1:-}")"
         shift || true
@@ -160,11 +189,11 @@ case "$cmd" in
             shift
         done
         if [[ "$no_json" == "1" ]]; then
-            exec "$bin" files --path "$project" "${args[@]}"
+            exec "$bin" files --path "$project" ${args[@]+"${args[@]}"}
         fi
-        exec "$bin" files --path "$project" "${args[@]}" --json
+        exec "$bin" files --path "$project" ${args[@]+"${args[@]}"} --json
     ;;
-    
+
     callers|callees)
         project="$(require_project "${1:-}")"
         shift || true
@@ -186,11 +215,11 @@ case "$cmd" in
             shift
         done
         if [[ "$no_json" == "1" ]]; then
-            exec "$bin" "$cmd" --path "$project" "${args[@]}" "$symbol"
+            exec "$bin" "$cmd" --path "$project" ${args[@]+"${args[@]}"} "$symbol"
         fi
-        exec "$bin" "$cmd" --path "$project" "${args[@]}" --json "$symbol"
+        exec "$bin" "$cmd" --path "$project" ${args[@]+"${args[@]}"} --json "$symbol"
     ;;
-    
+
     impact)
         project="$(require_project "${1:-}")"
         shift || true
@@ -212,11 +241,11 @@ case "$cmd" in
             shift
         done
         if [[ "$no_json" == "1" ]]; then
-            exec "$bin" impact --path "$project" "${args[@]}" "$symbol"
+            exec "$bin" impact --path "$project" ${args[@]+"${args[@]}"} "$symbol"
         fi
-        exec "$bin" impact --path "$project" "${args[@]}" --json "$symbol"
+        exec "$bin" impact --path "$project" ${args[@]+"${args[@]}"} --json "$symbol"
     ;;
-    
+
     affected)
         project="$(require_project "${1:-}")"
         shift || true
@@ -237,24 +266,23 @@ case "$cmd" in
             shift
         done
         if [[ "$no_json" == "1" ]]; then
-            exec "$bin" affected --path "$project" "${args[@]}" "${files[@]}"
+            exec "$bin" affected --path "$project" ${args[@]+"${args[@]}"} ${files[@]+"${files[@]}"}
         fi
-        exec "$bin" affected --path "$project" "${args[@]}" --json "${files[@]}"
+        exec "$bin" affected --path "$project" ${args[@]+"${args[@]}"} --json ${files[@]+"${files[@]}"}
     ;;
-    
+
     unlock)
         project="$(require_project "${1:-}")"
         shift || true
         [[ "$#" -eq 0 ]] || fail "unlock 不接受额外参数。"
         exec "$bin" unlock "$project"
     ;;
-    
+
     upgrade)
-        help_text="$("$bin" --help 2>/dev/null || true)"
-        if [[ "$help_text" == *"upgrade [version]"* ]]; then
+        if "$bin" upgrade --help >/dev/null 2>&1; then
             exec "$bin" upgrade "$@"
         fi
-        
+
         check=0
         version=""
         while [[ "$#" -gt 0 ]]; do
@@ -270,8 +298,9 @@ case "$cmd" in
             esac
             shift
         done
-        
+
         current="$("$bin" --version 2>/dev/null || printf 'unknown')"
+        command -v npm >/dev/null 2>&1 || fail "当前 CodeGraph 不支持原生 upgrade，且找不到 npm；请按官方安装方式重新安装。"
         if [[ "$check" == "1" ]]; then
             latest="$(npm view @colbymchenry/codegraph version)"
             printf 'current=%s\nlatest=%s\n' "$current" "$latest"
@@ -282,13 +311,13 @@ case "$cmd" in
             fi
             exit 0
         fi
-        
+
         if [[ -n "$version" ]]; then
             exec npm i -g "@colbymchenry/codegraph@$version"
         fi
         exec npm i -g @colbymchenry/codegraph
     ;;
-    
+
     *)
         usage >&2
         fail "未知命令: $cmd"

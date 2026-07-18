@@ -15,7 +15,6 @@ A collection of agent skills maintained by `betterlmy`, covering repository guid
 | [`codegraph`](skills/codegraph/SKILL.md) | Index local repositories and analyze symbols, call relationships, impact, and affected tests | `npx skills add betterlmy/agent-skills --skill codegraph` |
 | [`drawio-skill`](skills/drawio-skill/SKILL.md) | Create, edit, review, validate, and export Draw.io diagrams | `npx skills add betterlmy/agent-skills --skill drawio-skill` |
 | [`find-skills`](skills/find-skills/SKILL.md) | Discover and install skills from the open agent skills ecosystem | `npx skills add betterlmy/agent-skills --skill find-skills` |
-| [`frontend-design`](skills/frontend-design/SKILL.md) | Build distinctive, production-grade frontend interfaces with strong visual design | `npx skills add betterlmy/agent-skills --skill frontend-design` |
 | [`go-dev`](skills/go-dev/SKILL.md) | Apply Go conventions for services, APIs, GORM models, DAO code, SQL, logging, and configuration | `npx skills add betterlmy/agent-skills --skill go-dev` |
 | [`go-mcp-builder`](skills/go-mcp-builder/SKILL.md) | Build Go MCP servers with `mcp-go` and Streamable HTTP | `npx skills add betterlmy/agent-skills --skill go-mcp-builder` |
 | [`mermaid-diagrams`](skills/mermaid-diagrams/SKILL.md) | Create software diagrams with Mermaid, including flowcharts, sequence diagrams, ERDs, and C4 models | `npx skills add betterlmy/agent-skills --skill mermaid-diagrams` |
@@ -23,7 +22,6 @@ A collection of agent skills maintained by `betterlmy`, covering repository guid
 | [`pptx`](skills/pptx/SKILL.md) | Create, read, edit, validate, and render PowerPoint presentations | `npx skills add betterlmy/agent-skills --skill pptx` |
 | [`rag-agent-builder`](skills/rag-agent-builder/SKILL.md) | Build RAG applications with embeddings, vector databases, retrieval, and evaluation | `npx skills add betterlmy/agent-skills --skill rag-agent-builder` |
 | [`skill-engineer`](skills/skill-engineer/SKILL.md) | Create, improve, review, and evaluate production-ready agent skills | `npx skills add betterlmy/agent-skills --skill skill-engineer` |
-| [`vercel-react-best-practices`](skills/vercel-react-best-practices/SKILL.md) | Apply Vercel's React and Next.js performance optimization guidance | `npx skills add betterlmy/agent-skills --skill vercel-react-best-practices` |
 
 ## Installation
 
@@ -50,12 +48,10 @@ Omit `--skill <skill-name>` to use the interactive selection provided by the Ski
 - `codegraph` wraps CodeGraph workflows for repository indexing, symbol discovery, call analysis, and change-impact analysis.
 - `go-dev` defines conventions for Go code, gRPC, Gin HTTP APIs, GORM, DAO layers, SQL, configuration, and logging.
 - `go-mcp-builder` provides a complete workflow for Go MCP servers based on `mark3labs/mcp-go` and Streamable HTTP.
-- `vercel-react-best-practices` contains prioritized React and Next.js performance rules from Vercel Engineering.
 
 ### Design and Diagrams
 
 - `drawio-skill` supports Draw.io architecture diagrams, flowcharts, ER/UML/sequence diagrams, visual QA, and Office-safe export.
-- `frontend-design` guides the implementation of polished web interfaces and avoids generic generated aesthetics.
 - `mermaid-diagrams` covers version-controlled software diagrams using Mermaid syntax.
 
 ### Automation and Content

@@ -1,0 +1,4 @@
+interface:
+  display_name: "CodeGraph"
+  short_description: "探索本地代码结构、调用路径和改动影响"
+  default_prompt: "使用 $codegraph，通过适合当前平台的 wrapper 检查仓库符号、源码、调用路径和改动影响。"

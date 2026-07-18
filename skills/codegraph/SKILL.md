@@ -1,103 +1,89 @@
 ---
 name: codegraph
-description: 使用 CodeGraph CLI 做本地代码库索引、符号检索、调用关系分析和改动影响分析。Use when需要通过 Bash 命令行探索代码实现位置、查看文件结构、查询 callers/callees、评估 refactor 影响或定位受影响测试，且项目可使用 codegraph CLI。
-allowed-tools: Bash(bash:*) Bash(codegraph:*) Bash(command:*) Bash(chmod:*) Bash(test:*) Bash(npm:*) Bash(curl:*)
+description: 使用 CodeGraph CLI 在本地代码库中进行语义探索、符号检索、源码读取、调用关系和改动影响分析。Use when 需要理解代码结构、追踪 callers/callees、评估重构影响或定位受影响测试；适用于 Windows、macOS 和 Linux，精确字符串与非代码文本检索不触发本 Skill。
 ---
 
 # CodeGraph
 
-## 默认行为
+## 启动方式
 
-所有命令优先通过本 skill 自带 wrapper 执行。执行前先把脚本路径按 skill 目录解析：
+先把本 `SKILL.md` 所在目录的绝对路径保存为 Skill 目录。不得假设当前工作目录就是 Skill 目录，也不要直接运行相对路径 `scripts/codegraph.*`。
 
-```bash
-bash scripts/codegraph.sh check
-```
-
-如果 `check` 提示找不到 `codegraph`，先安装 CLI：
+macOS、Linux、WSL 或 Git Bash：
 
 ```bash
-npm i -g @colbymchenry/codegraph
+CODEGRAPH_SKILL_DIR="/absolute/path/to/installed/codegraph"
+cg() { bash "$CODEGRAPH_SKILL_DIR/scripts/codegraph.sh" "$@"; }
 ```
 
-也可以使用官方无 Node 安装脚本：
+Windows PowerShell：
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh | sh
+```powershell
+$CodeGraphSkillDir = "C:\absolute\path\to\installed\codegraph"
+function cg { & (Join-Path $CodeGraphSkillDir "scripts/codegraph.ps1") @args }
 ```
 
-如果安装在非 PATH 位置，用 `CODEGRAPH_BIN` 指定可执行文件：
+`cg` 只在当前 shell 会话有效。若宿主无法执行对应 wrapper，可使用相同参数直接调用 `codegraph` CLI。
 
-```bash
-CODEGRAPH_BIN=/path/to/codegraph bash scripts/codegraph.sh check
+## 前置检查
+
+```text
+cg check
 ```
 
-如果项目没有 `.codegraph/`，先初始化索引。`init` 会在项目内写入 `.codegraph/` 索引目录：
+如果找不到 CLI，先说明安装会修改用户环境，并让用户选择官方 standalone installer 或 npm 全局安装；未经明确同意不要安装、升级或执行远程脚本。安装方式和平台说明见 [工作流参考](references/workflows.md)。
 
-```bash
-bash scripts/codegraph.sh init .
+首次使用 `explore` 或 `node` 时，可用 `cg raw explore --help` 和 `cg raw node --help` 做能力检查。旧版 CLI 不支持时，先使用结构化查询降级；只有用户同意后才升级。
+
+首次在项目中初始化前：
+
+1. 确认目标项目和索引写入范围。
+2. 如果是 Git 项目，使用 `git check-ignore` 确认 `.codegraph/` 已被忽略。
+3. 未忽略时，先取得用户同意，再在适用的 `.gitignore` 中加入 `.codegraph/` 或 `**/.codegraph/`。
+4. 运行 `cg init .`；wrapper 会拒绝在未忽略索引目录的 Git 项目中初始化。
+5. 用 `cg status .` 确认索引状态。
+
+不要因为分析结束就自动删除索引。只有用户明确要求清理时才运行 `cg uninit . --force`，随后检查工作区状态。
+
+## 默认检索顺序
+
+1. `cg status .`：确认项目是否已初始化。
+2. `cg explore . "问题、流程或目标符号"`：默认入口，一次获取相关源码、调用路径和影响摘要。
+3. `cg node . TargetSymbol`：读取单个符号及其调用关系。
+4. `cg node . --file path/to/file --offset 1 --limit 200`：按行读取文件并查看依赖。
+5. 需要结构化细查时再使用 `files`、`query`、`callers`、`callees`、`impact` 和 `affected`。
+
+```text
+cg files . --format tree --max-depth 2 --no-json
+cg query . TargetSymbol --limit 5
+cg callers . TargetSymbol --limit 20
+cg callees . TargetSymbol --limit 20
+cg impact . TargetSymbol --depth 2
+cg affected . path/to/changed_file.ext
 ```
 
-只读评估或临时分析结束后，如果不希望留下索引状态，运行清理命令并用 `git status --short` 确认工作树：
-
-```bash
-bash scripts/codegraph.sh uninit . --force
-```
-
-官方文档中的 `codegraph init -i` / `--index` 也可以传给 wrapper；当前 CLI 版本中 `init` 已默认索引，`-i` 仍作为兼容参数接受。初始化后用 `status` 确认 `initialized`、`fileCount` 和 `nodeCount`；如果索引为空，再运行 `index`。
-
-日常使用优先顺序：
-
-1. 确认索引状态：`status`
-2. 初次进入项目：`files --format tree --max-depth 2 --no-json`
-3. 不清楚实现位置：`query`
-4. 追调用链：`callers` 或 `callees`
-5. 改动前评估影响：`impact`
-6. 选择回归测试：`affected`；如果结果为空，先确认项目内是否存在可索引测试文件
-7. 索引疑似过期：`sync`，必要时 `index --force`
-8. 确认不再需要项目索引：`uninit --force`
-
-## 核心命令
-
-```bash
-bash scripts/codegraph.sh status .
-bash scripts/codegraph.sh files . --format tree --max-depth 2 --no-json
-bash scripts/codegraph.sh query . TargetSymbol --limit 5
-bash scripts/codegraph.sh files . --format flat --max-depth 2
-bash scripts/codegraph.sh callers . TargetSymbol --limit 20
-bash scripts/codegraph.sh callees . TargetSymbol --limit 20
-bash scripts/codegraph.sh impact . TargetSymbol --depth 2
-bash scripts/codegraph.sh affected . path/to/changed_file.ext
-bash scripts/codegraph.sh uninit . --force
-```
-
-wrapper 对查询类命令默认加 `--json`，便于解析和引用。需要人类可读输出时加 `--no-json`：
-
-```bash
-bash scripts/codegraph.sh query . TargetSymbol --limit 5 --no-json
-```
+`status`、`files`、`query`、`callers`、`callees`、`impact` 和 `affected` 默认输出 JSON；需要原始可读输出时加 `--no-json`。`explore` 和 `node` 使用 CLI 原生文本输出。
 
 ## 索引维护
 
-```bash
-bash scripts/codegraph.sh init .
-bash scripts/codegraph.sh sync .
-bash scripts/codegraph.sh index . --force
-bash scripts/codegraph.sh unlock .
-bash scripts/codegraph.sh upgrade --check
+当前 CodeGraph 初始化后会自动同步文件变化。只有状态异常、文件大量移动或结果明显过期时才手工执行：
+
+```text
+cg sync .
+cg index . --force
+cg unlock .
 ```
 
-`sync` 适合普通增量变更；如果查询结果明显不准、文件大量移动、语言解析结果异常，再用 `index --force`。
-
-`upgrade` 会优先调用 CLI 原生命令；如果当前安装版本还不支持，则由 wrapper 使用 npm 查询或安装 `@colbymchenry/codegraph`。
+升级会修改全局或 standalone 安装。只有用户明确要求时才运行 `cg upgrade --check` 或 `cg upgrade`。
 
 ## 使用边界
 
-- CodeGraph 适合符号、文件结构、调用关系和影响分析；精确文本、错误消息、配置项仍优先用 `rg`。
-- 查询输出只说明索引视角，不等同于完整语义证明；涉及行为判断时还要读取相关源码和测试。
-- 调用图和影响面不能覆盖所有运行时行为；外部依赖、生成代码、动态注册、反射、初始化副作用等需要补充源码或常规检索确认。
-- `affected` 结果为空不等于没有回归风险；先检查测试文件是否存在、命名是否符合规则、过滤条件是否过窄、索引是否覆盖目标文件。
-- 对大型仓库，先用 `files --max-depth` 缩小范围，再做 `query` 或调用图分析。
-- 如果 CLI 不存在、索引损坏或语言不支持，直接退回 `rg`、`rg --files` 和常规文件阅读。
+- 精确字符串、错误消息、配置项、环境变量和非代码文件优先用 `rg` 或宿主等价工具。
+- CodeGraph 结果是索引视角；运行时注册、反射、生成代码、外部依赖和初始化副作用仍需源码与测试确认。
+- `affected` 为空不等于没有回归风险；检查测试命名、过滤条件、语言支持和索引覆盖。
+- CLI 不存在、语言不支持、索引损坏或 wrapper 不兼容时，退回常规文件检索，不要阻塞任务。
+- `init`、`.gitignore` 编辑、安装、升级和 `uninit` 都会改变状态，执行前遵循用户授权边界。
 
-更多场景见 [references/workflows.md](references/workflows.md)。需要理解 CodeGraph 架构背景、索引模型或工具设计取舍时，再读取 [references/knowledge.md](references/knowledge.md)。
+更多安装、跨平台命令、降级和评估场景见 [工作流参考](references/workflows.md)。
+
+本 Skill 及其分发包使用 [MIT License](LICENSE)。
