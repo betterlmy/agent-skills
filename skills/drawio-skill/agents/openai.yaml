@@ -1,0 +1,4 @@
+interface:
+  display_name: "Draw.io Diagrams"
+  short_description: "Create, review, and export Draw.io diagrams"
+  default_prompt: "Use $drawio-skill to create or improve a Draw.io diagram and export the right deliverable format."

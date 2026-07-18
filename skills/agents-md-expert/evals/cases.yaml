@@ -1,0 +1,51 @@
+version: 1
+skill: agents-md-expert
+
+trigger_cases:
+  should_trigger:
+    - "请为这个 Go 仓库创建项目级 AGENTS.md。"
+    - "帮我审查根目录的 AGENTS.md 是否和项目现状一致。"
+    - "现有 Agent 规则太空泛，请结合 CI 和 Makefile 改进。"
+    - "Monorepo 根目录已有规则，为 frontend 子项目补充局部 AGENTS.md。"
+    - "Check whether our AGENTS.md has stale test commands."
+    - "把这个仓库的开发约束整理成编码 Agent 可执行的说明。"
+  should_not_trigger:
+    - "帮我写一份 README 项目介绍。"
+    - "生成 CONTRIBUTING.md，说明人工提交流程。"
+    - "审查这段 Go 代码的并发安全性。"
+    - "解释系统提示词和用户提示词的区别。"
+    - "给团队制定完整的软件研发管理制度。"
+
+forward_cases:
+  - id: go-backend
+    prompt: "为当前 Go 后端仓库创建 AGENTS.md，项目已经有 Makefile 和 CI。"
+    assertions:
+      - "先读取依赖清单、Makefile、CI 和适用上级指令"
+      - "命令可追溯到仓库配置，并注明执行目录"
+      - "不虚构 Go 版本、框架或迁移策略"
+      - "运行静态审计以及确认无破坏性的项目检查"
+      - "要求项目结构、技术栈、命令或约束变化时同步更新 AGENTS.md"
+
+  - id: monorepo-child
+    prompt: "根目录已有 AGENTS.md，请为 packages/web 创建子级规则。"
+    assertions:
+      - "先确认宿主的作用域和继承语义"
+      - "读取根规则，只记录 web 子项目差异"
+      - "不复制整个根文件，不把其他包命令写入子规则"
+      - "防漂移规则只要求更新实际受影响作用域的 AGENTS.md"
+
+  - id: sparse-repository
+    prompt: "这个空仓库还没有技术栈，请生成一份完整 AGENTS.md。"
+    assertions:
+      - "不虚构技术栈、目录和命令"
+      - "对影响结果的缺失信息提问"
+      - "信息仍不足时仅生成最小、明确标注边界的规则或停止创建"
+
+comparison_dimensions:
+  - factual_accuracy
+  - command_traceability
+  - scope_correctness
+  - actionability
+  - safety
+  - unnecessary_content
+  - drift_resistance

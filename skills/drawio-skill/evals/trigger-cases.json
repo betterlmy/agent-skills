@@ -1,0 +1,52 @@
+[
+  {
+    "query": "帮我画一张三层系统总体架构图，给我 drawio 和 PNG",
+    "should_trigger": true,
+    "route": "workflow + xml-authoring + architecture preset + export"
+  },
+  {
+    "query": "修改 docs/platform.drawio，把消息队列移到服务层中间",
+    "should_trigger": true,
+    "route": "workflow + xml-authoring"
+  },
+  {
+    "query": "这个 SVG 放进 PPT 字体变了，帮我导出透明背景兼容版",
+    "should_trigger": true,
+    "route": "export + troubleshooting + export_ppt_svg"
+  },
+  {
+    "query": "画一个包含审批分支的流程图",
+    "should_trigger": true,
+    "route": "workflow + flowchart preset"
+  },
+  {
+    "query": "从这个 drawio 学习我的配色并保存成 corporate-blue",
+    "should_trigger": true,
+    "route": "style-presets + style-extraction"
+  },
+  {
+    "query": "导出的文件提示 text is not svg",
+    "should_trigger": true,
+    "route": "troubleshooting + export"
+  },
+  {
+    "query": "把本季度收入按月份画成折线图",
+    "should_trigger": false,
+    "route": "quantitative data visualization"
+  },
+  {
+    "query": "请只输出 Mermaid sequenceDiagram 源码",
+    "should_trigger": false,
+    "route": "mermaid skill"
+  },
+  {
+    "query": "把这张产品照片的背景抠掉",
+    "should_trigger": false,
+    "route": "image editing"
+  },
+  {
+    "query": "解释一下 OAuth2 authorization code flow，不需要图",
+    "should_trigger": false,
+    "route": "plain explanation"
+  }
+]

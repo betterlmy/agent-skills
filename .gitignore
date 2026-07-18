@@ -1,0 +1,23 @@
+# CodeGraph 索引
+.codegraph/
+**/.codegraph/
+
+# Playwright CLI 运行产物
+**/.playwright-cli/
+
+# Python 缓存
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node.js 依赖与构建产物
+**/node_modules/
+**/.pnpm-store/
+**/.vite/
+**/dist/
+
+# 系统文件
+.DS_Store
+Thumbs.db
