@@ -9,6 +9,7 @@ This file applies to the entire repository. A more deeply nested `AGENTS.md` add
 - `skills/<skill-name>/SKILL.md` is the required entry point for each skill.
 - A skill may also contain `agents/`, `assets/`, `evals/`, `examples/`, `references/`, `scripts/`, `templates/`, or `tests/`. Add supporting files only when the skill needs them.
 - `README.md` and `README.zh-CN.md` are the English and Chinese repository indexes. Keep their skill lists and repository facts aligned.
+- `SKILLS-GUID.md` is the agent-facing routing guide for choosing among this repository's skills. Keep it concise and do not duplicate complete skill workflows.
 - `skills/Makefile` packages one skill at a time and writes archives under `skills/dist/`.
 
 ## Before Editing
@@ -27,7 +28,7 @@ This file applies to the entire repository. A more deeply nested `AGENTS.md` add
 - Keep the main workflow concise. Move detailed guidance to `references/` and reusable operations to `scripts/` when that improves progressive disclosure.
 - Reference bundled scripts and reference documents from `SKILL.md` so agents can discover when to use them.
 - Do not add secrets, credentials, private machine paths, generated caches, dependency directories, or build output.
-- When adding, removing, or renaming a skill, update both root README files in the same change.
+- When adding, removing, or renaming a skill, update both root README files and `SKILLS-GUID.md` in the same change. Update `SKILLS-GUID.md` when a skill's trigger conditions or boundaries change materially.
 
 ## Validation
 
@@ -76,4 +77,4 @@ When project structure, the technology stack, build or test commands, generation
 
 ## Completion Report
 
-State what changed, which checks actually ran, their results, and any unverified assumptions or remaining risks. Before finishing, confirm that the change did not leave stale entries in either root README or require an `AGENTS.md` synchronization update.
+State what changed, which checks actually ran, their results, and any unverified assumptions or remaining risks. Before finishing, confirm that the change did not leave stale entries in either root README or `SKILLS-GUID.md`, and whether an `AGENTS.md` synchronization update is required.

@@ -83,6 +83,7 @@ Each skill has a `SKILL.md` entry point. Supporting resources are bundled only w
 
 ## Related Links
 
+- [Skills routing guide](SKILLS-GUID.md)
 - [Skills directory](https://skills.sh/)
 - [Skills CLI](https://github.com/vercel-labs/skills)
 - [Claude Code Skills](https://code.claude.com/docs/en/skills)

@@ -83,6 +83,7 @@ skills/
 
 ## 相关链接
 
+- [Skills 使用指南](SKILLS-GUID.md)
 - [Skills directory](https://skills.sh/)
 - [Skills CLI](https://github.com/vercel-labs/skills)
 - [Claude Code Skills](https://code.claude.com/docs/en/skills)
