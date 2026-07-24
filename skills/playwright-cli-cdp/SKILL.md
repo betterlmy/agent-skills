@@ -207,7 +207,8 @@ bash scripts/playwright-cdp.sh -s=cdp pdf --filename=page.pdf
 ```bash
 bash scripts/playwright-cdp.sh -s=cdp console
 bash scripts/playwright-cdp.sh -s=cdp console error
-bash scripts/playwright-cdp.sh -s=cdp network
+bash scripts/playwright-cdp.sh -s=cdp requests
+bash scripts/playwright-cdp.sh -s=cdp request 3
 
 bash scripts/playwright-cdp.sh -s=cdp cookie-list
 bash scripts/playwright-cdp.sh -s=cdp cookie-get session_id
