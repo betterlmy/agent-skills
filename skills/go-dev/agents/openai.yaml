@@ -1,0 +1,4 @@
+interface:
+  display_name: "Go Dev"
+  short_description: "Develop and review idiomatic Go projects"
+  default_prompt: "Use $go-dev to implement or review this Go change while preserving the repository's existing architecture and conventions."

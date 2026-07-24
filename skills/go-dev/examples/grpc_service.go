@@ -1,124 +1,58 @@
-// gRPC 服务方法示例
-
-package service
+// gRPC 错误映射示例：请求响应类型经过简化，实际项目使用生成的 pb 类型。
+package examples
 
 import (
 	"context"
+	"errors"
 
-	"myproject/internal/data"
-	"myproject/internal/pkg/codes"
-	"myproject/internal/pkg/util"
-	"myproject/pb/account"
-
-	"gitlab-esd.leapmotor.com/psa/product/lp-go-tool.git/log"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
-// AccountService 账号服务
-// 必须嵌入 UnimplementedXXXServer，确保向前兼容
-type AccountService struct {
-	account.UnimplementedAccountServer
+var (
+	errAccountNotFound  = errors.New("account not found")
+	errStoreUnavailable = errors.New("store unavailable")
+)
+
+type getAccountRequest struct {
+	AccountID string
 }
 
-// 编译期接口检查：确保 AccountService 实现了 account.AccountServer 接口
-var _ account.AccountServer = &AccountService{}
+type getAccountResponse struct {
+	AccountID string
+	Name      string
+}
 
-// RegisterAccount 注册账号
-// 遵循 gRPC 接口规范模板：日志 + defer + 错误码
-func (s *AccountService) RegisterAccount(ctx context.Context, req *account.RegisterAccountRequest) (*account.RegisterAccountResponse, error) {
-	log.Infof("=== RegisterAccount in ===")
-	log.Infof("request: %+v", req)
+type accountReader interface {
+	GetAccount(context.Context, string) (getAccountResponse, error)
+}
 
-	resp := &account.RegisterAccountResponse{
-		Code:    int32(codes.OK),
-		Message: codes.Message(codes.OK),
+type accountService struct {
+	reader accountReader
+}
+
+func (service *accountService) getAccount(
+	ctx context.Context,
+	request *getAccountRequest,
+) (*getAccountResponse, error) {
+	if request == nil || request.AccountID == "" {
+		return nil, status.Error(codes.InvalidArgument, "account_id is required")
 	}
 
-	defer func() {
-		log.Infof("resp: %+v", resp)
-		log.Infof("=== RegisterAccount out ===")
-	}()
-
-	// 参数校验
-	if req.GetUsername() == "" || req.GetPassword() == "" {
-		resp.Code = int32(codes.InvalidArgument)
-		resp.Message = codes.Message(codes.InvalidArgument)
-		return resp, nil
-	}
-
-	// 检查账号是否已存在
-	err := data.CheckAccountExist(ctx, req.GetUsername(), req.GetEmail())
-	if err == nil {
-		log.Errorf("RegisterAccount account already exists. username[%s]", req.GetUsername())
-		resp.Code = int32(codes.AlreadyExists)
-		resp.Message = codes.Message(codes.AlreadyExists)
-		return resp, nil
-	}
-
-	// 密码加密
-	passwordH, salt := util.EncryptPassword(req.GetPassword())
-
-	// 调用数据层
-	accountId, err := data.RegisterAccount(ctx, req.GetUsername(), req.GetNickname(), req.GetEmail(), passwordH, salt)
+	account, err := service.reader.GetAccount(ctx, request.AccountID)
 	if err != nil {
-		log.Errorf("RegisterAccount data error. err[%v]", err)
-		resp.Code = int32(codes.Internal)
-		resp.Message = codes.Message(codes.Internal)
-		return resp, nil
+		switch {
+		case errors.Is(err, errAccountNotFound):
+			return nil, status.Error(codes.NotFound, "account not found")
+		case errors.Is(err, context.Canceled):
+			return nil, status.Error(codes.Canceled, "request canceled")
+		case errors.Is(err, context.DeadlineExceeded):
+			return nil, status.Error(codes.DeadlineExceeded, "request deadline exceeded")
+		case errors.Is(err, errStoreUnavailable):
+			return nil, status.Error(codes.Unavailable, "service unavailable")
+		default:
+			return nil, status.Error(codes.Internal, "internal error")
+		}
 	}
-
-	resp.AccountId = accountId
-
-	return resp, nil
-}
-
-// GetAccountList 获取账号列表 - 注意 Data 和 RecordList 必须初始化
-func (s *AccountService) GetAccountList(ctx context.Context, req *account.GetAccountListRequest) (*account.GetAccountListResponse, error) {
-	log.Infof("=== GetAccountList in ===")
-	log.Infof("request: %+v", req)
-
-	resp := &account.GetAccountListResponse{
-		Code:    int32(codes.OK),
-		Message: codes.Message(codes.OK),
-		Data: &account.AccountListData{
-			RecordList: []*account.AccountInfo{}, // 必须初始化，返回 [] 而不是 null
-		},
-	}
-
-	defer func() {
-		log.Infof("resp: %+v", resp)
-		log.Infof("=== GetAccountList out ===")
-	}()
-
-	records, total, err := data.GetAccountList(ctx, req.GetPageNumber(), req.GetPageSize(), req.GetKeyword())
-	if err != nil {
-		log.Errorf("GetAccountList data error. err[%v]", err)
-		resp.Code = int32(codes.Internal)
-		resp.Message = codes.Message(codes.Internal)
-		return resp, nil
-	}
-
-	resp.Data = &account.AccountListData{
-		PageNumber: req.GetPageNumber(),
-		PageSize:   req.GetPageSize(),
-		Total:      total,
-		RecordList: convertToAccountInfos(records),
-	}
-
-	return resp, nil
-}
-
-// convertToAccountInfos 内部转换函数，私有函数用小驼峰
-func convertToAccountInfos(records []*data.AccountRecord) []*account.AccountInfo {
-	infos := make([]*account.AccountInfo, 0, len(records))
-	for _, r := range records {
-		infos = append(infos, &account.AccountInfo{
-			AccountId:  r.Id,
-			Username:   r.Username,
-			Nickname:   r.Nickname,
-			Email:      r.Email,
-			RoleId:     r.RoleId,
-			CreateTime: r.CreateTime.UnixMilli(),
-		})
-	}
-	return infos
+	return &account, nil
 }

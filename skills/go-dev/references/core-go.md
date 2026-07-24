@@ -1,72 +1,42 @@
 # Go 基础规范
 
-## 命名规范
+## 先识别仓库
 
-| 类型 | 风格 | 示例 |
-| --- | --- | --- |
-| 文件名 | 下划线分隔 | `device_api.go`, `mysql_model.go` |
-| 结构体 | 大驼峰 | `AccountRecord`, `ApiJobAddRequest` |
-| 导出函数 | 大驼峰 | `GenerateAccessToken()`, `PropertySet()` |
-| 私有函数 | 小驼峰 | `getTenantId()`, `getJWTClaimsFromUser()` |
-| 全局变量 | 大驼峰 | `Conf`, `Db`, `Rdb` |
-| 局部变量 | 小驼峰 | `tenantId`, `isDeleted` |
-| 常量 | 全大写下划线分隔 | `ACCESS_TOKEN_EXPIRE_TIME`, `CONTACT_TYPE_EMAIL` |
+开始修改前先读取仓库指令、`go.mod`、`go.work`、构建脚本和相邻代码。确认 Go 版本、模块边界、生成代码、错误与日志封装、依赖注入方式及测试入口。不要仅凭目录名推断架构。
 
-## 注释规范
+## 命名
 
-导出函数、导出变量和导出常量必须有注释，注释以标识符名开头。
+- 包名简短、小写、有含义，不使用 `util`、`common`、`base` 等无法表达职责的兜底包名。
+- 导出标识符使用大驼峰，非导出标识符使用小驼峰；缩写保持 `ID`、`URL`、`HTTP`、`JSON`、`API` 的一致形式。
+- 常量按 Go 标识符方式命名，例如 `defaultRequestTimeout`、`MaxBatchSize`，不强制全大写下划线。
+- 文件名使用小写，必要时用下划线分隔；测试文件以 `_test.go` 结尾，平台与架构后缀遵循 Go Build Constraint 约定。
+- 接口按能力命名并保持窄小，例如 `Reader`、`TaskStore`；不要为每个结构体机械创建同名接口。
+- 避免包级可变全局变量。配置、数据库、客户端和日志器优先通过构造函数注入。
 
-```go
-// FunctionName 功能描述
-func FunctionName() {}
+## 注释与包设计
 
-// ErrConfigNotFound 定价配置未找到
-var ErrConfigNotFound = errors.New("config not found")
-```
+- 导出标识符的注释以名称开头，说明对调用方有价值的行为、约束或副作用。
+- 注释解释“为什么”和不明显的边界，不逐行翻译代码。
+- 保持依赖方向清晰，避免循环依赖、万能包和把传输 DTO 直接当领域对象。
+- 调用方定义其所需的窄接口；实现方不为“以后可能用到”提前建立大接口。
+- 生成文件不手工编辑；修改生成输入并运行仓库固定的生成命令。
 
-HTTP API 必须写 Swagger 注释：
+## 配置
 
-```go
-// @Summary 接口摘要
-// @Tags 模块标签
-// @Security BasicAuth
-// @Param request body RequestType true "请求body"
-// @Success 200 {object} ResponseType "响应"
-// @Router /api/v1/path [post]
-```
+- 沿用仓库现有配置入口；标准库环境变量、自有解析器、Viper、Koanf、godotenv 等都不是通用强制选择。
+- 配置在启动阶段完成解析与校验，非法值应尽早失败；不要在业务路径反复读取环境变量。
+- 区分未设置、显式空值和默认值，安全敏感配置通常不应有隐式默认值。
+- 不提交 `.env`、Token、密码、Cookie、私钥或真实连接串，也不在错误和日志中输出它们。
 
-## 配置加载规范
+## 依赖
 
-- `.env` 读取统一使用 `github.com/joho/godotenv`；禁止手写 `os.Open` + `bufio.Scanner` 的 dotenv 解析器。
-- API 入口推荐使用 blank import 自动加载：
+- 优先使用标准库和仓库已有依赖；新增依赖前确认维护状态、许可证、版本兼容、供应链和二进制体积影响。
+- 不擅自升级 Go 版本、依赖、生成器或锁定工具。修改 `go.mod`、`go.sum` 前遵循仓库审批与网络访问规则。
+- 只依赖公开 API，不复制第三方库内部实现；版本敏感行为应查阅仓库锁定版本的官方文档或源码。
 
-```go
-import (
-    _ "github.com/joho/godotenv/autoload"
-)
-```
+## 推荐的代码形态
 
-- 如果需要显式控制加载顺序，在 `main` 开始处调用 `godotenv.Load()`，再执行 `config.Load()`。
-- `.env` 只用于本地和部署环境注入，不要提交真实 token、secret、cookie；日志中禁止打印敏感配置值。
-
-## 日志规范
-
-- 日志底层使用基于 `go.uber.org/zap` 改造的统一日志包，不直接在业务代码里裸用 `go.uber.org/zap`。
-- 业务代码统一使用当前项目已有的 `log` 封装包；具体 import 路径以当前仓库为准，不在业务代码里新增另一套日志体系。
-- 业务代码、启动代码、handler、service、DAO 不直接使用标准库 `log`、`log/slog` 或 logrus；GORM 等第三方适配例外见下方。
-- 默认使用 `log.Infof`、`log.Errorf`、`log.Warnf`、`log.Fatalf` 等格式化接口，保持项目现有风格。
-- 需要结构化日志时使用封装包提供的 `log.InfoW`、`log.ErrorW`、`log.WarnW`，字段按 key-value 成对传入。
-- 启动失败使用 `log.Fatalf("message:%v", err)`；普通业务错误使用 `log.Errorf(...)` 后按业务响应或错误返回处理。
-- 只有第三方库接口强制要求 `Printf` 风格 writer 时，才用小 adapter 转发到统一日志包。
-
-import 示例：
-
-```go
-import "gitlab-esd.leapmotor.com/psa/product/lp-go-tool.git/log"
-```
-
-## 其他约定
-
-- 导入顺序：标准库、第三方库、本项目。
-- 使用 `context.Context` 传递上下文，不要忽略已有 context 参数。
-- 长时间操作需检查 `ctx.Done()` 响应取消信号，子操作按场景使用 `context.WithTimeout` 设置超时。
+- 构造函数返回可用对象，并在输入无效时返回明确错误。
+- 零值有合理语义时优先让零值可用；零值不安全时通过非导出字段或构造函数保护不变量。
+- 参数超过可读范围时使用配置结构体，但不要用无类型 `map[string]any` 代替稳定契约。
+- 避免无意义的 getter/setter、过深嵌套和只转发一次调用的抽象层。

@@ -1,0 +1,86 @@
+[
+  {
+    "name": "gin-endpoint-existing-contract",
+    "should_trigger": true,
+    "prompt": "在现有 Gin 服务里增加任务列表接口，仓库已经有统一响应和日志中间件。",
+    "expected_refs": ["core-go.md", "errors-context.md", "logging-security.md", "http-api.md", "testing.md"],
+    "assertions": ["沿用现有响应和日志封装", "不打印完整请求响应", "补充路由与空列表测试"]
+  },
+  {
+    "name": "go-cli-concurrency",
+    "should_trigger": true,
+    "prompt": "这个 Go CLI 批量处理文件时偶发退出不了，请检查 goroutine 和 channel 生命周期。",
+    "expected_refs": ["core-go.md", "errors-context.md", "testing.md"],
+    "assertions": ["识别 goroutine 所有者", "传播取消", "建议竞态测试"]
+  },
+  {
+    "name": "gorm-mysql-migration",
+    "should_trigger": true,
+    "prompt": "在已经使用 GORM 和 MySQL 的 Go 服务中新增订单表及查询。",
+    "expected_refs": ["core-go.md", "errors-context.md", "persistence.md", "gorm-database.md", "sql-standards.md", "testing.md"],
+    "assertions": ["确认真实 Schema 和方言", "GORM 规则按需加载", "不强制固定表名前缀"]
+  },
+  {
+    "name": "grpc-service",
+    "should_trigger": true,
+    "prompt": "给 Go gRPC 服务增加服务端流式接口，要求支持取消和最大消息限制。",
+    "expected_refs": ["core-go.md", "errors-context.md", "logging-security.md", "grpc.md", "testing.md"],
+    "assertions": ["保留 Protobuf 兼容性", "处理流结束和取消", "不打印完整消息"]
+  },
+  {
+    "name": "pgx-transaction",
+    "should_trigger": true,
+    "prompt": "审查一个使用 pgx 的 Go 事务函数，确认提交、回滚和重试是否正确。",
+    "expected_refs": ["errors-context.md", "persistence.md", "testing.md"],
+    "assertions": ["不建议引入 GORM", "检查 Commit 错误", "限制重试"]
+  },
+  {
+    "name": "standard-http-new-project",
+    "should_trigger": true,
+    "prompt": "用 net/http 新建一个内部 JSON API，目前没有既定响应契约。",
+    "expected_refs": ["core-go.md", "errors-context.md", "logging-security.md", "http-api.md", "testing.md"],
+    "assertions": ["推荐三段式整数业务码", "说明 HTTP 200 策略", "保留协议特例"]
+  },
+  {
+    "name": "existing-rest-contract",
+    "should_trigger": true,
+    "prompt": "修复现有 REST API 的 404 错误映射，项目使用 Problem Details。",
+    "expected_refs": ["errors-context.md", "http-api.md", "testing.md"],
+    "assertions": ["沿用 Problem Details", "不改成 HTTP 200", "不暴露内部错误"]
+  },
+  {
+    "name": "go-review-only",
+    "should_trigger": true,
+    "prompt": "只审查这个 Go PR 的错误处理和资源释放，不要修改代码。",
+    "expected_refs": ["core-go.md", "errors-context.md", "testing.md"],
+    "assertions": ["保持只读边界", "按影响排序发现", "不直接实施修复"]
+  },
+  {
+    "name": "react-component",
+    "should_trigger": false,
+    "prompt": "实现一个 React 表格组件并优化前端渲染性能。",
+    "expected_refs": [],
+    "assertions": ["不触发 go-dev"]
+  },
+  {
+    "name": "python-fastapi",
+    "should_trigger": false,
+    "prompt": "给 Python FastAPI 增加数据库接口和错误处理中间件。",
+    "expected_refs": [],
+    "assertions": ["不因 API 和数据库关键词触发 go-dev"]
+  },
+  {
+    "name": "standalone-sql",
+    "should_trigger": false,
+    "prompt": "只为数据仓库编写一段 Snowflake SQL 报表查询，不涉及 Go 项目。",
+    "expected_refs": [],
+    "assertions": ["不因 SQL 关键词单独触发 go-dev"]
+  },
+  {
+    "name": "architecture-diagram",
+    "should_trigger": false,
+    "prompt": "根据现有服务说明绘制一张部署架构图。",
+    "expected_refs": [],
+    "assertions": ["路由到图表技能"]
+  }
+]

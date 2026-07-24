@@ -15,7 +15,7 @@
 | [`codegraph`](skills/codegraph/SKILL.md) | 索引本地代码库并分析符号、调用关系、改动影响和受影响测试 | `npx skills add betterlmy/agent-skills --skill codegraph` |
 | [`drawio-skill`](skills/drawio-skill/SKILL.md) | 创建、编辑、审查、验证和导出 Draw.io 图表 | `npx skills add betterlmy/agent-skills --skill drawio-skill` |
 | [`find-skills`](skills/find-skills/SKILL.md) | 从开放的 agent skills 生态中发现并安装 Skill | `npx skills add betterlmy/agent-skills --skill find-skills` |
-| [`go-dev`](skills/go-dev/SKILL.md) | 规范 Go 服务、API、GORM Model、DAO、SQL、日志和配置开发 | `npx skills add betterlmy/agent-skills --skill go-dev` |
+| [`go-dev`](skills/go-dev/SKILL.md) | 按仓库约束和实际技术栈规范 Go 开发、评审、API、并发、持久化与测试 | `npx skills add betterlmy/agent-skills --skill go-dev` |
 | [`go-mcp-builder`](skills/go-mcp-builder/SKILL.md) | 使用 `mcp-go` 和 Streamable HTTP 构建 Go MCP Server | `npx skills add betterlmy/agent-skills --skill go-mcp-builder` |
 | [`mermaid-diagrams`](skills/mermaid-diagrams/SKILL.md) | 使用 Mermaid 创建流程图、时序图、ER 图和 C4 模型等软件图表 | `npx skills add betterlmy/agent-skills --skill mermaid-diagrams` |
 | [`playwright-cli-cdp`](skills/playwright-cli-cdp/SKILL.md) | 使用 `playwright-cli` 通过 CDP 控制 Chrome 系浏览器 | `npx skills add betterlmy/agent-skills --skill playwright-cli-cdp` |
@@ -45,7 +45,7 @@ npx skills add betterlmy/agent-skills --skill <skill-name> -a claude-code -g -y
 - `agents-md-expert` 用于维护真实、作用域清晰、可执行且可验证的仓库协作指令。
 - `code-review-skill` 提供跨语言的架构、安全、性能、质量和正确性审查指南。
 - `codegraph` 封装代码库索引、符号定位、调用分析和改动影响分析工作流。
-- `go-dev` 规定 Go 代码、gRPC、Gin HTTP API、GORM、DAO、SQL、配置和日志规范。
+- `go-dev` 先识别仓库约束和实际技术栈，再提供 Go 编码、错误、Context、日志、HTTP/gRPC、持久化、并发和测试规范；统一响应等偏好只在仓库无相反约定时作为推荐默认值。
 - `go-mcp-builder` 提供基于 `mark3labs/mcp-go` 与 Streamable HTTP 的 Go MCP Server 完整开发流程。
 
 ### 设计与图表

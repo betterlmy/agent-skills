@@ -15,7 +15,7 @@ A collection of agent skills maintained by `betterlmy`, covering repository guid
 | [`codegraph`](skills/codegraph/SKILL.md) | Index local repositories and analyze symbols, call relationships, impact, and affected tests | `npx skills add betterlmy/agent-skills --skill codegraph` |
 | [`drawio-skill`](skills/drawio-skill/SKILL.md) | Create, edit, review, validate, and export Draw.io diagrams | `npx skills add betterlmy/agent-skills --skill drawio-skill` |
 | [`find-skills`](skills/find-skills/SKILL.md) | Discover and install skills from the open agent skills ecosystem | `npx skills add betterlmy/agent-skills --skill find-skills` |
-| [`go-dev`](skills/go-dev/SKILL.md) | Apply Go conventions for services, APIs, GORM models, DAO code, SQL, logging, and configuration | `npx skills add betterlmy/agent-skills --skill go-dev` |
+| [`go-dev`](skills/go-dev/SKILL.md) | Guide Go development, review, APIs, concurrency, persistence, and testing from repository constraints and the detected stack | `npx skills add betterlmy/agent-skills --skill go-dev` |
 | [`go-mcp-builder`](skills/go-mcp-builder/SKILL.md) | Build Go MCP servers with `mcp-go` and Streamable HTTP | `npx skills add betterlmy/agent-skills --skill go-mcp-builder` |
 | [`mermaid-diagrams`](skills/mermaid-diagrams/SKILL.md) | Create software diagrams with Mermaid, including flowcharts, sequence diagrams, ERDs, and C4 models | `npx skills add betterlmy/agent-skills --skill mermaid-diagrams` |
 | [`playwright-cli-cdp`](skills/playwright-cli-cdp/SKILL.md) | Control Chrome-family browsers through CDP with `playwright-cli` | `npx skills add betterlmy/agent-skills --skill playwright-cli-cdp` |
@@ -45,7 +45,7 @@ Omit `--skill <skill-name>` to use the interactive selection provided by the Ski
 - `agents-md-expert` keeps repository instructions accurate, scoped, actionable, and verifiable.
 - `code-review-skill` provides cross-language review guidance for architecture, security, performance, quality, and correctness.
 - `codegraph` wraps CodeGraph workflows for repository indexing, symbol discovery, call analysis, and change-impact analysis.
-- `go-dev` defines conventions for Go code, gRPC, Gin HTTP APIs, GORM, DAO layers, SQL, configuration, and logging.
+- `go-dev` inspects repository constraints and the actual stack before applying Go guidance for code, errors, context, logging, HTTP/gRPC, persistence, concurrency, and testing; response-style preferences are defaults only when the repository is silent.
 - `go-mcp-builder` provides a complete workflow for Go MCP servers based on `mark3labs/mcp-go` and Streamable HTTP.
 
 ### Design and Diagrams

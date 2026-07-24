@@ -1,122 +1,68 @@
 ---
 name: go-dev
-description: Go 开发规范技能，覆盖命名、注释、日志、配置加载、gRPC、Gin HTTP API、GORM Model、DAO、SQL 和数据库约束。Use when writing, reviewing, or refactoring Go code, gRPC services, HTTP handlers, API response contracts, database models, SQL migrations, or project coding conventions.
-when_to_use: "编写Go代码、gRPC服务、HTTP API、Gin handler、数据库Model、GORM结构体、SQL、配置加载、日志规范、编码规范查询、命名规范查询"
+description: 面向通用 Go 项目的开发与评审规范，先识别仓库约束和实际技术栈，再指导命名、错误处理、Context、日志、HTTP/gRPC、持久化、并发与测试。Use when working in a Go repository to write, review, refactor, or debug Go code, services, APIs, database access, migrations, concurrency, tests, or project conventions; load framework-specific guidance only when the repository actually uses that stack.
 ---
 
 # Go Dev
 
-## 使用方式
+## 规则优先级
 
-开始编写或审查 Go 代码前，先按任务类型读取最小必要参考：
+按以下顺序处理冲突，低优先级规则不得覆盖高优先级事实：
 
-- 基础 Go 规范、命名、注释、配置和日志：读 `references/core-go.md`
-- gRPC、HTTP API、Gin handler、响应体、Swagger 和 in/out 日志：读 `references/grpc-http.md`
-- GORM Model、DAO、错误处理、SQL 建表和索引：读 `references/gorm-database.md`
-- 完整 SQL 细则：必要时读 `sql-standards.md`
-- 示例代码：需要模板时读 `examples/grpc_service.go`、`examples/http_handler.go`、`examples/model_example.go`
+1. 用户明确要求。
+2. 仓库中的 `AGENTS.md`、`CONTRIBUTING.md`、设计文档和公开契约。
+3. 仓库已有架构、依赖、封装、生成流程和测试方式。
+4. Go 官方惯例、依赖的对应版本文档和本 Skill 的必须规则。
+5. 本 Skill 的推荐风格。
 
-## 全局硬规则
+不要为套用示例而引入第二套路由、日志、配置、错误码、ORM、DAO 或测试体系。仓库规则缺失时才使用推荐风格；发现冲突时说明冲突并沿用仓库选择。
 
-- 对话、文档和代码说明使用中文；Markdown 文档保持中文标题和中文说明。
-- 优先沿用当前仓库已有封装、包名和风格，不新增第二套日志、响应或 DAO 体系。
-- `.env` 只用于本地和部署注入，不提交真实 token、secret、cookie，也不在日志中打印敏感配置。
-- 业务代码、handler、service、DAO 不直接使用标准库 `log`、`log/slog` 或 logrus；使用项目已有 `log` 封装。
-- 日志禁止完整打印 token、cookie、password、secret、Authorization、access_token、refresh_token、身份证号、手机号等敏感信息。
-- I/O、RPC、数据库、外部 API 调用要接收并传递 `context.Context`；长耗时操作要考虑超时或取消。
+## 开始前
 
-## 命名速查
+1. 检查工作区状态并保留已有改动。
+2. 阅读适用的仓库指令，再检查 `go.mod`、`go.work`、Makefile、生成配置和相关测试。
+3. 确认任务属于实现、评审、排障还是设计；没有修改授权时只给结论和证据。
+4. 根据实际任务读取最小参考，不因关键词加载所有文件。
 
-| 类型 | 规范 | 示例 |
-| --- | --- | --- |
-| 文件名 | 下划线分隔 | `device_api.go` |
-| 结构体 | 大驼峰 | `AccountRecord` |
-| 导出函数 | 大驼峰 | `GenerateAccessToken` |
-| 私有函数 | 小驼峰 | `getTenantId` |
-| 全局变量 | 大驼峰 | `Conf`、`Db`、`Rdb` |
-| 局部变量 | 小驼峰 | `tenantId` |
-| 常量 | 全大写下划线 | `ACCESS_TOKEN_EXPIRE_TIME` |
+## 参考路由
 
-## 日志速查
+- 命名、包设计、配置和依赖：读 `references/core-go.md`。
+- 错误、Context、资源和并发：读 `references/errors-context.md`。
+- 日志、敏感信息和可观测性：读 `references/logging-security.md`。
+- `net/http`、Gin、Echo、Chi 等 HTTP API：读 `references/http-api.md`。
+- gRPC、Protobuf 或拦截器：读 `references/grpc.md`。
+- `database/sql`、pgx、sqlc、GORM、迁移或 SQL：读 `references/persistence.md`；仓库实际使用 GORM 时再读 `references/gorm-database.md`，编写 SQL 时再读 `sql-standards.md`。
+- 测试、静态检查和生成物：读 `references/testing.md`。
+- 只有需要起始模板时才读取 `examples/`；示例中的包路径和组件必须替换为当前仓库已有实现。
 
-- gRPC 方法入口：`log.Infof("=== MethodName in ===")`
-- gRPC 请求：`log.Infof("request: %+v", req)`，敏感字段先脱敏
-- gRPC 出口：`log.Infof("resp: %+v", resp)` + `log.Infof("=== MethodName out ===")`
-- HTTP Handler 入口：`log.Infof("=== HandlerName in ===")`
-- HTTP Handler 请求：绑定成功后打印脱敏后的 `apiReq`
-- HTTP Handler 出口：统一 `defer` 打印响应和 `log.Infof("=== HandlerName out ===")`
-- 业务错误：`log.Errorf(...)` 后修改业务响应或返回错误，不直接泄露密钥和凭证。
+## 必须规则
 
-## gRPC 必守模板
+- 代码必须通过 `gofmt`；命名遵循 Go 惯例，缩写使用 `ID`、`URL`、`HTTP` 等一致形式。
+- I/O、RPC、数据库和外部 API 调用接收并传播 `context.Context`；不得用 `context.Background()` 绕过已有取消链。
+- 错误使用 `%w` 包装并用 `errors.Is`、`errors.As` 分类；不得依赖错误字符串做业务分支。
+- 文件、响应体、Rows、Ticker、事务和 goroutine 必须有明确的关闭、回收或退出路径。
+- 禁止无界读取、无界并发、goroutine 泄漏、数据竞争，以及忽略关键写入、提交或关闭错误。
+- 不记录或返回凭据、完整敏感请求、内部堆栈、SQL 参数、未受控远端正文或原始内部错误。
+- 不凭空假设框架、中间件、数据库、日志包、配置库和响应协议；版本敏感行为以仓库锁定版本及官方资料为准。
+- 修改共享契约、生成输入、数据库 Schema 或并发状态时，必须检查调用方并补最接近行为边界的测试。
 
-```go
-func (s *Service) MethodName(ctx context.Context, req *pb.MethodRequest) (*pb.MethodResponse, error) {
-    log.Infof("=== MethodName in ===")
-    log.Infof("request: %+v", req)
+## 推荐风格
 
-    resp := &pb.MethodResponse{
-        Code:    int32(codes.OK),
-        Message: codes.Message(codes.OK),
-    }
+仓库没有相反约定时，默认采用以下风格：
 
-    defer func() {
-        log.Infof("resp: %+v", resp)
-        log.Infof("=== MethodName out ===")
-    }()
+- 对话、Markdown 文档和变更说明使用中文；代码标识符、外部协议和依赖名称沿用其英文约定。
+- Handler 只做输入、认证上下文、用例调用和响应映射；业务规则放在 service/application/domain 层。
+- 使用窄接口和构造函数注入依赖，避免包级可变全局变量。
+- 错误码和公开消息集中定义，内部错误只用于日志和诊断，不直接暴露给调用方。
+- 新建普通 JSON 业务 API 时，优先采用 `{code,message,data}`；成功和业务失败可统一使用 HTTP 200，但必须记录协议决定，并为重定向、下载、流式响应、探针和纯 HTTP 协议错误保留真实状态语义。
+- List 数据初始化为空切片，公开 JSON 返回 `[]` 而不是 `null`，除非契约明确要求可空。
+- 在统一中间件或拦截器记录入口、出口、耗时和关联 ID；业务日志记录事件与白名单字段，不打印完整请求或响应。
+- DTO、领域对象和持久化模型分离；转换函数保持显式、可测试，避免传输或 ORM 标签污染领域层。
+- 导出标识符写以名称开头的有意义注释；复杂决策解释原因和约束，不复述代码。
 
-    return resp, nil
-}
-```
+## 完成前
 
-错误分支修改 `resp.Code` 和 `resp.Message` 后 `return resp, nil`；不要把业务错误直接作为 gRPC `error` 返回。
-
-## HTTP Handler 必守模板
-
-普通 JSON HTTP API 统一 HTTP `200 OK`，业务状态通过 `{code,message,data}` 表达。Handler 使用入口日志、预初始化响应、`defer` 统一出口，分支只修改响应体。
-
-```go
-func Xxx(c *gin.Context) {
-    log.Infof("=== Xxx in ===")
-
-    apiResp := response.New()
-    defer func() {
-        log.Infof("resp: %+v", apiResp)
-        log.Infof("=== Xxx out ===")
-        response.JSON(c, apiResp)
-    }()
-
-    var apiReq ApiXxxRequest
-    if err := c.ShouldBindJSON(&apiReq); err != nil {
-        apiResp.SetError(codes.BadRequest)
-        log.Errorf("Xxx ShouldBindJSON error. err[%v]", err)
-        return
-    }
-    log.Infof("request: %+v", apiReq)
-
-    data, err := service.Xxx(c.Request.Context(), &apiReq)
-    if err != nil {
-        apiResp.SetErrorWithMsg(codes.InternalServerError, err.Error())
-        return
-    }
-    apiResp.Data = data
-}
-```
-
-SSE、CSV、文件下载、重定向、静态资源、健康探针等协议特例不强行套普通 JSON 模板。
-
-## 数据库速查
-
-- Model 时间字段用应用层和数据库层双重保险：`autoCreateTime` / `autoUpdateTime` + `default:CURRENT_TIMESTAMP(3)`。
-- json 标签使用 snake_case；线上字段名不同则用 `gorm:"column:..."` 映射。
-- DAO 查询使用 `Db.Debug().WithContext(ctx)`，并手动加 `Where("is_deleted = 0")`。
-- 所有表优先使用 `t_` 前缀；线上已存在表名保持原名。
-- 基础字段包含 `id`、`create_time`、`create_user`、`update_time`、`update_user`、`is_deleted`。
-- 表级声明使用 `ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin`。
-- 普通索引 `idx_`，唯一索引 `uk_`，使用 `KEY` 关键字。
-- 所有字段和表添加中文 `COMMENT`；数据库名用 `${DBNAME}` 占位，不硬编码。
-
-## 修改后检查
-
-- 修改 Go 代码后运行当前仓库要求的 Go 检查，通常至少 `go test ./...` 或项目 Makefile 中的测试命令。
-- 修改 HTTP API、Swagger、响应结构或前端生成类型时，同步更新 DTO、Swagger 注释和生成代码。
-- 修改 SQL、Model 或 DAO 时，对照 `references/gorm-database.md` 和 `sql-standards.md` 检查字段、索引、软删除和时间精度。
+1. 运行仓库真实存在且与改动匹配的格式化、测试、静态检查、竞态检查和生成检查。
+2. 检查实际差异、未跟踪文件、生成物漂移和是否需要同步文档。
+3. 区分已通过检查、条件跳过项、未运行的外部环境验证和剩余风险。
+4. 不把“已编写”“静态检查通过”或“等待 CI”表述成真实环境验证成功。
