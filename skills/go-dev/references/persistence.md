@@ -39,5 +39,5 @@
 ## 技术栈补充
 
 - 使用 GORM 时继续读取 `gorm-database.md`。
-- 编写或评审 SQL、DDL 和迁移时继续读取 `../sql-standards.md`。
+- 编写或评审 SQL、DDL 和迁移时继续读取 `sql-standards.md`。
 - 对版本敏感的驱动、ORM 和迁移行为，查阅仓库锁定版本的官方文档和源码。

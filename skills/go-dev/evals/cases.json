@@ -56,6 +56,13 @@
     "assertions": ["保持只读边界", "按影响排序发现", "不直接实施修复"]
   },
   {
+    "name": "go-dotenv-local-development",
+    "should_trigger": true,
+    "prompt": "给这个通过 os.LookupEnv 读取配置的 Go 服务增加本地 .env 支持，生产由 Kubernetes 注入环境变量。",
+    "expected_refs": ["core-go.md", "testing.md"],
+    "assertions": ["先确认仓库现有配置入口", "生产注入环境变量优先", "缺失文件可选且非法文件安全失败", "提交无凭据的 .env.example", "不使用隐式 autoload 或 Overload"]
+  },
+  {
     "name": "react-component",
     "should_trigger": false,
     "prompt": "实现一个 React 表格组件并优化前端渲染性能。",

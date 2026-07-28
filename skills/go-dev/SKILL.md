@@ -31,7 +31,7 @@ description: 面向通用 Go 项目的开发与评审规范，先识别仓库约
 - 日志、敏感信息和可观测性：读 `references/logging-security.md`。
 - `net/http`、Gin、Echo、Chi 等 HTTP API：读 `references/http-api.md`。
 - gRPC、Protobuf 或拦截器：读 `references/grpc.md`。
-- `database/sql`、pgx、sqlc、GORM、迁移或 SQL：读 `references/persistence.md`；仓库实际使用 GORM 时再读 `references/gorm-database.md`，编写 SQL 时再读 `sql-standards.md`。
+- `database/sql`、pgx、sqlc、GORM、迁移或 SQL：读 `references/persistence.md`；仓库实际使用 GORM 时再读 `references/gorm-database.md`，编写 SQL 时再读 `references/sql-standards.md`。
 - 测试、静态检查和生成物：读 `references/testing.md`。
 - 只有需要起始模板时才读取 `examples/`；示例中的包路径和组件必须替换为当前仓库已有实现。
 

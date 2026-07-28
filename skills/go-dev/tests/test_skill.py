@@ -20,7 +20,7 @@ class GoDevSkillTest(unittest.TestCase):
             "references/persistence.md",
             "references/gorm-database.md",
             "references/testing.md",
-            "sql-standards.md",
+            "references/sql-standards.md",
             "agents/openai.yaml",
             "evals/cases.json",
             "evals/baseline-review.md",
@@ -59,6 +59,19 @@ class GoDevSkillTest(unittest.TestCase):
         description = match.group(1)
         self.assertIn("working in a Go repository", description)
         self.assertIn("repository actually uses that stack", description)
+
+    def test_dotenv_guidance_preserves_deployment_environment(self) -> None:
+        text = (SKILL_DIR / "references/core-go.md").read_text(encoding="utf-8")
+        required = {
+            "`.env` 本地开发约定",
+            "godotenv.Load",
+            "godotenv/autoload",
+            "禁止用 `Overload`",
+            "`.env.example`",
+            "文件缺失、成功加载、外部环境优先和非法文件安全失败",
+        }
+        missing = sorted(value for value in required if value not in text)
+        self.assertEqual([], missing)
 
     def test_eval_set_has_trigger_and_near_miss_coverage(self) -> None:
         cases = json.loads((SKILL_DIR / "evals/cases.json").read_text(encoding="utf-8"))

@@ -15,6 +15,7 @@
 | --- | --- | --- |
 | 创建、审查或改进项目级 `AGENTS.md` | `agents-md-expert` | 只处理 Agent 协作指令，不用于普通 README 或完整架构文档 |
 | 审查代码、PR、架构、安全、性能或常见缺陷 | `code-review-skill` | 适用于审查和反馈；没有修改授权时不要直接实施修复 |
+| 生成、优化或检查中文 commit message，或执行本地提交 | `commit` | 可按明确范围执行 `git add` 和 `git commit`，禁止 `git push` |
 | 探索代码结构、定位符号、分析调用关系或改动影响 | `codegraph` | 精确字符串、配置和非代码文本优先使用 `rg` |
 | 创建、编辑、审查或导出 Draw.io 图表 | `drawio-skill` | 明确要求 Mermaid 或定量数据图表时不要使用 |
 | 查找或安装外部 Skill | `find-skills` | 已经指定要修改某个现有 Skill 时不需要先搜索 |
