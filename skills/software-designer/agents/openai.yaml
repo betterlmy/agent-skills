@@ -1,4 +1,0 @@
-interface:
-  display_name: "Software Designer"
-  short_description: "生成或从代码逆向软件设计文档"
-  default_prompt: "使用 $software-designer 根据需求或现有代码生成一份证据清晰、规模适度的软件设计文档。"

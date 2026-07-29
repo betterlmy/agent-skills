@@ -1,6 +1,9 @@
 # agent-skills
 
 [![skills.sh](https://skills.sh/b/betterlmy/agent-skills)](https://skills.sh/betterlmy/agent-skills)
+[![GitHub Stars](https://img.shields.io/github/stars/betterlmy/agent-skills?style=flat)](https://github.com/betterlmy/agent-skills/stargazers)
+[![GitHub License](https://img.shields.io/github/license/betterlmy/agent-skills)](https://github.com/betterlmy/agent-skills/blob/main/LICENSE)
+[![Last Commit](https://img.shields.io/github/last-commit/betterlmy/agent-skills)](https://github.com/betterlmy/agent-skills/commits/main)
 
 [English README](README.md)
 
