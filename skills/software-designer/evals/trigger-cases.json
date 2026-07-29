@@ -1,0 +1,72 @@
+[
+  {
+    "name": "forward-system-design",
+    "should_trigger": true,
+    "prompt": "根据这份订单系统需求写一份标准的软件设计文档，包含架构、数据、接口和核心时序图。",
+    "expected_mode": "正向设计",
+    "assertions": ["先固定范围和约束", "设计深度与需求相称", "需求可追踪到验证"]
+  },
+  {
+    "name": "reverse-existing-repository",
+    "should_trigger": true,
+    "prompt": "阅读当前仓库的代码、数据库迁移和测试，逆向整理一份现状软件设计说明书。",
+    "expected_mode": "代码逆向",
+    "assertions": ["结论引用代码证据", "区分已确认、推断和待确认", "不修改业务代码"]
+  },
+  {
+    "name": "as-is-and-to-be",
+    "should_trigger": true,
+    "prompt": "先从旧系统代码还原当前架构，再给出拆分报表模块的目标设计和迁移步骤。",
+    "expected_mode": "代码逆向加目标设计",
+    "assertions": ["现状与目标分开", "记录取舍和迁移风险", "不把建议写成现状"]
+  },
+  {
+    "name": "incremental-document-update",
+    "should_trigger": true,
+    "prompt": "支付回调新增了幂等表和补偿任务，请根据代码更新现有 docs/software-design.md。",
+    "expected_mode": "增量维护",
+    "assertions": ["只更新受影响章节", "核对数据和时序图", "保留无关现有内容"]
+  },
+  {
+    "name": "small-feature-design",
+    "should_trigger": true,
+    "prompt": "为批量导出功能写一个简版技术设计，重点说明异步任务、文件权限和失败重试。",
+    "expected_mode": "正向设计简版",
+    "assertions": ["不套用整套系统模板", "覆盖安全与失败路径", "给出可验证标准"]
+  },
+  {
+    "name": "messy-repository-evidence",
+    "should_trigger": true,
+    "prompt": "仓库 README 和代码说法不一致，请以可核实证据为准整理设计文档，并列出无法确认的运行配置。",
+    "expected_mode": "代码逆向",
+    "assertions": ["记录资料冲突", "不猜测生产配置", "列出证据缺口"]
+  },
+  {
+    "name": "standalone-mermaid",
+    "should_trigger": false,
+    "prompt": "只给我画一张登录流程的 Mermaid 时序图，不需要设计文档。",
+    "expected_mode": "不触发",
+    "assertions": ["不因时序图关键词触发完整设计文档流程"]
+  },
+  {
+    "name": "implementation-only",
+    "should_trigger": false,
+    "prompt": "在现有服务里实现学生选课接口并补充单元测试。",
+    "expected_mode": "不触发",
+    "assertions": ["直接实现业务代码不属于文档设计任务"]
+  },
+  {
+    "name": "code-review-only",
+    "should_trigger": false,
+    "prompt": "只审查这个 PR 是否有 SQL 注入和并发问题，不要生成文档。",
+    "expected_mode": "不触发",
+    "assertions": ["单次代码审查不触发"]
+  },
+  {
+    "name": "requirements-only",
+    "should_trigger": false,
+    "prompt": "采访业务人员并整理学生管理系统的用户故事和需求规格说明书。",
+    "expected_mode": "不触发",
+    "assertions": ["仅需求分析不触发软件设计"]
+  }
+]

@@ -24,6 +24,7 @@ A production-ready skill is:
 - **Small by default**: keep `SKILL.md` close to 100 lines when practical; split rare or detailed material into one-level `references/` files.
 - **Operational**: deterministic or repeated work lives in `scripts/`; reusable output material lives in `assets/`.
 - **Portable**: avoid private paths, time-sensitive facts, hidden environment assumptions, and tool names that are not actually available.
+- **Independent**: a packaged skill does not name, invoke, link to, or depend on sibling skills; central repository indexes own cross-skill routing and composition guidance.
 - **Validated**: run available validators and the bundled static audit script.
 - **Forward-tested**: important skills are tried on realistic prompts, preferably against a no-skill or previous-version baseline.
 
@@ -43,7 +44,7 @@ A production-ready skill is:
 
 ## Review Workflow
 
-For reviews, read the skill directory first: `SKILL.md`, metadata files, scripts, references, assets list, and any tests/evals. Then run:
+For reviews, read the skill directory first: `SKILL.md`, metadata files, scripts, references, assets list, and any tests/evals. Check that every required workflow, resource, fallback, and validation step remains usable when the skill is installed by itself. Then run:
 
 ```bash
 python3 scripts/audit_skill.py <path-to-skill>

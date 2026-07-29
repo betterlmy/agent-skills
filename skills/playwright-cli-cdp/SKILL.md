@@ -23,6 +23,8 @@ Use a 15 second page/navigation timeout by default. Run `playwright-cli` through
 
 Override the page/navigation timeout only when needed with `PLAYWRIGHT_CLI_CDP_PAGE_TIMEOUT_MS=<milliseconds>`. If navigation times out, report the timeout and inspect the current page state through the existing CDP session; do not close or restart the endpoint unless the user asks.
 
+The wrapper redirects playwright-cli output (console logs `console-*.log`, page snapshots `page-*.yml`) to a dedicated temp directory (`$TMPDIR/playwright-cli-cdp` on macOS/Linux/WSL2, `%TEMP%\playwright-cli-cdp` on Windows) so the working directory stays clean. playwright-cli always writes snapshot/console output to files in skill mode and only returns a link, so `read` that linked path when the page snapshot content is needed. A built-in size budget (`PLAYWRIGHT_MCP_OUTPUT_MAX_SIZE`, default 50 MiB) automatically reclaims the oldest files across runs; files written by the current command are never deleted. Override either with `PLAYWRIGHT_MCP_OUTPUT_DIR` or `PLAYWRIGHT_MCP_OUTPUT_MAX_SIZE`.
+
 ## Quick start
 
 Resolve bundled scripts relative to this skill directory before running them.

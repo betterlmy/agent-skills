@@ -14,6 +14,18 @@ if ($PageTimeoutMs -lt 1) {
 
 $env:PLAYWRIGHT_MCP_TIMEOUT_NAVIGATION = [string]$PageTimeoutMs
 
+# Redirect playwright-cli output (console logs, page snapshots) to a dedicated
+# temp directory so the working directory stays clean. A fixed subdirectory lets
+# the built-in outputMaxSize budget reclaim old files across runs; the budget
+# never deletes files written by the current command. Both vars stay overridable.
+if (-not $env:PLAYWRIGHT_MCP_OUTPUT_DIR) {
+  $env:PLAYWRIGHT_MCP_OUTPUT_DIR = Join-Path $env:TEMP 'playwright-cli-cdp'
+}
+if (-not $env:PLAYWRIGHT_MCP_OUTPUT_MAX_SIZE) {
+  $env:PLAYWRIGHT_MCP_OUTPUT_MAX_SIZE = '52428800'  # 50 MiB
+}
+New-Item -ItemType Directory -Force -Path $env:PLAYWRIGHT_MCP_OUTPUT_DIR | Out-Null
+
 $PlaywrightCli = Get-Command playwright-cli -ErrorAction SilentlyContinue
 if ($PlaywrightCli) {
   & playwright-cli @args

@@ -16,11 +16,13 @@
 | [`drawio-skill`](skills/drawio-skill/SKILL.md) | 创建、编辑、审查、验证和导出 Draw.io 图表 | `npx skills add betterlmy/agent-skills --skill drawio-skill` |
 | [`find-skills`](skills/find-skills/SKILL.md) | 从开放的 agent skills 生态中发现并安装 Skill | `npx skills add betterlmy/agent-skills --skill find-skills` |
 | [`go-dev`](skills/go-dev/SKILL.md) | 按仓库约束和实际技术栈规范 Go 开发、评审、API、并发、持久化与测试 | `npx skills add betterlmy/agent-skills --skill go-dev` |
+| [`go-auditor`](skills/go-auditor/SKILL.md) | 审计仓库、模块、package、目录、文件集、高风险域或 Go diff，输出证据可追溯的质量报告 | `npx skills add betterlmy/agent-skills --skill go-auditor` |
 | [`go-mcp-builder`](skills/go-mcp-builder/SKILL.md) | 使用 `mcp-go` 和 Streamable HTTP 构建 Go MCP Server | `npx skills add betterlmy/agent-skills --skill go-mcp-builder` |
 | [`mermaid-diagrams`](skills/mermaid-diagrams/SKILL.md) | 使用 Mermaid 创建流程图、时序图、ER 图和 C4 模型等软件图表 | `npx skills add betterlmy/agent-skills --skill mermaid-diagrams` |
 | [`playwright-cli-cdp`](skills/playwright-cli-cdp/SKILL.md) | 使用 `playwright-cli` 通过 CDP 控制 Chrome 系浏览器 | `npx skills add betterlmy/agent-skills --skill playwright-cli-cdp` |
 | [`rag-agent-builder`](skills/rag-agent-builder/SKILL.md) | 使用嵌入、向量数据库、检索和评估能力构建 RAG 应用 | `npx skills add betterlmy/agent-skills --skill rag-agent-builder` |
 | [`skill-engineer`](skills/skill-engineer/SKILL.md) | 创建、改进、审查和评估生产可用的 agent skills | `npx skills add betterlmy/agent-skills --skill skill-engineer` |
+| [`software-designer`](skills/software-designer/SKILL.md) | 根据需求生成可追踪的软件设计文档，或根据现有代码和证据逆向还原设计 | `npx skills add betterlmy/agent-skills --skill software-designer` |
 
 ## 安装
 
@@ -46,12 +48,14 @@ npx skills add betterlmy/agent-skills --skill <skill-name> -a claude-code -g -y
 - `code-review-skill` 提供跨语言的架构、安全、性能、质量和正确性审查指南。
 - `codegraph` 封装代码库索引、符号定位、调用分析和改动影响分析工作流。
 - `go-dev` 先识别仓库约束和实际技术栈，再提供 Go 编码、错误、Context、日志、HTTP/gRPC、持久化、并发和测试规范；统一响应等偏好只在仓库无相反约定时作为推荐默认值。
+- `go-auditor` 可审计整个 Go 仓库、模块、package、目录、文件集、高风险域或本地与指定 revision 的 diff，产出边界明确、按优先级排序的证据报告；`go-dev` 用于落实代码修改。
 - `go-mcp-builder` 提供基于 `mark3labs/mcp-go` 与 Streamable HTTP 的 Go MCP Server 完整开发流程。
 
 ### 设计与图表
 
 - `drawio-skill` 支持 Draw.io 架构图、流程图、ER/UML/时序图、视觉检查及 Office 安全导出。
 - `mermaid-diagrams` 覆盖使用 Mermaid 语法维护可版本控制的软件图表。
+- `software-designer` 根据需求生成规模适度的 Markdown 软件设计文档，或依据代码、配置、Schema 和测试还原现状设计。
 
 ### 自动化与内容
 

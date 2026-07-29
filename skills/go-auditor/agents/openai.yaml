@@ -1,0 +1,4 @@
+interface:
+  display_name: "Go Auditor"
+  short_description: "审计不同范围的 Go 代码并输出证据报告"
+  default_prompt: "使用 $go-auditor 审计我指定范围的 Go 代码，并输出证据可追溯、边界明确的质量报告。"

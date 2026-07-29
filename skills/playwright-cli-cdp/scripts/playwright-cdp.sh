@@ -12,6 +12,15 @@ fi
 
 export PLAYWRIGHT_MCP_TIMEOUT_NAVIGATION="$page_timeout_ms"
 
+# Redirect playwright-cli output (console logs, page snapshots) to a dedicated
+# temp directory so the working directory stays clean. A fixed subdirectory lets
+# the built-in outputMaxSize budget reclaim old files across runs; the budget
+# never deletes files written by the current command. Both vars stay overridable.
+: "${PLAYWRIGHT_MCP_OUTPUT_DIR:=${TMPDIR:-/tmp}/playwright-cli-cdp}"
+: "${PLAYWRIGHT_MCP_OUTPUT_MAX_SIZE:=52428800}"  # 50 MiB
+export PLAYWRIGHT_MCP_OUTPUT_DIR PLAYWRIGHT_MCP_OUTPUT_MAX_SIZE
+mkdir -p "$PLAYWRIGHT_MCP_OUTPUT_DIR"
+
 if command -v playwright-cli >/dev/null 2>&1; then
   exec playwright-cli "$@"
 fi

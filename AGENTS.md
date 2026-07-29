@@ -30,6 +30,16 @@ This file applies to the entire repository. A more deeply nested `AGENTS.md` add
 - Do not add secrets, credentials, private machine paths, generated caches, dependency directories, or build output.
 - When adding, removing, or renaming a skill, update both root README files and `SKILLS-GUID.md` in the same change. Update `SKILLS-GUID.md` when a skill's trigger conditions or boundaries change materially.
 
+### Skill 独立性设计原则
+
+- 每个 `skills/<skill-name>/` 都必须是可单独安装、读取、执行和验证的独立分发包；假设其他 sibling skill 均未安装。
+- 一个 skill 的 `SKILL.md`、metadata、references、scripts、assets、examples、evals 和 tests 不得点名、调用、组合、链接或依赖其他 sibling skill，也不得读取 `../<other-skill>/` 下的文件。
+- 不要在 skill 包内写“改用某个 skill”“组合某个 skill”或“先运行某个 skill”等路由说明。跨 skill 的选择、互补关系和组合流程只能写在仓库根 `README.md`、`README.zh-CN.md` 或 `SKILLS-GUID.md` 等中央索引中。
+- 能力边界必须用任务类型描述，例如“本 Skill 不用于仅审查单次 PR/diff”，不要用其他 skill 名称描述边界。
+- 如果工作流依赖外部 CLI、MCP、SDK、运行时或服务，当前 skill 必须自行说明前置条件、授权边界、调用方式、失败降级和验证方法；外部工具与 sibling skill 同名时，也不得把对应 sibling skill 当作前置条件。
+- 当前 skill 所需的私有模板、脚本和参考资料必须放入自身目录并从 `SKILL.md` 可发现；不得用跨包相对路径、指向包外的符号链接或用户机器上的另一个 skill 安装路径复用资源。
+- 审查或修改 skill 时，必须运行独立性检查；发现 sibling 名称引用、越出包目录的本地 Markdown 链接或包外符号链接时视为失败，不得以“组合使用更方便”为理由保留。
+
 ## Validation
 
 Run commands from the repository root unless another directory is specified.

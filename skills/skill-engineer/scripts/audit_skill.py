@@ -8,10 +8,13 @@ import os
 import re
 import sys
 from pathlib import Path
+from urllib.parse import unquote, urlparse
 
 
 MAX_DESCRIPTION = 1024
 MAX_SKILL_MD_LINES = 140
+SKIP_DIRS = {".git", "__pycache__", "dist", "node_modules"}
+AMBIGUOUS_SKILL_NAMES = {"commit"}
 
 
 def fail(message: str) -> str:
@@ -36,16 +39,148 @@ def parse_frontmatter(text: str) -> tuple[dict[str, str], list[str]]:
         return {}, [fail("SKILL.md frontmatter delimiter is invalid")]
 
     frontmatter: dict[str, str] = {}
-    for raw_line in match.group(1).splitlines():
+    raw_lines = match.group(1).splitlines()
+    index = 0
+    while index < len(raw_lines):
+        raw_line = raw_lines[index]
         line = raw_line.strip()
         if not line or line.startswith("#"):
+            index += 1
+            continue
+        if raw_line[:1].isspace():
+            index += 1
             continue
         if ":" not in line:
             issues.append(warn(f"frontmatter line is not key/value: {raw_line}"))
+            index += 1
             continue
         key, value = line.split(":", 1)
-        frontmatter[key.strip()] = value.strip().strip('"').strip("'")
+        key = key.strip()
+        value = value.strip()
+        if re.fullmatch(r"[|>][-+]?", value):
+            block_lines: list[str] = []
+            index += 1
+            while index < len(raw_lines):
+                block_line = raw_lines[index]
+                if block_line and not block_line[:1].isspace():
+                    break
+                block_lines.append(block_line.strip())
+                index += 1
+            separator = " " if value.startswith(">") else "\n"
+            frontmatter[key] = separator.join(block_lines).strip()
+            continue
+        frontmatter[key] = value.strip('"').strip("'")
+        index += 1
     return frontmatter, issues
+
+
+def is_within(path: Path, directory: Path) -> bool:
+    try:
+        path.relative_to(directory)
+    except ValueError:
+        return False
+    return True
+
+
+def package_files(skill_dir: Path) -> list[Path]:
+    files: list[Path] = []
+    for path in skill_dir.rglob("*"):
+        relative = path.relative_to(skill_dir)
+        if any(part in SKIP_DIRS for part in relative.parts):
+            continue
+        if path.is_file() or path.is_symlink():
+            files.append(path)
+    return sorted(files)
+
+
+def sibling_skill_names(skill_dir: Path) -> list[str]:
+    names: list[str] = []
+    for sibling in skill_dir.parent.iterdir():
+        sibling_md = sibling / "SKILL.md"
+        if sibling == skill_dir or not sibling_md.is_file():
+            continue
+        try:
+            sibling_text = sibling_md.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue
+        frontmatter, _ = parse_frontmatter(sibling_text)
+        name = frontmatter.get("name", "")
+        if name:
+            names.append(name)
+    return sorted(set(names))
+
+
+def read_text(path: Path) -> str | None:
+    try:
+        return path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return None
+
+
+def cross_skill_reference_results(skill_dir: Path) -> list[str]:
+    results: list[str] = []
+    names = sibling_skill_names(skill_dir)
+    if not names:
+        return results
+
+    for path in package_files(skill_dir):
+        if path.is_symlink():
+            continue
+        text = read_text(path)
+        if text is None:
+            continue
+        relative = path.relative_to(skill_dir)
+        for line_number, line in enumerate(text.splitlines(), 1):
+            for name in names:
+                escaped = re.escape(name)
+                if name in AMBIGUOUS_SKILL_NAMES:
+                    patterns = (
+                        rf"\${escaped}(?![a-z0-9-])",
+                        rf"\bskill\b[^\n]{{0,40}}`?{escaped}`?",
+                        rf"`?{escaped}`?[^\n]{{0,40}}\bskill\b",
+                        rf"(?:^|[/.])skills/{escaped}(?:/|$)",
+                    )
+                else:
+                    patterns = (rf"(?<![a-z0-9-]){escaped}(?![a-z0-9-])",)
+                if any(re.search(pattern, line, re.IGNORECASE) for pattern in patterns):
+                    results.append(
+                        fail(f"cross-skill reference to '{name}': {relative}:{line_number}")
+                    )
+    return results
+
+
+def external_link_results(skill_dir: Path) -> list[str]:
+    results: list[str] = []
+    link_pattern = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
+    root = skill_dir.resolve()
+
+    for path in package_files(skill_dir):
+        relative = path.relative_to(skill_dir)
+        if path.is_symlink():
+            target = path.resolve(strict=False)
+            if not is_within(target, root):
+                results.append(fail(f"symlink points outside skill package: {relative} -> {target}"))
+            continue
+
+        text = read_text(path)
+        if text is None:
+            continue
+        for line_number, line in enumerate(text.splitlines(), 1):
+            for match in link_pattern.finditer(line):
+                raw_target = match.group(1).strip().strip("<>")
+                target_text = raw_target.split(maxsplit=1)[0]
+                parsed = urlparse(target_text)
+                if parsed.scheme or target_text.startswith("#"):
+                    continue
+                target_path = unquote(target_text.split("#", 1)[0])
+                if not target_path:
+                    continue
+                resolved = (path.parent / target_path).resolve(strict=False)
+                if not is_within(resolved, root):
+                    results.append(
+                        fail(f"link points outside skill package: {relative}:{line_number} -> {target_text}")
+                    )
+    return results
 
 
 def audit(skill_dir: Path) -> list[str]:
@@ -121,6 +256,9 @@ def audit(skill_dir: Path) -> list[str]:
             results.append(ok("agents/openai.yaml has display and short description"))
         else:
             results.append(warn("agents/openai.yaml is missing display_name or short_description"))
+
+    results.extend(cross_skill_reference_results(skill_dir))
+    results.extend(external_link_results(skill_dir))
 
     return results
 

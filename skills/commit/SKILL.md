@@ -1,6 +1,8 @@
 ---
 name: commit
 description: 根据用户说明或 Git 变更生成、检查中文 commit message，并在用户明确要求时执行本地提交。Use when 用户要求编写、优化或检查 commit message，或要求暂存并提交本地变更；支持 git commit，但禁止 git push。
+user-invocable: true
+argument-hint: "[提交范围或补充要求]"
 ---
 
 # Commit Message

@@ -37,6 +37,8 @@ Use this rubric when reviewing or improving an existing skill.
 ### Production Behavior
 
 - A new agent can use the skill without hidden conversation context.
+- The package does not name, invoke, link to, or depend on sibling skills; cross-skill routing exists only in central repository indexes.
+- Markdown links and symlinks stay inside the package unless they target public external documentation.
 - The skill does not depend on a tool, MCP, package, or environment variable unless documented.
 - Domain-specific skills cite or request current source material.
 - Important claims are tested on realistic prompts.
@@ -58,4 +60,3 @@ Then include:
 - Open questions or assumptions.
 - Validation performed.
 - Short change summary if edits were made.
-
