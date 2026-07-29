@@ -38,7 +38,7 @@ class SoftwareDesignerSkillTests(unittest.TestCase):
         )
         self.assertIn("### 修订记录", template)
         self.assertIn("## 11. 追踪矩阵", template)
-        self.assertIn("## 12. 代码证据", template)
+        self.assertIn("## 12. 设计依据", template)
 
     def test_skill_defines_non_blocking_unknowns_and_recommendations(self):
         skill_text = (SKILL_DIR / "SKILL.md").read_text(encoding="utf-8")
@@ -46,6 +46,38 @@ class SoftwareDesignerSkillTests(unittest.TestCase):
         self.assertIn("技术中立设计", skill_text)
         self.assertIn("**建议**", skill_text)
         self.assertIn("理由、代价和需要确认的责任角色", skill_text)
+
+    def test_formation_method_does_not_replace_document_semantics(self):
+        skill_text = (SKILL_DIR / "SKILL.md").read_text(encoding="utf-8")
+        standard = (SKILL_DIR / "references/document-standard.md").read_text(
+            encoding="utf-8"
+        )
+        reverse = (SKILL_DIR / "references/reverse-engineering.md").read_text(
+            encoding="utf-8"
+        )
+        template = (
+            SKILL_DIR / "templates/software-design-document.md"
+        ).read_text(encoding="utf-8")
+        example = (
+            SKILL_DIR / "examples/student-management-system.md"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("文档语义不随形成方式改变", skill_text)
+        self.assertIn("不得用分析任务代替系统目的", skill_text)
+        self.assertIn("不得用“分析代码”", standard)
+        self.assertIn("识别系统背景与建设目标", reverse)
+        self.assertIn("不要描述本次分析、逆向或文档编写任务", template)
+        self.assertIn("| 形成方式 |", template)
+        self.assertIn("| 事实基准 |", template)
+        self.assertNotIn("| 设计模式 |", template)
+        self.assertIn("| 形成方式 |", example)
+
+    def test_template_separates_test_presence_from_execution_result(self):
+        template = (SKILL_DIR / "templates/software-design-document.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("证据状态/执行结果", template)
+        self.assertIn("测试存在/本次通过/未运行", template)
 
 if __name__ == "__main__":
     unittest.main()
