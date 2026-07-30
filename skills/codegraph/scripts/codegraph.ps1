@@ -3,6 +3,7 @@
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = "Stop"
 $CliArgs = @($args)
+$VerifiedCodeGraphVersion = "1.4.1"
 
 function Show-Usage {
     @"
@@ -93,9 +94,27 @@ if ($CommandName -in @("help", "-h", "--help")) {
 $Rest = @(Get-Tail $CliArgs 1)
 $script:CodeGraphBin = Get-CodeGraphBin
 
+if ($CommandName -ne "raw" -and $Rest.Count -gt 0 -and $Rest[0] -in @("-h", "--help")) {
+    Invoke-CodeGraph @($CommandName, "--help")
+}
+
 switch ($CommandName) {
     "check" {
-        Invoke-CodeGraph @("--version")
+        $CurrentVersion = (& $script:CodeGraphBin --version | Select-Object -First 1)
+        if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($CurrentVersion)) {
+            Fail "无法读取 CodeGraph 版本。"
+        }
+        Write-Output $CurrentVersion
+        if ($CurrentVersion.TrimStart("v") -ne $VerifiedCodeGraphVersion) {
+            [Console]::Error.WriteLine("警告: 当前 CodeGraph 版本为 $CurrentVersion，本 Skill 本机验证版本为 $VerifiedCodeGraphVersion；将继续检查关键能力。")
+        }
+        foreach ($Capability in @("status", "explore", "node", "affected")) {
+            & $script:CodeGraphBin $Capability --help *> $null
+            if ($LASTEXITCODE -ne 0) {
+                Fail "当前 CodeGraph 缺少必需能力: $Capability --help"
+            }
+        }
+        exit 0
     }
     "raw" {
         if ($Rest.Count -eq 0) { Fail "raw 需要传入 codegraph 原生命令参数。" }

@@ -5,6 +5,8 @@ description: Creates, edits, reviews, and exports Draw.io diagrams. Use when the
 license: MIT
 homepage: https://github.com/Agents365-ai/drawio-skill
 compatibility: Requires Draw.io Desktop for local rendering; PPT-safe SVG additionally requires Poppler pdftocairo. Vision is optional for visual QA.
+external-cli: true
+cli-compatibility: references/cli-compatibility.md
 platforms: [macos, linux, windows]
 metadata: {"openclaw":{"requires":{"anyBins":["draw.io","drawio"]},"emoji":"📐","os":["darwin","linux","win32"],"install":[{"id":"brew-drawio","kind":"brew","formula":"drawio","bins":["draw.io"],"label":"Install draw.io via Homebrew","os":["darwin"]}]},"hermes":{"tags":["drawio","diagram","flowchart","architecture","visualization","uml"],"category":"design","requires_tools":["draw.io"],"related_skills":["mermaid","excalidraw","plantuml"]},"author":"Agents365-ai","version":"1.6.0"}
 ---
@@ -26,6 +28,7 @@ Read only the resources needed for the current request:
 | `references/style-extraction.md` | Extracting a style from Draw.io XML or an image |
 | `references/export.md` | Exporting PNG/SVG/PDF/JPG or choosing editable versus PPT-safe output |
 | `references/troubleshooting.md` | Rendering, CLI, layout, PNG, SVG, font, or background failures |
+| `references/cli-compatibility.md` | CLI 版本、必需导出能力或版本漂移 |
 
 Deterministic helpers:
 

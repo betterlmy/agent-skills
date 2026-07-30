@@ -29,6 +29,7 @@ This file applies to the entire repository. A more deeply nested `AGENTS.md` add
 - Reference bundled scripts and reference documents from `SKILL.md` so agents can discover when to use them.
 - Do not add secrets, credentials, private machine paths, generated caches, dependency directories, or build output.
 - When adding, removing, or renaming a skill, update both root README files and `SKILLS-GUID.md` in the same change. Update `SKILLS-GUID.md` when a skill's trigger conditions or boundaries change materially.
+- 强依赖外部 CLI 命令、参数、输出字段或内部 API 的 Skill，必须在 frontmatter 设置 `external-cli: true`，用 `cli-compatibility` 指向包内兼容性契约，并由 `SKILL.md` 直接链接。契约必须记录本机验证版本或明确说明未安装，列出关键能力探测和版本不一致时的处理；没有跨版本测试证据时，不得把单一验证版本表述为完整支持范围。
 
 ### Skill 独立性设计原则
 

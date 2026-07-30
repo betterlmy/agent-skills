@@ -49,6 +49,7 @@ package:
 	  find . -type f \
 	    ! -path './.git/*' \
 	    ! -path './.codegraph/*' \
+	    ! -path './.playwright-cli/*' \
 	    ! -path './dist/*' \
 	    ! -path './.venv/*' \
 	    ! -path './.pytest_cache/*' \
@@ -80,6 +81,7 @@ list:
 	  find . -type f \
 	    ! -path './.git/*' \
 	    ! -path './.codegraph/*' \
+	    ! -path './.playwright-cli/*' \
 	    ! -path './dist/*' \
 	    ! -path './.venv/*' \
 	    ! -path './.pytest_cache/*' \

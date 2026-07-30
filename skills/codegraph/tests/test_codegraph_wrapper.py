@@ -57,6 +57,30 @@ class CodeGraphWrapperTest(unittest.TestCase):
         project.mkdir()
         self.assertEqual(["--version"], self.run_wrapper("check", cwd=project).stdout.splitlines())
 
+    def test_check_warns_when_version_differs_from_verified_baseline(self) -> None:
+        result = self.run_wrapper("check")
+
+        self.assertIn("本机验证版本为 1.4.1", result.stderr)
+
+    def test_check_rejects_missing_required_capability(self) -> None:
+        self.write_executable(
+            self.fake_bin,
+            """#!/usr/bin/env bash
+if [[ "${1:-}" == "--version" ]]; then printf '1.4.1\n'; exit 0; fi
+if [[ "${1:-}" == "node" && "${2:-}" == "--help" ]]; then exit 2; fi
+exit 0
+""",
+        )
+
+        result = self.run_wrapper("check", check=False)
+
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("缺少必需能力: node --help", result.stderr)
+
+    def test_subcommand_help_does_not_require_project_or_symbol(self) -> None:
+        self.assertEqual(["impact", "--help"], self.output("impact", "--help"))
+        self.assertEqual(["--help"], self.output("raw", "--help"))
+
     def test_default_json_commands_without_optional_arguments(self) -> None:
         cases = {
             ("status", "."): ["status", "--json", "."],

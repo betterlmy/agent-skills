@@ -1,6 +1,8 @@
 ---
 name: mermaid-diagrams
 description: Comprehensive guide for creating software diagrams using Mermaid syntax. Use when users need to create, visualize, or document software through diagrams including class diagrams (domain modeling, object-oriented design), sequence diagrams (application flows, API interactions, code execution), flowcharts (processes, algorithms, user journeys), entity relationship diagrams (database schemas), C4 architecture diagrams (system context, containers, components), state diagrams, git graphs, pie charts, gantt charts, or any other diagram type. Triggers include requests to "diagram", "visualize", "model", "map out", "show the flow", or when explaining system architecture, database design, code structure, or user/application flows.
+external-cli: true
+cli-compatibility: references/cli-compatibility.md
 ---
 
 # Mermaid Diagramming
@@ -182,6 +184,8 @@ flowchart LR
 
 ## Exporting and Rendering
 
+命令行导出前先阅读 [CLI 兼容性契约](references/cli-compatibility.md)。本机当前未安装 `mmdc`，因此下列命令是待验证路径，不代表本机已验证兼容。
+
 **Native support in:**
 - GitHub/GitLab - Automatically renders in Markdown
 - VS Code - With Markdown Mermaid extension
@@ -189,8 +193,8 @@ flowchart LR
 
 **Export options:**
 - [Mermaid Live Editor](https://mermaid.live) - Online editor with PNG/SVG export
-- Mermaid CLI - `npm install -g @mermaid-js/mermaid-cli` then `mmdc -i input.mmd -o output.png`
-- Docker - `docker run --rm -v $(pwd):/data minlag/mermaid-cli -i /data/input.mmd -o /data/output.png`
+- Mermaid CLI - 获得用户安装授权后运行 `npm install -g @mermaid-js/mermaid-cli`，再用 `mmdc --version`、`mmdc --help` 和最小图验证后执行 `mmdc -i input.mmd -o output.png`
+- Docker - 本机未验证；获得用户授权后选择明确镜像 tag，先验证 `mmdc --version` 和最小图，不要用未固定的默认 tag 作为兼容性依据
 
 ## Common Pitfalls
 

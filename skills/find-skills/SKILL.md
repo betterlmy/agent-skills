@@ -1,6 +1,8 @@
 ---
 name: find-skills
 description: Helps users discover and install agent skills when they ask questions like "how do I do X", "find a skill for X", "is there a skill that can...", or express interest in extending capabilities. This skill should be used when the user is looking for functionality that might exist as an installable skill.
+external-cli: true
+cli-compatibility: references/cli-compatibility.md
 ---
 
 # Find Skills
@@ -21,6 +23,8 @@ Use this skill when the user:
 ## What is the Skills CLI?
 
 The Skills CLI (`npx skills`) is the package manager for the open agent skills ecosystem. Skills are modular packages that extend agent capabilities with specialized knowledge, workflows, and tools.
+
+依赖这些命令前，先阅读 [CLI 兼容性契约](references/cli-compatibility.md) 并尝试 `npx --no-install skills --help`。当前机器没有本地安装的 Skills CLI，因此命令可用性尚未验证。未经用户授权，不得让 `npx` 下载包。
 
 **Key commands:**
 

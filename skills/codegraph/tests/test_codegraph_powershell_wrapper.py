@@ -49,6 +49,10 @@ class CodeGraphPowerShellWrapperTest(unittest.TestCase):
             self.run_wrapper("status", "project path"),
         )
 
+    def test_subcommand_help_does_not_require_project_or_symbol(self) -> None:
+        self.assertEqual(["impact", "--help"], self.run_wrapper("impact", "--help"))
+        self.assertEqual(["--help"], self.run_wrapper("raw", "--help"))
+
     def test_explore_and_node_preserve_spaces(self) -> None:
         self.assertEqual(
             ["explore", "--path", "project path", "auth flow"],

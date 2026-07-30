@@ -5,6 +5,7 @@ HOST="${CDP_HOST:-127.0.0.1}"
 PORT="${CDP_PORT:-9222}"
 ENDPOINT="${CDP_ENDPOINT:-http://${HOST}:${PORT}}"
 TIMEOUT_SECONDS="${CDP_TIMEOUT_SECONDS:-15}"
+VERIFIED_PLAYWRIGHT_CLI_VERSION="0.1.17"
 
 failures=0
 warnings=0
@@ -83,14 +84,30 @@ case "$(uname -s 2>/dev/null || printf unknown)" in
   *) warn "platform could not be identified; continue if Chrome-family CDP is reachable" ;;
 esac
 
+playwright_command=()
 if command -v playwright-cli >/dev/null 2>&1; then
-  version="$(playwright-cli --version 2>/dev/null | head -n 1 || true)"
-  ok "playwright-cli is available${version:+: $version}"
+  playwright_command=(playwright-cli)
 elif command -v npx >/dev/null 2>&1 && npx --no-install playwright-cli --version >/dev/null 2>&1; then
-  version="$(npx --no-install playwright-cli --version 2>/dev/null | head -n 1 || true)"
-  ok "local playwright-cli is available through npx${version:+: $version}"
+  playwright_command=(npx --no-install playwright-cli)
 else
   fail "playwright-cli is not available; install it or provide a local package usable with npx --no-install"
+fi
+
+if [[ "${#playwright_command[@]}" -gt 0 ]]; then
+  version="$("${playwright_command[@]}" --version 2>/dev/null | head -n 1 || true)"
+  ok "playwright-cli is available${version:+: $version}"
+  if [[ -z "$version" ]]; then
+    fail "playwright-cli 未返回版本"
+  elif [[ "${version#v}" != "$VERIFIED_PLAYWRIGHT_CLI_VERSION" ]]; then
+    warn "playwright-cli 当前版本 $version 与本机验证版本 $VERIFIED_PLAYWRIGHT_CLI_VERSION 不同；以能力检查结果为准"
+  fi
+
+  cli_help="$("${playwright_command[@]}" --help 2>/dev/null || true)"
+  for capability in attach snapshot run-code tracing-start video-start; do
+    if ! grep -Eq "^[[:space:]]+${capability}([[:space:]]|$)" <<<"$cli_help"; then
+      fail "playwright-cli 缺少必需能力: $capability"
+    fi
+  done
 fi
 
 if command -v curl >/dev/null 2>&1; then

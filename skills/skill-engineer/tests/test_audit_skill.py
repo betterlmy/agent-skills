@@ -11,11 +11,13 @@ AUDIT_SKILL = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(AUDIT_SKILL)
 
 
-def write_skill(root: Path, name: str, body: str = "") -> Path:
+def write_skill(root: Path, name: str, body: str = "", description: str | None = None) -> Path:
     skill_dir = root / name
     skill_dir.mkdir()
+    if description is None:
+        description = f"Use when testing {name}."
     (skill_dir / "SKILL.md").write_text(
-        f"---\nname: {name}\ndescription: Use when testing {name}.\n---\n\n{body}\n",
+        f"---\nname: {name}\ndescription: {description}\n---\n\n{body}\n",
         encoding="utf-8",
     )
     return skill_dir
@@ -37,6 +39,36 @@ allowed-tools:
 
         self.assertEqual([], issues)
         self.assertIn("Use when", frontmatter["description"])
+
+
+class TriggerDescriptionAuditTest(unittest.TestCase):
+    def test_accepts_common_use_when_phrasings(self) -> None:
+        descriptions = (
+            "Use when alpha output is requested.",
+            "Use for alpha output tasks.",
+            "Use this skill when alpha output is requested.",
+            "This skill should be used when alpha output is requested.",
+            "This skill is used for alpha output tasks.",
+        )
+        for description in descriptions:
+            with self.subTest(description=description), tempfile.TemporaryDirectory() as temp_dir:
+                skill = write_skill(Path(temp_dir), "alpha-tool", description=description)
+
+                results = AUDIT_SKILL.audit(skill)
+
+                self.assertFalse(any("trigger contexts" in item for item in results))
+
+    def test_warns_when_description_has_no_trigger_context(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            skill = write_skill(
+                Path(temp_dir),
+                "alpha-tool",
+                description="Creates alpha output.",
+            )
+
+            results = AUDIT_SKILL.audit(skill)
+
+        self.assertTrue(any("trigger contexts" in item for item in results))
 
 
 class IndependenceAuditTest(unittest.TestCase):
@@ -91,6 +123,55 @@ class IndependenceAuditTest(unittest.TestCase):
             results = AUDIT_SKILL.audit(alpha)
 
         self.assertTrue(any("symlink points outside skill package" in item for item in results))
+
+
+class CliCompatibilityAuditTest(unittest.TestCase):
+    def test_warns_when_cli_is_mentioned_but_not_declared(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            skill = write_skill(Path(temp_dir), "alpha-tool", "Use the Alpha CLI.")
+
+            results = AUDIT_SKILL.audit(skill)
+
+        self.assertTrue(any("未声明 external-cli" in item for item in results))
+
+    def test_rejects_declared_cli_without_contract(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            skill = write_skill(Path(temp_dir), "alpha-tool")
+            (skill / "SKILL.md").write_text(
+                "---\nname: alpha-tool\ndescription: Use when testing alpha.\n"
+                "external-cli: true\n---\n",
+                encoding="utf-8",
+            )
+
+            results = AUDIT_SKILL.audit(skill)
+
+        self.assertTrue(any("缺少 cli-compatibility frontmatter" in item for item in results))
+
+    def test_accepts_complete_cli_contract(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            skill = write_skill(Path(temp_dir), "alpha-tool")
+            references = skill / "references"
+            references.mkdir()
+            contract = references / "cli-compatibility.md"
+            contract.write_text(
+                "# CLI 兼容性\n\n<!-- cli-compatibility-contract:v1 -->\n\n"
+                "| 本机验证版本 | `1.2.3` |\n\n"
+                "## 关键能力\n\nRun help.\n\n"
+                "## 版本不一致时\n\nWarn and probe.\n",
+                encoding="utf-8",
+            )
+            (skill / "SKILL.md").write_text(
+                "---\nname: alpha-tool\ndescription: Use when testing alpha.\n"
+                "external-cli: true\n"
+                "cli-compatibility: references/cli-compatibility.md\n---\n\n"
+                "Read [CLI compatibility](references/cli-compatibility.md).\n",
+                encoding="utf-8",
+            )
+
+            results = AUDIT_SKILL.audit(skill)
+
+        self.assertTrue(any("兼容性契约完整" in item for item in results))
+        self.assertFalse(any(item.startswith("FAIL") for item in results))
 
 
 if __name__ == "__main__":

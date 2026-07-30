@@ -38,6 +38,7 @@ if ($TimeoutSeconds -lt 1) {
 
 $Failures = 0
 $Warnings = 0
+$VerifiedPlaywrightCliVersion = "0.1.17"
 
 function Write-Ok {
   param([string]$Message)
@@ -103,20 +104,40 @@ Write-Output ""
 Write-Ok "platform: Windows PowerShell"
 
 $PlaywrightCli = Get-Command playwright-cli -ErrorAction SilentlyContinue
+$UseNpx = $false
 if ($PlaywrightCli) {
-  $Version = try { (& playwright-cli --version 2>$null | Select-Object -First 1) } catch { "" }
-  Write-Ok "playwright-cli is available$(if ($Version) { ": $Version" })"
 } else {
   $Npx = Get-Command npx -ErrorAction SilentlyContinue
   if ($Npx) {
     $NpxVersion = try { (& npx --no-install playwright-cli --version 2>$null | Select-Object -First 1) } catch { "" }
     if ($LASTEXITCODE -eq 0 -and $NpxVersion) {
-      Write-Ok "local playwright-cli is available through npx: $NpxVersion"
+      $UseNpx = $true
     } else {
       Write-Fail "playwright-cli is not available; install it or provide a local package usable with npx --no-install"
     }
   } else {
     Write-Fail "playwright-cli is not available and npx was not found"
+  }
+}
+
+if ($PlaywrightCli -or $UseNpx) {
+  if ($UseNpx) {
+    $Version = (& npx --no-install playwright-cli --version 2>$null | Select-Object -First 1)
+    $CliHelp = (& npx --no-install playwright-cli --help 2>$null) -join "`n"
+  } else {
+    $Version = (& playwright-cli --version 2>$null | Select-Object -First 1)
+    $CliHelp = (& playwright-cli --help 2>$null) -join "`n"
+  }
+  Write-Ok "playwright-cli is available$(if ($Version) { ": $Version" })"
+  if (-not $Version) {
+    Write-Fail "playwright-cli 未返回版本"
+  } elseif ($Version.TrimStart("v") -ne $VerifiedPlaywrightCliVersion) {
+    Write-Warn "playwright-cli 当前版本 $Version 与本机验证版本 $VerifiedPlaywrightCliVersion 不同；以能力检查结果为准"
+  }
+  foreach ($Capability in @("attach", "snapshot", "run-code", "tracing-start", "video-start")) {
+    if ($CliHelp -notmatch "(?m)^\s+$([regex]::Escape($Capability))(?:\s|$)") {
+      Write-Fail "playwright-cli 缺少必需能力: $Capability"
+    }
   }
 }
 

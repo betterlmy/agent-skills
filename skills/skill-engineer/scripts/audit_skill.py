@@ -15,6 +15,15 @@ MAX_DESCRIPTION = 1024
 MAX_SKILL_MD_LINES = 140
 SKIP_DIRS = {".git", "__pycache__", "dist", "node_modules"}
 AMBIGUOUS_SKILL_NAMES = {"commit"}
+CLI_MENTION = re.compile(r"\bcli\b", re.IGNORECASE)
+CLI_CONTRACT_MARKER = "<!-- cli-compatibility-contract:v1 -->"
+TRIGGER_WORDING = re.compile(
+    r"\b(?:"
+    r"use(?:\s+this\s+skill)?\s+(?:when|for)"
+    r"|this\s+skill\s+(?:(?:should\s+)?be|is)\s+used\s+(?:when|for)"
+    r")\b",
+    re.IGNORECASE,
+)
 
 
 def fail(message: str) -> str:
@@ -183,6 +192,51 @@ def external_link_results(skill_dir: Path) -> list[str]:
     return results
 
 
+def cli_compatibility_results(
+    skill_dir: Path,
+    skill_text: str,
+    frontmatter: dict[str, str],
+) -> list[str]:
+    results: list[str] = []
+    declared = frontmatter.get("external-cli", "").lower() == "true"
+
+    if CLI_MENTION.search(skill_text) and not declared:
+        results.append(warn("SKILL.md 提到 CLI，但 frontmatter 未声明 external-cli: true"))
+        return results
+    if not declared:
+        return results
+
+    contract_value = frontmatter.get("cli-compatibility", "")
+    if not contract_value:
+        return [fail("external-cli Skill 缺少 cli-compatibility frontmatter")]
+
+    contract_path = (skill_dir / contract_value).resolve(strict=False)
+    root = skill_dir.resolve()
+    if not is_within(contract_path, root):
+        return [fail(f"cli-compatibility 指向 Skill 包外: {contract_value}")]
+    if not contract_path.is_file():
+        return [fail(f"cli-compatibility 文件不存在: {contract_value}")]
+    if contract_value not in skill_text:
+        results.append(fail(f"SKILL.md 未链接 cli-compatibility 文件: {contract_value}"))
+
+    contract_text = read_text(contract_path)
+    if contract_text is None:
+        return results + [fail(f"cli-compatibility 文件不是可读 UTF-8: {contract_value}")]
+
+    required_fragments = (
+        CLI_CONTRACT_MARKER,
+        "本机验证版本",
+        "## 关键能力",
+        "## 版本不一致时",
+    )
+    for fragment in required_fragments:
+        if fragment not in contract_text:
+            results.append(fail(f"cli-compatibility 文件缺少必需内容: {fragment}"))
+    if not results:
+        results.append(ok("外部 CLI 兼容性契约完整"))
+    return results
+
+
 def audit(skill_dir: Path) -> list[str]:
     results: list[str] = []
     skill_md = skill_dir / "SKILL.md"
@@ -213,8 +267,8 @@ def audit(skill_dir: Path) -> list[str]:
     else:
         if len(description) > MAX_DESCRIPTION:
             results.append(fail(f"description is {len(description)} chars; max is {MAX_DESCRIPTION}"))
-        elif "Use when" not in description and "use when" not in description:
-            results.append(warn('description should include concrete "Use when..." trigger contexts'))
+        elif not TRIGGER_WORDING.search(description):
+            results.append(warn('description should include concrete "Use when..." or "Use for..." trigger contexts'))
         elif "<" in description or ">" in description:
             results.append(fail("description contains angle brackets"))
         else:
@@ -259,6 +313,7 @@ def audit(skill_dir: Path) -> list[str]:
 
     results.extend(cross_skill_reference_results(skill_dir))
     results.extend(external_link_results(skill_dir))
+    results.extend(cli_compatibility_results(skill_dir, text, frontmatter))
 
     return results
 

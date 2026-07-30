@@ -2,6 +2,8 @@
 name: playwright-cli-cdp
 description: CDP-only browser control with playwright-cli. Use for launching Chrome in remote debugging mode, attaching exclusively through --cdp endpoints, driving attached pages, inspecting console/network/storage, and sending raw Chrome DevTools Protocol commands. Do not use playwright-cli open, non-CDP browser launches, extension attach, or Playwright test debug attach workflows from this skill.
 allowed-tools: Bash(playwright-cli:*) Bash(npx:*) Bash(npm:*) Bash(bash:*) Bash(curl:*) Bash(lsof:*) Bash(pgrep:*) Bash(mkdir:*) Bash(pwsh:*) Bash(powershell:*) Bash(powershell.exe:*)
+external-cli: true
+cli-compatibility: references/cli-compatibility.md
 ---
 
 # playwright-cli CDP
@@ -28,6 +30,7 @@ The wrapper redirects playwright-cli output (console logs `console-*.log`, page 
 ## Quick start
 
 Resolve bundled scripts relative to this skill directory before running them.
+先阅读 [CLI 兼容性契约](references/cli-compatibility.md)；环境检查会报告版本漂移并验证必需命令。
 
 macOS, Linux, or WSL2 with a Linux browser:
 
@@ -190,6 +193,8 @@ bash scripts/playwright-cdp.sh -s=cdp click "getByRole('button', { name: 'Submit
 bash scripts/playwright-cdp.sh -s=cdp click "getByTestId('submit-button')"
 ```
 
+普通 `click` 对可见、启用元素持续等待，或组合框、弹窗等复合组件的键盘行为不一致时，按 [交互失败排查与验收边界](references/interaction-troubleshooting.md) 检查活动页面、命中区域、动画和替代交互路径。不要用 DOM 提交或直接请求接口掩盖指针交互失败。
+
 ## Tabs and navigation
 
 ```bash
@@ -345,14 +350,18 @@ The wrapper automatically falls back to `npx --no-install playwright-cli` when a
 If no local version exists, install the CLI:
 
 ```bash
-npm install -g @playwright/cli@latest
+npm install -g @playwright/cli@0.1.17
 ```
+
+`0.1.17` 是本机验证基线。使用其他版本前必须运行环境与能力检查；安装成功不代表本 Skill 的全部命令都兼容。
 
 ## References
 
 - CDP startup and troubleshooting: [references/cdp-startup.md](references/cdp-startup.md)
+- CLI 版本与能力契约：[references/cli-compatibility.md](references/cli-compatibility.md)
 - CDP protocol recipes: [references/cdp-recipes.md](references/cdp-recipes.md)
 - Element attribute inspection: [references/element-attributes.md](references/element-attributes.md)
+- 交互失败排查与验收边界：[references/interaction-troubleshooting.md](references/interaction-troubleshooting.md)
 - Request mocking: [references/request-mocking.md](references/request-mocking.md)
 - Custom Playwright code: [references/running-code.md](references/running-code.md)
 - Storage management: [references/storage-state.md](references/storage-state.md)

@@ -24,6 +24,7 @@ A production-ready skill is:
 - **Small by default**: keep `SKILL.md` close to 100 lines when practical; split rare or detailed material into one-level `references/` files.
 - **Operational**: deterministic or repeated work lives in `scripts/`; reusable output material lives in `assets/`.
 - **Portable**: avoid private paths, time-sensitive facts, hidden environment assumptions, and tool names that are not actually available.
+- **命令兼容**：依赖外部命令行工具的 Skill 必须声明自包含的版本与能力契约，并验证运行时能力，不得假设文档与已安装工具一致。
 - **Independent**: a packaged skill does not name, invoke, link to, or depend on sibling skills; central repository indexes own cross-skill routing and composition guidance.
 - **Validated**: run available validators and the bundled static audit script.
 - **Forward-tested**: important skills are tried on realistic prompts, preferably against a no-skill or previous-version baseline.
@@ -51,6 +52,8 @@ python3 scripts/audit_skill.py <path-to-skill>
 ```
 
 Use [references/review-rubric.md](references/review-rubric.md) for severity and findings. Lead with bugs and production risks, not praise. Give file/line references where possible.
+
+审查调用外部命令行工具的 Skill 时，遵循 [外部命令兼容性契约](references/external-command-compatibility.md)，验证其基线版本、能力探测、版本不一致处理和安装边界。
 
 ## Evaluation Workflow
 

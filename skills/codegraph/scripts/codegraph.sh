@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+verified_codegraph_version="1.4.1"
+
 usage() {
   cat <<'EOF'
 CodeGraph CLI wrapper
@@ -72,9 +74,23 @@ shift || true
 
 bin="$(codegraph_bin)"
 
+if [[ "$cmd" != "raw" && ( "${1:-}" == "-h" || "${1:-}" == "--help" ) ]]; then
+    exec "$bin" "$cmd" --help
+fi
+
 case "$cmd" in
     check)
-        "$bin" --version
+        current_version="$("$bin" --version)"
+        printf '%s\n' "$current_version"
+        if [[ "${current_version#v}" != "$verified_codegraph_version" ]]; then
+            printf '警告: 当前 CodeGraph 版本为 %s，本 Skill 本机验证版本为 %s；将继续检查关键能力。\n' \
+                "$current_version" "$verified_codegraph_version" >&2
+        fi
+        for capability in status explore node affected; do
+            if ! "$bin" "$capability" --help >/dev/null 2>&1; then
+                fail "当前 CodeGraph 缺少必需能力: $capability --help"
+            fi
+        done
     ;;
 
     raw)

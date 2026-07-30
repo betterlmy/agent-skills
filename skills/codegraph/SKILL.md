@@ -1,6 +1,8 @@
 ---
 name: codegraph
 description: 使用 CodeGraph CLI 在本地代码库中进行语义探索、符号检索、源码读取、调用关系和改动影响分析。Use when 需要理解代码结构、追踪 callers/callees、评估重构影响或定位受影响测试；适用于 Windows、macOS 和 Linux，精确字符串与非代码文本检索不触发本 Skill。
+external-cli: true
+cli-compatibility: references/cli-compatibility.md
 ---
 
 # CodeGraph
@@ -26,6 +28,8 @@ function cg { & (Join-Path $CodeGraphSkillDir "scripts/codegraph.ps1") @args }
 `cg` 只在当前 shell 会话有效。若宿主无法执行对应 wrapper，可使用相同参数直接调用 `codegraph` CLI。
 
 ## 前置检查
+
+先阅读 [CLI 兼容性契约](references/cli-compatibility.md)，再检查当前版本和关键能力：
 
 ```text
 cg check
@@ -74,16 +78,24 @@ cg index . --force
 cg unlock .
 ```
 
+解读 `status` 时区分增量同步与提取器版本：
+
+- `pendingChanges` 为 0 只表示工作区没有等待增量同步的文件，不表示索引由当前提取器完整构建。
+- `index.builtWithExtractionVersion` 为 `null` 或低于 `currentExtractionVersion` 时，当前 CLI 会设置 `reindexRecommended: true`；`builtWithVersion` 只记录完整建索引时的 CLI 版本。
+- `sync` 只处理文件增删改，不能替代完整重建。出现上述组合时，先说明原因；获得用户同意后运行 `cg index . --force`，再用 `cg status .` 复核。
+
 升级会修改全局或 standalone 安装。只有用户明确要求时才运行 `cg upgrade --check` 或 `cg upgrade`。
 
 ## 使用边界
 
 - 精确字符串、错误消息、配置项、环境变量和非代码文件优先用 `rg` 或宿主等价工具。
 - CodeGraph 结果是索引视角；运行时注册、反射、生成代码、外部依赖和初始化副作用仍需源码与测试确认。
+- 框架路由识别是尽力而为。受支持框架的路由缺失且状态建议重建时，先完整重建再复测，不要直接归因于静态分析能力。
+- HTTP 路径字符串、动态 URL 拼接、前后端跨语言消费者、ORM 字段和业务状态关系不保证形成图边；结合 `rg`、源码、迁移和测试补齐影响面。
 - `affected` 为空不等于没有回归风险；检查测试命名、过滤条件、语言支持和索引覆盖。
 - CLI 不存在、语言不支持、索引损坏或 wrapper 不兼容时，退回常规文件检索，不要阻塞任务。
 - `init`、`.gitignore` 编辑、安装、升级和 `uninit` 都会改变状态，执行前遵循用户授权边界。
 
-更多安装、跨平台命令、降级和评估场景见 [工作流参考](references/workflows.md)。
+更多安装、跨平台命令、降级和评估场景见 [工作流参考](references/workflows.md)；版本漂移和能力探测见 [CLI 兼容性契约](references/cli-compatibility.md)。
 
 本 Skill 及其分发包使用 [MIT License](LICENSE)。
