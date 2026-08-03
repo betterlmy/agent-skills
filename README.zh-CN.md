@@ -14,6 +14,7 @@
 | Skill | 用途 | 安装 |
 | --- | --- | --- |
 | [`agents-md-expert`](skills/agents-md-expert/SKILL.md) | 创建、审查和改进项目级 `AGENTS.md` 协作指令 | `npx skills add betterlmy/agent-skills --skill agents-md-expert` |
+| [`audit-overengineering`](skills/audit-overengineering/SKILL.md) | 对一个或多个仓库进行证据驱动的过度工程审计，发现可删除、可简化和可由原生能力替代的实现 | `npx skills add betterlmy/agent-skills --skill audit-overengineering` |
 | [`code-review-skill`](skills/code-review-skill/SKILL.md) | 跨主流技术栈审查架构、安全、性能、代码质量和常见缺陷 | `npx skills add betterlmy/agent-skills --skill code-review-skill` |
 | [`codegraph`](skills/codegraph/SKILL.md) | 索引本地代码库并分析符号、调用关系、改动影响和受影响测试 | `npx skills add betterlmy/agent-skills --skill codegraph` |
 | [`drawio-skill`](skills/drawio-skill/SKILL.md) | 创建、编辑、审查、验证和导出 Draw.io 图表 | `npx skills add betterlmy/agent-skills --skill drawio-skill` |
@@ -48,6 +49,7 @@ npx skills add betterlmy/agent-skills --skill <skill-name> -a claude-code -g -y
 ### 仓库与代码工程
 
 - `agents-md-expert` 用于维护真实、作用域清晰、可执行且可验证的仓库协作指令。
+- `audit-overengineering` 对一个或多个仓库审计无必要抽象、透传层、重复能力、失效扩展点和可替代依赖，只输出有证据的精简候选，不直接修改代码。
 - `code-review-skill` 提供跨语言的架构、安全、性能、质量和正确性审查指南。
 - `codegraph` 封装代码库索引、符号定位、调用分析和改动影响分析工作流。
 - `go-dev` 先识别仓库约束和实际技术栈，再提供 Go 编码、错误、Context、日志、HTTP/gRPC、持久化、并发和测试规范；统一响应等偏好只在仓库无相反约定时作为推荐默认值。

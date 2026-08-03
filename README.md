@@ -14,6 +14,7 @@ A collection of agent skills maintained by `betterlmy`, covering repository guid
 | Skill | Purpose | Install |
 | --- | --- | --- |
 | [`agents-md-expert`](skills/agents-md-expert/SKILL.md) | Create, review, and improve repository-level `AGENTS.md` instructions | `npx skills add betterlmy/agent-skills --skill agents-md-expert` |
+| [`audit-overengineering`](skills/audit-overengineering/SKILL.md) | Audit one or more repositories for evidence-backed deletion, simplification, and native or standard-library replacement opportunities | `npx skills add betterlmy/agent-skills --skill audit-overengineering` |
 | [`code-review-skill`](skills/code-review-skill/SKILL.md) | Review architecture, security, performance, code quality, and common bugs across major ecosystems | `npx skills add betterlmy/agent-skills --skill code-review-skill` |
 | [`codegraph`](skills/codegraph/SKILL.md) | Index local repositories and analyze symbols, call relationships, impact, and affected tests | `npx skills add betterlmy/agent-skills --skill codegraph` |
 | [`drawio-skill`](skills/drawio-skill/SKILL.md) | Create, edit, review, validate, and export Draw.io diagrams | `npx skills add betterlmy/agent-skills --skill drawio-skill` |
@@ -48,6 +49,7 @@ Omit `--skill <skill-name>` to use the interactive selection provided by the Ski
 ### Repository and Code Engineering
 
 - `agents-md-expert` keeps repository instructions accurate, scoped, actionable, and verifiable.
+- `audit-overengineering` audits one or more repositories for unnecessary abstractions, delegation layers, duplicate capabilities, dead extension points, and replaceable dependencies; it reports evidence-backed candidates without modifying code.
 - `code-review-skill` provides cross-language review guidance for architecture, security, performance, quality, and correctness.
 - `codegraph` wraps CodeGraph workflows for repository indexing, symbol discovery, call analysis, and change-impact analysis.
 - `go-dev` inspects repository constraints and the actual stack before applying Go guidance for code, errors, context, logging, HTTP/gRPC, persistence, concurrency, and testing; response-style preferences are defaults only when the repository is silent.

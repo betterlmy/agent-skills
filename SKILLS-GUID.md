@@ -14,6 +14,7 @@
 | 用户意图 | 优先使用 | 关键边界 |
 | --- | --- | --- |
 | 创建、审查或改进项目级 `AGENTS.md` | `agents-md-expert` | 只处理 Agent 协作指令，不用于普通 README 或完整架构文档 |
+| 扫描一个或多个仓库的过度工程、代码膨胀、无必要抽象或可删除内容 | `audit-overengineering` | 默认只输出证据报告；不用于单次 diff、通用正确性、安全或性能审查，也不直接实施重构 |
 | 跨语言审查代码、PR、架构、安全、性能或常见缺陷 | `code-review-skill` | Go 专项且需要 package、范围或影响上下文时优先使用 `go-auditor` |
 | 生成、优化或检查中文 commit message，或执行本地提交 | `commit` | 可按明确范围执行 `git add` 和 `git commit`，禁止 `git push` |
 | 探索代码结构、定位符号、分析调用关系或改动影响 | `codegraph` | 精确字符串、配置和非代码文本优先使用 `rg` |

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Overengineering Auditor"
+  short_description: "审计一个或多个仓库中的过度工程与精简机会"
+  default_prompt: "使用 $audit-overengineering 对目标仓库做只读、证据驱动的过度工程审计，核验调用关系与边界后按净收益输出精简候选。"
