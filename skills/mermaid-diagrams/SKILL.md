@@ -184,7 +184,7 @@ flowchart LR
 
 ## Exporting and Rendering
 
-命令行导出前先阅读 [CLI 兼容性契约](references/cli-compatibility.md)。本机当前未安装 `mmdc`，因此下列命令是待验证路径，不代表本机已验证兼容。
+命令行导出前先阅读 [CLI 兼容性契约](references/cli-compatibility.md)。本机已在 WSL2 上验证 `mmdc 11.16.0` 的版本探测、帮助信息、Markdown 多图提取及 SVG 渲染；版本号只是已验证基线，实际使用前仍需探测当前命令能力并完成与任务图类型匹配的最小渲染。
 
 **Native support in:**
 - GitHub/GitLab - Automatically renders in Markdown
@@ -193,7 +193,7 @@ flowchart LR
 
 **Export options:**
 - [Mermaid Live Editor](https://mermaid.live) - Online editor with PNG/SVG export
-- Mermaid CLI - 获得用户安装授权后运行 `npm install -g @mermaid-js/mermaid-cli`，再用 `mmdc --version`、`mmdc --help` 和最小图验证后执行 `mmdc -i input.mmd -o output.png`
+- Mermaid CLI - 已安装时先用 `mmdc --version`、`mmdc --help` 和最小图验证，再执行 `mmdc -i input.mmd -o output.png`；未安装时获得用户授权后运行 `npm install -g @mermaid-js/mermaid-cli`
 - Docker - 本机未验证；获得用户授权后选择明确镜像 tag，先验证 `mmdc --version` 和最小图，不要用未固定的默认 tag 作为兼容性依据
 
 ## Common Pitfalls
