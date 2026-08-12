@@ -7,7 +7,7 @@
 
 [中文文档](README.zh-CN.md)
 
-A collection of agent skills maintained by `betterlmy`, covering repository guidance, code engineering, diagrams, frontend development, browser automation, RAG, and skill development.
+A collection of agent skills maintained by `betterlmy`, covering repository guidance, code engineering, visual design and diagrams, frontend development, browser automation, RAG, and skill development.
 
 ## Available Skills
 
@@ -27,6 +27,7 @@ A collection of agent skills maintained by `betterlmy`, covering repository guid
 | [`rag-agent-builder`](skills/rag-agent-builder/SKILL.md) | Build RAG applications with embeddings, vector databases, retrieval, and evaluation | `npx skills add betterlmy/agent-skills --skill rag-agent-builder` |
 | [`skill-engineer`](skills/skill-engineer/SKILL.md) | Create, improve, review, and evaluate production-ready agent skills | `npx skills add betterlmy/agent-skills --skill skill-engineer` |
 | [`software-designer`](skills/software-designer/SKILL.md) | Create traceable software design documents from requirements or reverse-engineer them from existing code and evidence | `npx skills add betterlmy/agent-skills --skill software-designer` |
+| [`svg-logo-designer`](skills/svg-logo-designer/SKILL.md) | Design and deliver original, scalable, safe, and validated SVG logos and essential variants | `npx skills add betterlmy/agent-skills --skill svg-logo-designer` |
 
 ## Installation
 
@@ -61,6 +62,7 @@ Omit `--skill <skill-name>` to use the interactive selection provided by the Ski
 - `drawio-skill` supports Draw.io architecture diagrams, flowcharts, ER/UML/sequence diagrams, visual QA, and Office-safe export.
 - `mermaid-diagrams` covers version-controlled software diagrams using Mermaid syntax.
 - `software-designer` creates proportionate Markdown software design documents from requirements or reconstructs as-is designs from code, configuration, schemas, and tests.
+- `svg-logo-designer` turns brand briefs into original SVG wordmarks, lettermarks, pictorial marks, combination marks, and essential layout or color variants with structural safety checks.
 
 ### Automation and Content
 

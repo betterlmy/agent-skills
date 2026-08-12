@@ -1,0 +1,4 @@
+interface:
+  display_name: "SVG Logo 设计"
+  short_description: "设计原创、安全且经过验证的 SVG Logo 与必要变体"
+  default_prompt: "使用 $svg-logo-designer，根据我的品牌简报设计原创 SVG Logo，并完成安全与交付检查。"

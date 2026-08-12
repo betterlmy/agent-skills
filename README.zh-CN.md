@@ -7,7 +7,7 @@
 
 [English README](README.md)
 
-`betterlmy` 维护的 agent skills 集合，覆盖仓库协作规范、代码工程、图表、前端开发、浏览器自动化、RAG 和 Skill 开发。
+`betterlmy` 维护的 agent skills 集合，覆盖仓库协作规范、代码工程、视觉设计与图表、前端开发、浏览器自动化、RAG 和 Skill 开发。
 
 ## 可用 Skills
 
@@ -27,6 +27,7 @@
 | [`rag-agent-builder`](skills/rag-agent-builder/SKILL.md) | 使用嵌入、向量数据库、检索和评估能力构建 RAG 应用 | `npx skills add betterlmy/agent-skills --skill rag-agent-builder` |
 | [`skill-engineer`](skills/skill-engineer/SKILL.md) | 创建、改进、审查和评估生产可用的 agent skills | `npx skills add betterlmy/agent-skills --skill skill-engineer` |
 | [`software-designer`](skills/software-designer/SKILL.md) | 根据需求生成可追踪的软件设计文档，或根据现有代码和证据逆向还原设计 | `npx skills add betterlmy/agent-skills --skill software-designer` |
+| [`svg-logo-designer`](skills/svg-logo-designer/SKILL.md) | 设计并交付原创、可缩放、安全且经过验证的 SVG Logo 与必要变体 | `npx skills add betterlmy/agent-skills --skill svg-logo-designer` |
 
 ## 安装
 
@@ -61,6 +62,7 @@ npx skills add betterlmy/agent-skills --skill <skill-name> -a claude-code -g -y
 - `drawio-skill` 支持 Draw.io 架构图、流程图、ER/UML/时序图、视觉检查及 Office 安全导出。
 - `mermaid-diagrams` 覆盖使用 Mermaid 语法维护可版本控制的软件图表。
 - `software-designer` 根据需求生成规模适度的 Markdown 软件设计文档，或依据代码、配置、Schema 和测试还原现状设计。
+- `svg-logo-designer` 将品牌简报转化为原创 SVG 字标、字母标、图形标、组合标及必要版式和颜色变体，并执行结构安全检查。
 
 ### 自动化与内容
 

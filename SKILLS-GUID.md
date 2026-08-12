@@ -28,6 +28,7 @@
 | 构建文档问答、知识库、企业搜索或其他 RAG 应用 | `rag-agent-builder` | 普通数据库查询或不涉及检索增强的搜索不触发 |
 | 创建、改进、审查或生产化 Agent Skill | `skill-engineer` | 单纯发现现有 Skill 时优先使用 `find-skills` |
 | 根据需求编写软件设计文档，或根据代码、配置、Schema 和测试逆向现状设计 | `software-designer` | 只画单张图、只做代码审查、只写需求或直接实现功能时不使用 |
+| 从品牌简报设计或迭代字标、字母标、图形标、组合标及 SVG Logo 变体 | `svg-logo-designer` | 普通 UI 图标、图表、格式转换、完整品牌战略或商标法律审查不使用 |
 
 ## 推荐组合
 
