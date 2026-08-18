@@ -17,6 +17,7 @@ A collection of agent skills maintained by `betterlmy`, covering repository guid
 | [`audit-overengineering`](skills/audit-overengineering/SKILL.md) | Audit one or more repositories for evidence-backed deletion, simplification, and native or standard-library replacement opportunities | `npx skills add betterlmy/agent-skills --skill audit-overengineering` |
 | [`code-review-skill`](skills/code-review-skill/SKILL.md) | Review architecture, security, performance, code quality, and common bugs across major ecosystems | `npx skills add betterlmy/agent-skills --skill code-review-skill` |
 | [`codegraph`](skills/codegraph/SKILL.md) | Index local repositories and analyze symbols, call relationships, impact, and affected tests | `npx skills add betterlmy/agent-skills --skill codegraph` |
+| [`diagram-design`](skills/diagram-design/SKILL.md) | Create branded editorial HTML/SVG/PNG diagrams, redraw Draw.io or Mermaid sources, and apply accessible visual design rules | `npx skills add betterlmy/agent-skills --skill diagram-design` |
 | [`drawio-skill`](skills/drawio-skill/SKILL.md) | Create, edit, review, validate, and export Draw.io diagrams | `npx skills add betterlmy/agent-skills --skill drawio-skill` |
 | [`find-skills`](skills/find-skills/SKILL.md) | Discover and install skills from the open agent skills ecosystem | `npx skills add betterlmy/agent-skills --skill find-skills` |
 | [`go-dev`](skills/go-dev/SKILL.md) | Guide Go development, review, APIs, concurrency, persistence, and testing from repository constraints and the detected stack | `npx skills add betterlmy/agent-skills --skill go-dev` |
@@ -59,6 +60,7 @@ Omit `--skill <skill-name>` to use the interactive selection provided by the Ski
 
 ### Design and Diagrams
 
+- `diagram-design` creates branded editorial diagrams as self-contained HTML/SVG/PNG, with templates, accessible SVG checks, and bounded Draw.io/Mermaid redraw workflows.
 - `drawio-skill` supports Draw.io architecture diagrams, flowcharts, ER/UML/sequence diagrams, visual QA, and Office-safe export.
 - `mermaid-diagrams` covers version-controlled software diagrams using Mermaid syntax.
 - `software-designer` creates proportionate Markdown software design documents from requirements or reconstructs as-is designs from code, configuration, schemas, and tests.

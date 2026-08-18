@@ -17,6 +17,7 @@
 | [`audit-overengineering`](skills/audit-overengineering/SKILL.md) | 对一个或多个仓库进行证据驱动的过度工程审计，发现可删除、可简化和可由原生能力替代的实现 | `npx skills add betterlmy/agent-skills --skill audit-overengineering` |
 | [`code-review-skill`](skills/code-review-skill/SKILL.md) | 跨主流技术栈审查架构、安全、性能、代码质量和常见缺陷 | `npx skills add betterlmy/agent-skills --skill code-review-skill` |
 | [`codegraph`](skills/codegraph/SKILL.md) | 索引本地代码库并分析符号、调用关系、改动影响和受影响测试 | `npx skills add betterlmy/agent-skills --skill codegraph` |
+| [`diagram-design`](skills/diagram-design/SKILL.md) | 创建具有品牌风格的 HTML/SVG/PNG 编辑式图表，重绘 Draw.io 或 Mermaid 源图，并遵循无障碍视觉规范 | `npx skills add betterlmy/agent-skills --skill diagram-design` |
 | [`drawio-skill`](skills/drawio-skill/SKILL.md) | 创建、编辑、审查、验证和导出 Draw.io 图表 | `npx skills add betterlmy/agent-skills --skill drawio-skill` |
 | [`find-skills`](skills/find-skills/SKILL.md) | 从开放的 agent skills 生态中发现并安装 Skill | `npx skills add betterlmy/agent-skills --skill find-skills` |
 | [`go-dev`](skills/go-dev/SKILL.md) | 按仓库约束和实际技术栈规范 Go 开发、评审、API、并发、持久化与测试 | `npx skills add betterlmy/agent-skills --skill go-dev` |
@@ -59,6 +60,7 @@ npx skills add betterlmy/agent-skills --skill <skill-name> -a claude-code -g -y
 
 ### 设计与图表
 
+- `diagram-design` 生成自包含 HTML/SVG/PNG 编辑式图表，提供模板、SVG 无障碍检查以及受约束的 Draw.io/Mermaid 重绘流程。
 - `drawio-skill` 支持 Draw.io 架构图、流程图、ER/UML/时序图、视觉检查及 Office 安全导出。
 - `mermaid-diagrams` 覆盖使用 Mermaid 语法维护可版本控制的软件图表。
 - `software-designer` 根据需求生成规模适度的 Markdown 软件设计文档，或依据代码、配置、Schema 和测试还原现状设计。

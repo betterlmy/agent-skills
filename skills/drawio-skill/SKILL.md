@@ -1,7 +1,7 @@
 ---
 name: drawio-skill
 version: 1.6.0
-description: Creates, edits, reviews, and exports Draw.io diagrams. Use when the user asks for architecture diagrams, flowcharts, ER/UML/sequence diagrams, .drawio XML changes, diagram visual QA, transparent image export, or PowerPoint/Office-safe SVGs with stable fonts. Do not use for quantitative data charts or requests explicitly requiring Mermaid.
+description: Create, edit, review, validate, and export editable Draw.io diagrams. Use when the primary deliverable is `.drawio` XML, `.drawio.png`/`.drawio.svg`, Draw.io visual QA, transparent export, or PowerPoint/Office-safe SVG with stable fonts. Do not use when the user wants only Mermaid source or a branded standalone HTML/SVG/PNG redraw.
 license: MIT
 homepage: https://github.com/Agents365-ai/drawio-skill
 compatibility: Requires Draw.io Desktop for local rendering; PPT-safe SVG additionally requires Poppler pdftocairo. Vision is optional for visual QA.
