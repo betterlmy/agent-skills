@@ -20,6 +20,7 @@
 | [`diagram-design`](skills/diagram-design/SKILL.md) | 创建具有品牌风格的 HTML/SVG/PNG 编辑式图表，重绘 Draw.io 或 Mermaid 源图，并遵循无障碍视觉规范 | `npx skills add betterlmy/agent-skills --skill diagram-design` |
 | [`drawio-skill`](skills/drawio-skill/SKILL.md) | 创建、编辑、审查、验证和导出 Draw.io 图表 | `npx skills add betterlmy/agent-skills --skill drawio-skill` |
 | [`find-skills`](skills/find-skills/SKILL.md) | 从开放的 agent skills 生态中发现并安装 Skill | `npx skills add betterlmy/agent-skills --skill find-skills` |
+| [`ip-as-logo`](skills/ip-as-logo/SKILL.md) | 生成简洁、可爱、拟人化的方形角色 Logo，采用圆润厚重造型与角落构图 | `npx skills add betterlmy/agent-skills --skill ip-as-logo` |
 | [`go-dev`](skills/go-dev/SKILL.md) | 按仓库约束和实际技术栈规范 Go 开发、评审、API、并发、持久化与测试 | `npx skills add betterlmy/agent-skills --skill go-dev` |
 | [`go-auditor`](skills/go-auditor/SKILL.md) | 审计仓库、模块、package、目录、文件集、高风险域或 Go diff，输出证据可追溯的质量报告 | `npx skills add betterlmy/agent-skills --skill go-auditor` |
 | [`go-mcp-builder`](skills/go-mcp-builder/SKILL.md) | 使用 `mcp-go` 和 Streamable HTTP 构建 Go MCP Server | `npx skills add betterlmy/agent-skills --skill go-mcp-builder` |
@@ -62,6 +63,7 @@ npx skills add betterlmy/agent-skills --skill <skill-name> -a claude-code -g -y
 
 - `diagram-design` 生成自包含 HTML/SVG/PNG 编辑式图表，提供模板、SVG 无障碍检查以及受约束的 Draw.io/Mermaid 重绘流程。
 - `drawio-skill` 支持 Draw.io 架构图、流程图、ER/UML/时序图、视觉检查及 Office 安全导出。
+- `ip-as-logo` 设计最简洁可爱的 IP 角色 Logo：紧凑、小尺寸仍可辨识，批量产出六个候选并交用户确认。
 - `mermaid-diagrams` 覆盖使用 Mermaid 语法维护可版本控制的软件图表。
 - `software-designer` 根据需求生成规模适度的 Markdown 软件设计文档，或依据代码、配置、Schema 和测试还原现状设计。
 - `svg-logo-designer` 将品牌简报转化为原创 SVG 字标、字母标、图形标、组合标及必要版式和颜色变体，并执行结构安全检查。

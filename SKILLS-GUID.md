@@ -21,6 +21,7 @@
 | 创建、编辑、审查或导出 Draw.io 图表 | `drawio-skill` | 需要 Mermaid 文本时使用 `mermaid-diagrams`；需要品牌化 HTML/SVG/PNG 重绘时使用 `diagram-design` |
 | 创建品牌化 HTML/SVG/PNG 编辑式图表，或将 Draw.io/Mermaid 重绘为可交付视觉稿 | `diagram-design` | 只需要可版本控制的 Mermaid 文本时使用 `mermaid-diagrams`；只需要编辑 Draw.io 源文件时使用 `drawio-skill` |
 | 查找或安装外部 Skill | `find-skills` | 已经指定要修改某个现有 Skill 时不需要先搜索 |
+| 为产品生成简洁可爱的拟人化 IP 角色 Logo，或批量提出候选方向供确认 | `ip-as-logo` | 需要可编辑 SVG/矢量 Logo 时使用 `svg-logo-designer`；本 Skill 以方形角色构图和批量候选为主 |
 | 编写、审查、重构或排查 Go 代码、服务、API、并发和持久化 | `go-dev` | 先遵循仓库约束并识别实际技术栈；Go MCP Server 任务还必须组合 `go-mcp-builder` |
 | 审计 Go 仓库、模块、package、目录、文件集、高风险域或 diff | `go-auditor` | 输出证据报告但不直接修改代码；落实修复用 `go-dev` |
 | 使用 `mcp-go` 开发、修改或调试 Go MCP Server | `go-mcp-builder` | 仅讨论通用 Go 编码规范时使用 `go-dev` 即可 |

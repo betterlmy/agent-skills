@@ -20,6 +20,7 @@ A collection of agent skills maintained by `betterlmy`, covering repository guid
 | [`diagram-design`](skills/diagram-design/SKILL.md) | Create branded editorial HTML/SVG/PNG diagrams, redraw Draw.io or Mermaid sources, and apply accessible visual design rules | `npx skills add betterlmy/agent-skills --skill diagram-design` |
 | [`drawio-skill`](skills/drawio-skill/SKILL.md) | Create, edit, review, validate, and export Draw.io diagrams | `npx skills add betterlmy/agent-skills --skill drawio-skill` |
 | [`find-skills`](skills/find-skills/SKILL.md) | Discover and install skills from the open agent skills ecosystem | `npx skills add betterlmy/agent-skills --skill find-skills` |
+| [`ip-as-logo`](skills/ip-as-logo/SKILL.md) | Generate simple, cute, personified square character logos with rounded heavy forms and a dominant lower-corner composition | `npx skills add betterlmy/agent-skills --skill ip-as-logo` |
 | [`go-dev`](skills/go-dev/SKILL.md) | Guide Go development, review, APIs, concurrency, persistence, and testing from repository constraints and the detected stack | `npx skills add betterlmy/agent-skills --skill go-dev` |
 | [`go-auditor`](skills/go-auditor/SKILL.md) | Evidence-driven audits for Go repositories, modules, packages, directories, file sets, hotspots, and diffs | `npx skills add betterlmy/agent-skills --skill go-auditor` |
 | [`go-mcp-builder`](skills/go-mcp-builder/SKILL.md) | Build Go MCP servers with `mcp-go` and Streamable HTTP | `npx skills add betterlmy/agent-skills --skill go-mcp-builder` |
@@ -62,6 +63,7 @@ Omit `--skill <skill-name>` to use the interactive selection provided by the Ski
 
 - `diagram-design` creates branded editorial diagrams as self-contained HTML/SVG/PNG, with templates, accessible SVG checks, and bounded Draw.io/Mermaid redraw workflows.
 - `drawio-skill` supports Draw.io architecture diagrams, flowcharts, ER/UML/sequence diagrams, visual QA, and Office-safe export.
+- `ip-as-logo` designs the simplest cute IP character logos: compact, recognizable at small sizes, prototyped in batches of six candidates for approval.
 - `mermaid-diagrams` covers version-controlled software diagrams using Mermaid syntax.
 - `software-designer` creates proportionate Markdown software design documents from requirements or reconstructs as-is designs from code, configuration, schemas, and tests.
 - `svg-logo-designer` turns brand briefs into original SVG wordmarks, lettermarks, pictorial marks, combination marks, and essential layout or color variants with structural safety checks.
