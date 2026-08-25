@@ -21,20 +21,73 @@ SYNC_RULE = (
     "必须同步更新适用作用域的 AGENTS.md。"
 )
 
+REQUIRED_SECTIONS = """# 仓库定位
+
+项目定位。
+
+## 技术栈
+
+Python。
+
+## 目录结构
+
+`src/`。
+
+## 文档索引
+
+`README.md`。
+
+## Skill 索引
+
+`skills/`。
+"""
+
 
 class AuditAgentsMdTest(unittest.TestCase):
     def severities(self, text: str) -> list[str]:
         return [finding.severity for finding in MODULE.audit_text(text)]
 
     def test_clean_document(self) -> None:
-        text = f"# 项目规则\n\n{SYNC_RULE}\n\n## 验证\n\n```bash\ngo test ./...\n```\n"
+        text = f"{REQUIRED_SECTIONS}\n{SYNC_RULE}\n\n## 验证\n\n```bash\ngo test ./...\n```\n"
         findings = MODULE.audit_text(text)
         self.assertEqual(["OK"], [finding.severity for finding in findings])
 
-    def test_second_level_heading_is_valid(self) -> None:
-        text = f"## 项目规则\n\n{SYNC_RULE}\n"
+    def test_required_headings_are_valid(self) -> None:
+        text = f"{REQUIRED_SECTIONS}\n{SYNC_RULE}\n"
         findings = MODULE.audit_text(text)
         self.assertEqual(["OK"], [finding.severity for finding in findings])
+
+    def test_english_required_section_aliases_are_accepted(self) -> None:
+        text = f"""# Repository Scope
+
+## Technology Stack
+
+## Project Structure
+
+## Documentation Index
+
+## Skills Catalog
+
+{SYNC_RULE}
+"""
+        findings = MODULE.audit_text(text)
+        self.assertEqual(["OK"], [finding.severity for finding in findings])
+
+    def test_missing_required_section_is_error(self) -> None:
+        text = f"# 仓库定位\n\n{SYNC_RULE}\n"
+        findings = MODULE.audit_text(text)
+        self.assertTrue(any(finding.severity == "ERROR" and "最低章节" in finding.message for finding in findings))
+
+    def test_more_than_240_lines_is_error(self) -> None:
+        text = f"{REQUIRED_SECTIONS}\n{SYNC_RULE}\n" + "\n".join("内容" for _ in range(220))
+        findings = MODULE.audit_text(text)
+        self.assertTrue(any(finding.severity == "ERROR" and "超过 240 行上限" in finding.message for finding in findings))
+
+    def test_240_lines_is_allowed(self) -> None:
+        lines = f"{REQUIRED_SECTIONS}\n{SYNC_RULE}\n".splitlines()
+        text = "\n".join(lines + ["内容"] * (240 - len(lines)))
+        findings = MODULE.audit_text(text)
+        self.assertFalse(any("超过 240 行上限" in finding.message for finding in findings))
 
     def test_missing_drift_rule_is_warning(self) -> None:
         text = "# 项目规则\n\n必须运行已声明的检查命令。\n"

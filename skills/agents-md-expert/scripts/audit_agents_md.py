@@ -45,6 +45,16 @@ DANGEROUS_PATTERNS = (
     r"\bDROP\s+DATABASE\b",
 )
 
+MAX_LINES = 240
+
+REQUIRED_SECTION_PATTERNS = (
+    ("仓库定位", re.compile(r"仓库定位|项目定位|repository\s+(?:scope|position|overview)|project\s+(?:scope|overview)|scope", re.IGNORECASE)),
+    ("技术栈", re.compile(r"技术栈|technology\s+stack|tech\s+stack", re.IGNORECASE)),
+    ("目录结构", re.compile(r"目录结构|项目结构|directory\s+structure|project\s+structure|repository\s+structure", re.IGNORECASE)),
+    ("文档索引", re.compile(r"文档索引|documentation\s+(?:index|catalog|list)|docs?\s+(?:index|catalog|list)", re.IGNORECASE)),
+    ("Skill 索引", re.compile(r"skills?\s*(?:索引|index|目录|catalog|list)|技能索引", re.IGNORECASE)),
+)
+
 DRIFT_SUBJECT_PATTERN = re.compile(
     r"项目结构|目录结构|技术栈|工具链|构建(?:或|和|与)?测试命令|构建命令|测试命令|生成流程|开发约束|"
     r"project structure|directory structure|tech(?:nology)? stack|toolchain|build (?:or |and )?test commands?|development constraints?",
@@ -100,6 +110,19 @@ def has_drift_sync_rule(text: str) -> bool:
     )
 
 
+def missing_required_sections(text: str) -> list[str]:
+    headings = [
+        re.sub(r"\s+", " ", match.group(1).strip())
+        for line in text.splitlines()
+        if (match := re.match(r"^#{1,6}\s+(.+?)\s*$", line))
+    ]
+    return [
+        label
+        for label, pattern in REQUIRED_SECTION_PATTERNS
+        if not any(pattern.search(heading) for heading in headings)
+    ]
+
+
 def audit_text(text: str) -> list[Finding]:
     findings: list[Finding] = []
     lines = text.splitlines()
@@ -115,8 +138,12 @@ def audit_text(text: str) -> list[Finding]:
         if len(marker_lines) % 2:
             findings.append(Finding("ERROR", f"未闭合的 {marker} 代码块", marker_lines[-1]))
 
-    if len(lines) > 240:
-        findings.append(Finding("WARN", f"文件共 {len(lines)} 行，可能包含过多背景或重复规则"))
+    if len(lines) > MAX_LINES:
+        findings.append(Finding("ERROR", f"文件共 {len(lines)} 行，超过 {MAX_LINES} 行上限"))
+
+    missing_sections = missing_required_sections(text)
+    if missing_sections:
+        findings.append(Finding("ERROR", f"缺少最低章节：{'、'.join(missing_sections)}"))
 
     for pattern in VAGUE_PATTERNS:
         match = first_match(text, pattern, re.IGNORECASE)
