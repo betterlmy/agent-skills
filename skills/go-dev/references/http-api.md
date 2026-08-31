@@ -4,6 +4,7 @@
 
 - 先确认仓库使用标准库 `net/http`、Gin、Echo、Chi、Fiber 或其他框架，并沿用已有 Router、中间件和绑定方式。
 - 先读取当前 OpenAPI/Swagger、客户端契约和相邻 Handler；不要根据本 Skill 擅自改变状态码、字段名、认证来源或错误格式。
+- 对外、跨服务或需要人工联调的 Go HTTP API 必须维护机器可读的 OpenAPI/Swagger 契约并提供可用的文档查看入口；仓库已有 spec-first、Code/Annotation First、API Portal 或生成流程时沿用现状。仓库没有约定时，默认采用 Go Code/Annotation First，让 Handler/DTO 注释成为权威输入，并提供 Swagger UI；纯内部探针、库或不承载 HTTP API 的项目不因此引入 Swagger。
 - Handler 只处理协议适配：解析与验证输入、建立认证上下文、调用用例、映射输出。业务规则放在可独立测试的层中。
 - Request/Response DTO、领域对象和持久化模型保持分离；公开 DTO 的 JSON 字段、可空性和集合语义必须稳定。
 
@@ -51,5 +52,7 @@ type Response[T any] struct {
 ## 文档与测试
 
 - 修改 DTO、路由、状态码、安全定义或错误码时同步更新 OpenAPI/Swagger 和生成客户端。
+- Code/Annotation First 项目必须固定生成器及 UI 依赖版本，把生成命令纳入仓库构建入口，并提供在临时目录重新生成后比较差异的检查；生成的 JSON、YAML 和 Go 注册文件不得手工修改。提交前同时检查 Router 与生成契约的 method/path、安全方案、关键请求响应 Schema 和生成物漂移。
+- Swagger UI 只负责展示和发起调试请求，不得绕过业务认证。文档页面是否公开应根据契约敏感性和部署网络决定；若现有 Header 认证无法用于浏览器页面导航，不要通过 Query Token 绕过，应公开无敏感信息的文档静态资源、复用现有登录界面或设计独立且明确的认证边界。
 - 测试精确 method/path、Content-Type、空集合、非法输入、认证来源、超时、Panic、重复写入和协议特例。
 - 框架行为与版本有关时，读取 `go.mod` 锁定版本的官方文档或源码，并用最小测试确认。
