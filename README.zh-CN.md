@@ -28,6 +28,7 @@
 | [`playwright-cli-cdp`](skills/playwright-cli-cdp/SKILL.md) | 使用 `playwright-cli` 通过 CDP 控制 Chrome 系浏览器 | `npx skills add betterlmy/agent-skills --skill playwright-cli-cdp` |
 | [`rag-agent-builder`](skills/rag-agent-builder/SKILL.md) | 使用嵌入、向量数据库、检索和评估能力构建 RAG 应用 | `npx skills add betterlmy/agent-skills --skill rag-agent-builder` |
 | [`skill-engineer`](skills/skill-engineer/SKILL.md) | 创建、改进、审查和评估生产可用的 agent skills | `npx skills add betterlmy/agent-skills --skill skill-engineer` |
+| [`simplify-codebase`](skills/simplify-codebase/SKILL.md) | 对现有代码库进行证据驱动的简化审计，或在明确授权后安全移除偶然复杂度 | `npx skills add betterlmy/agent-skills --skill simplify-codebase` |
 | [`software-designer`](skills/software-designer/SKILL.md) | 根据需求生成可追踪的软件设计文档，或根据现有代码和证据逆向还原设计 | `npx skills add betterlmy/agent-skills --skill software-designer` |
 | [`svg-logo-designer`](skills/svg-logo-designer/SKILL.md) | 设计并交付原创、可缩放、安全且经过验证的 SVG Logo 与必要变体 | `npx skills add betterlmy/agent-skills --skill svg-logo-designer` |
 
@@ -77,6 +78,7 @@ npx skills add betterlmy/agent-skills --skill <skill-name> -a claude-code -g -y
 
 - `find-skills` 帮助为目标能力查找可安装的 Skill。
 - `skill-engineer` 支持面向生产的 Skill 创建、审查、打包、验证和真实场景评估。
+- `simplify-codebase` 先证明候选项的消费者和契约，再审计或在明确授权后移除死代码、重复状态、冗余分层、失效兼容路径等偶然复杂度。
 
 ## 仓库结构
 

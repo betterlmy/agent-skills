@@ -30,6 +30,7 @@
 | 构建文档问答、知识库、企业搜索或其他 RAG 应用 | `rag-agent-builder` | 普通数据库查询或不涉及检索增强的搜索不触发 |
 | 创建、改进、审查或生产化 Agent Skill | `skill-engineer` | 单纯发现现有 Skill 时优先使用 `find-skills` |
 | 根据需求编写软件设计文档，或根据代码、配置、Schema 和测试逆向现状设计 | `software-designer` | 只画单张图、只做代码审查、只写需求或直接实现功能时不使用 |
+| 审计偶然复杂度，或在明确授权后删除、合并死代码、重复状态、冗余分层或失效兼容路径 | `simplify-codebase` | 先证明消费者、动态可达性和契约；不用于通用审查、纯样式重构或性能调优 |
 | 从品牌简报设计或迭代字标、字母标、图形标、组合标及 SVG Logo 变体 | `svg-logo-designer` | 普通 UI 图标、图表、格式转换、完整品牌战略或商标法律审查不使用 |
 
 ## 推荐组合
@@ -40,3 +41,4 @@
 - 软件图表：品牌化 HTML/SVG/PNG 编辑式交付或 Draw.io/Mermaid 重绘使用 `diagram-design`；Markdown 内联和文本维护使用 `mermaid-diagrams`；需要可编辑 Draw.io 文件或 Draw.io 专项视觉检查时使用 `drawio-skill`。
 - 软件设计文档：使用 `software-designer` 完成正向设计、代码逆向或增量维护；代码逆向需要调用关系和影响分析时可组合 `codegraph`，只需要单张图时使用对应图表能力。
 - Skill 维护：查找外部能力使用 `find-skills`；创建、修改、审查或验证 Skill 使用 `skill-engineer`。
+- 复杂度治理：只需要输出全仓候选证据时使用 `audit-overengineering`；需要把候选项追踪到消费者、动态边界、持久化契约，并在明确授权后完成删减时使用 `simplify-codebase`。

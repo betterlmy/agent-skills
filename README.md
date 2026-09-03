@@ -28,6 +28,7 @@ A collection of agent skills maintained by `betterlmy`, covering repository guid
 | [`playwright-cli-cdp`](skills/playwright-cli-cdp/SKILL.md) | Control Chrome-family browsers through CDP with `playwright-cli` | `npx skills add betterlmy/agent-skills --skill playwright-cli-cdp` |
 | [`rag-agent-builder`](skills/rag-agent-builder/SKILL.md) | Build RAG applications with embeddings, vector databases, retrieval, and evaluation | `npx skills add betterlmy/agent-skills --skill rag-agent-builder` |
 | [`skill-engineer`](skills/skill-engineer/SKILL.md) | Create, improve, review, and evaluate production-ready agent skills | `npx skills add betterlmy/agent-skills --skill skill-engineer` |
+| [`simplify-codebase`](skills/simplify-codebase/SKILL.md) | Audit a codebase for evidence-backed simplification, or safely remove accidental complexity with explicit authorization | `npx skills add betterlmy/agent-skills --skill simplify-codebase` |
 | [`software-designer`](skills/software-designer/SKILL.md) | Create traceable software design documents from requirements or reverse-engineer them from existing code and evidence | `npx skills add betterlmy/agent-skills --skill software-designer` |
 | [`svg-logo-designer`](skills/svg-logo-designer/SKILL.md) | Design and deliver original, scalable, safe, and validated SVG logos and essential variants | `npx skills add betterlmy/agent-skills --skill svg-logo-designer` |
 
@@ -77,6 +78,7 @@ Omit `--skill <skill-name>` to use the interactive selection provided by the Ski
 
 - `find-skills` helps identify installable skills for a requested capability.
 - `skill-engineer` supports production-oriented skill creation, review, packaging, validation, and realistic evaluation.
+- `simplify-codebase` proves consumers and contracts before auditing or, with explicit authorization, removing dead code, duplicate state, redundant layers, obsolete compatibility paths, and other accidental complexity.
 
 ## Repository Layout
 
