@@ -49,7 +49,7 @@ npm i -g @colbymchenry/codegraph@1.4.1
 git check-ignore -q --no-index -- .codegraph/.ignore-check
 ```
 
-如果未忽略，取得用户同意后编辑适用作用域的 `.gitignore`：
+如果未忽略，编辑适用作用域的 `.gitignore`：
 
 ```gitignore
 .codegraph/

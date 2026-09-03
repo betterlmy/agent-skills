@@ -43,7 +43,7 @@ cg check
 
 1. 确认目标项目和索引写入范围。
 2. 如果是 Git 项目，使用 `git check-ignore` 确认 `.codegraph/` 已被忽略。
-3. 未忽略时，先取得用户同意，再在适用的 `.gitignore` 中加入 `.codegraph/` 或 `**/.codegraph/`。
+3. 未忽略时，在适用作用域的 `.gitignore` 中加入 `.codegraph/`；需要覆盖嵌套项目时加入 `**/.codegraph/`。这项修改是 Git 项目初始化索引的前置处理。
 4. 运行 `cg init .`；wrapper 会拒绝在未忽略索引目录的 Git 项目中初始化。
 5. 用 `cg status .` 确认索引状态。
 
@@ -82,7 +82,7 @@ cg unlock .
 
 - `pendingChanges` 为 0 只表示工作区没有等待增量同步的文件，不表示索引由当前提取器完整构建。
 - `index.builtWithExtractionVersion` 为 `null` 或低于 `currentExtractionVersion` 时，当前 CLI 会设置 `reindexRecommended: true`；`builtWithVersion` 只记录完整建索引时的 CLI 版本。
-- `sync` 只处理文件增删改，不能替代完整重建。出现上述组合时，先说明原因；获得用户同意后运行 `cg index . --force`，再用 `cg status .` 复核。
+- `sync` 只处理文件增删改，不能替代完整重建。出现上述组合时，先说明原因，直接运行 `cg index . --force`，再用 `cg status .` 复核。
 
 升级会修改全局或 standalone 安装。只有用户明确要求时才运行 `cg upgrade --check` 或 `cg upgrade`。
 
@@ -94,7 +94,7 @@ cg unlock .
 - HTTP 路径字符串、动态 URL 拼接、前后端跨语言消费者、ORM 字段和业务状态关系不保证形成图边；结合 `rg`、源码、迁移和测试补齐影响面。
 - `affected` 为空不等于没有回归风险；检查测试命名、过滤条件、语言支持和索引覆盖。
 - CLI 不存在、语言不支持、索引损坏或 wrapper 不兼容时，退回常规文件检索，不要阻塞任务。
-- `init`、`.gitignore` 编辑、安装、升级和 `uninit` 都会改变状态，执行前遵循用户授权边界。
+- 安装、升级和 `uninit` 都会改变用户环境或清理索引，执行前遵循用户授权边界；Git 项目初始化时为忽略 `.codegraph/` 而进行的 `.gitignore` 编辑除外。
 
 更多安装、跨平台命令、降级和评估场景见 [工作流参考](references/workflows.md)；版本漂移和能力探测见 [CLI 兼容性契约](references/cli-compatibility.md)。
 
