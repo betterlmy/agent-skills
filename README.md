@@ -23,7 +23,7 @@ A collection of agent skills maintained by `betterlmy`, covering repository guid
 | [`ip-as-logo`](skills/ip-as-logo/SKILL.md) | Generate simple, cute, personified square character logos with rounded heavy forms and a dominant lower-corner composition | `npx skills add betterlmy/agent-skills --skill ip-as-logo` |
 | [`go-dev`](skills/go-dev/SKILL.md) | Guide Go development, review, APIs, concurrency, persistence, and testing from repository constraints and the detected stack | `npx skills add betterlmy/agent-skills --skill go-dev` |
 | [`go-auditor`](skills/go-auditor/SKILL.md) | Evidence-driven audits for Go repositories, modules, packages, directories, file sets, hotspots, and diffs | `npx skills add betterlmy/agent-skills --skill go-auditor` |
-| [`go-mcp-builder`](skills/go-mcp-builder/SKILL.md) | Build Go MCP servers with `mcp-go` and Streamable HTTP | `npx skills add betterlmy/agent-skills --skill go-mcp-builder` |
+| [`go-mcp-builder`](skills/go-mcp-builder/SKILL.md) | Build secure Go MCP servers from current official specifications and the official Go SDK | `npx skills add betterlmy/agent-skills --skill go-mcp-builder` |
 | [`mermaid-diagrams`](skills/mermaid-diagrams/SKILL.md) | Create software diagrams with Mermaid, including flowcharts, sequence diagrams, ERDs, and C4 models | `npx skills add betterlmy/agent-skills --skill mermaid-diagrams` |
 | [`playwright-cli-cdp`](skills/playwright-cli-cdp/SKILL.md) | Control Chrome-family browsers through CDP with `playwright-cli` | `npx skills add betterlmy/agent-skills --skill playwright-cli-cdp` |
 | [`rag-agent-builder`](skills/rag-agent-builder/SKILL.md) | Build RAG applications with embeddings, vector databases, retrieval, and evaluation | `npx skills add betterlmy/agent-skills --skill rag-agent-builder` |
@@ -58,7 +58,7 @@ Omit `--skill <skill-name>` to use the interactive selection provided by the Ski
 - `codegraph` wraps CodeGraph workflows for repository indexing, symbol discovery, call analysis, and change-impact analysis.
 - `go-dev` inspects repository constraints and the actual stack before applying Go guidance for code, errors, context, logging, HTTP/gRPC, persistence, concurrency, and testing; response-style preferences are defaults only when the repository is silent.
 - `go-auditor` audits Go repositories, modules, packages, directories, file sets, hotspots, and local or revision-based diffs, producing an evidence-driven report with explicit scope boundaries; use `go-dev` to implement fixes.
-- `go-mcp-builder` provides a complete workflow for Go MCP servers based on `mark3labs/mcp-go` and Streamable HTTP.
+- `go-mcp-builder` verifies the current dated MCP specification and official Go SDK before guiding Tools, Resources, Prompts, stdio or Streamable HTTP, authorization, compatibility, and conformance testing.
 
 ### Design and Diagrams
 
@@ -105,3 +105,7 @@ Each skill has a `SKILL.md` entry point. Supporting resources are bundled only w
 - [Skills CLI](https://github.com/vercel-labs/skills)
 - [Claude Code Skills](https://code.claude.com/docs/en/skills)
 - [Claude Code Agent SDK Skills](https://code.claude.com/docs/en/agent-sdk/skills)
+
+## Instruction audit scope
+
+AGENTS audits distinguish repository instructions, user/global instructions and reference manuals with --scope. Skill audits default to standalone packages; --package-root selects an explicit plugin or repository distribution boundary. CLI compatibility metadata lives under metadata; existing host-specific fields retain their host contract. Audit results report skipped large text rather than treating unscanned resources as verified.

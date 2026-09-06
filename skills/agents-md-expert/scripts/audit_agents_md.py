@@ -123,7 +123,7 @@ def missing_required_sections(text: str) -> list[str]:
     ]
 
 
-def audit_text(text: str) -> list[Finding]:
+def audit_text(text: str, scope: str = "repository") -> list[Finding]:
     findings: list[Finding] = []
     lines = text.splitlines()
 
@@ -138,10 +138,13 @@ def audit_text(text: str) -> list[Finding]:
         if len(marker_lines) % 2:
             findings.append(Finding("ERROR", f"未闭合的 {marker} 代码块", marker_lines[-1]))
 
-    if len(lines) > MAX_LINES:
+    if scope != "reference" and len(lines) > MAX_LINES:
         findings.append(Finding("ERROR", f"文件共 {len(lines)} 行，超过 {MAX_LINES} 行上限"))
 
-    missing_sections = missing_required_sections(text)
+    if scope != "reference" and len(text.encode("utf-8")) > 16384:
+        findings.append(Finding("WARN", "正文超过 16384 字节，检查常驻上下文预算并按需拆分参考"))
+
+    missing_sections = missing_required_sections(text) if scope == "repository" else []
     if missing_sections:
         findings.append(Finding("ERROR", f"缺少最低章节：{'、'.join(missing_sections)}"))
 
@@ -201,7 +204,7 @@ def audit_text(text: str) -> list[Finding]:
     return findings
 
 
-def audit_file(path: Path) -> list[Finding]:
+def audit_file(path: Path, scope: str = "repository") -> list[Finding]:
     if not path.exists():
         return [Finding("ERROR", "文件不存在")]
     if not path.is_file():
@@ -210,7 +213,7 @@ def audit_file(path: Path) -> list[Finding]:
         text = path.read_text(encoding="utf-8")
     except UnicodeDecodeError:
         return [Finding("ERROR", "文件不是有效的 UTF-8 文本")]
-    findings = audit_text(text)
+    findings = audit_text(text, scope=scope)
     if path.name != "AGENTS.md":
         findings.insert(0, Finding("WARN", "目标文件名不是 AGENTS.md"))
     return findings
@@ -220,10 +223,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="静态审计 AGENTS.md，不修改目标文件")
     parser.add_argument("path", type=Path, help="待审计的 AGENTS.md 路径")
     parser.add_argument("--strict", action="store_true", help="将警告也视为失败")
+    parser.add_argument("--scope", choices=("repository", "global", "reference"), default="repository", help="按用途检查；global/reference 不要求仓库五章节，reference 不限制行数")
     args = parser.parse_args()
 
     path = args.path.expanduser().resolve()
-    findings = audit_file(path)
+    findings = audit_file(path, scope=args.scope)
     for finding in findings:
         print(finding.render(path))
 

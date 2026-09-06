@@ -1,8 +1,9 @@
 ---
+metadata:
+  external-cli: "true"
+  cli-compatibility: "references/cli-compatibility.md"
 name: mermaid-diagrams
 description: Create and maintain software diagrams as Mermaid source. Use when the user asks for `.mmd` or fenced Mermaid blocks, Markdown-embedded diagrams, version-controlled Mermaid documentation, or Mermaid syntax for flowcharts, sequence, ERD, C4, state, git, pie, bar, or Gantt diagrams. Do not use when the primary deliverable is editable Draw.io XML or a branded standalone HTML/SVG/PNG redraw.
-external-cli: true
-cli-compatibility: references/cli-compatibility.md
 ---
 
 # Mermaid Diagramming

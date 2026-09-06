@@ -12,6 +12,19 @@ This file applies to the entire repository. A more deeply nested `AGENTS.md` add
 - `SKILLS-GUID.md` is the agent-facing routing guide for choosing among this repository's skills. Keep it concise and do not duplicate complete skill workflows.
 - `skills/Makefile` packages one skill at a time and writes archives under `skills/dist/`.
 
+## Technology Stack
+
+Skills are Markdown packages. The instruction auditors and their unit tests use Python 3; packaging uses GNU Make. Each skill declares its own external runtime and CLI requirements.
+
+## Documentation Index
+
+- README.md and README.zh-CN.md describe distribution and usage.
+- SKILLS-GUID.md owns task routing; package references own task-specific details.
+
+## Skills Index
+
+Use SKILLS-GUID.md to select a package under skills/; read the selected SKILL.md before using it. No repository-wide external toolchain is implied.
+
 ## Before Editing
 
 1. Read the target skill's complete `SKILL.md` before changing it.
@@ -29,7 +42,7 @@ This file applies to the entire repository. A more deeply nested `AGENTS.md` add
 - Reference bundled scripts and reference documents from `SKILL.md` so agents can discover when to use them.
 - Do not add secrets, credentials, private machine paths, generated caches, dependency directories, or build output.
 - When adding, removing, or renaming a skill, update both root README files and `SKILLS-GUID.md` in the same change. Update `SKILLS-GUID.md` when a skill's trigger conditions or boundaries change materially.
-- 强依赖外部 CLI 命令、参数、输出字段或内部 API 的 Skill，必须在 frontmatter 设置 `external-cli: true`，用 `cli-compatibility` 指向包内兼容性契约，并由 `SKILL.md` 直接链接。契约必须记录本机验证版本或明确说明未安装，列出关键能力探测和版本不一致时的处理；没有跨版本测试证据时，不得把单一验证版本表述为完整支持范围。
+- 强依赖外部 CLI 命令、参数、输出字段或内部 API 的 Skill，必须在 frontmatter 的 metadata 设置 `external-cli: "true"`，用 metadata 的 `cli-compatibility` 指向包内兼容性契约，并由 `SKILL.md` 直接链接。契约必须记录本机验证版本或明确说明未安装，列出关键能力探测和版本不一致时的处理；没有跨版本测试证据时，不得把单一验证版本表述为完整支持范围。
 
 ### Skill 独立性设计原则
 
@@ -40,6 +53,8 @@ This file applies to the entire repository. A more deeply nested `AGENTS.md` add
 - 如果工作流依赖外部 CLI、MCP、SDK、运行时或服务，当前 skill 必须自行说明前置条件、授权边界、调用方式、失败降级和验证方法；外部工具与 sibling skill 同名时，也不得把对应 sibling skill 当作前置条件。
 - 当前 skill 所需的私有模板、脚本和参考资料必须放入自身目录并从 `SKILL.md` 可发现；不得用跨包相对路径、指向包外的符号链接或用户机器上的另一个 skill 安装路径复用资源。
 - 审查或修改 skill 时，必须运行独立性检查；发现 sibling 名称引用、越出包目录的本地 Markdown 链接或包外符号链接时视为失败，不得以“组合使用更方便”为理由保留。
+
+本仓自有技能按独立包检查；审计其他来源的插件时，按其明确的分发根目录验证，不把插件内部共享资料误判为越界。命令中的普通词与示例不算 Skill 调用。
 
 ## Validation
 

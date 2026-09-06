@@ -37,10 +37,10 @@ Use this rubric when reviewing or improving an existing skill.
 ### Production Behavior
 
 - A new agent can use the skill without hidden conversation context.
-- The package does not name, invoke, link to, or depend on sibling skills; cross-skill routing exists only in central repository indexes.
+- Standalone packages do not depend on sibling skills; plugin/repository distributions may share resources inside their declared package root. Plain CLI commands and code examples are not skill dependencies.
 - Markdown links and symlinks stay inside the package unless they target public external documentation.
 - The skill does not depend on a tool, MCP, package, or environment variable unless documented.
-- 强依赖外部 CLI 的 Skill 设置 `external-cli: true`，用 `cli-compatibility` 指向包内契约，记录本机验证版本或明确说明不可用，探测必需能力，并定义版本不一致时的行为。
+- 强依赖外部 CLI 的 Skill 在 metadata 设置 `external-cli: "true"`，用 metadata 的 `cli-compatibility` 指向包内契约，记录本机验证版本或明确说明不可用，探测必需能力，并定义版本不一致时的行为。
 - Domain-specific skills cite or request current source material.
 - Important claims are tested on realistic prompts.
 - The skill includes enough negative guidance to avoid over-triggering.

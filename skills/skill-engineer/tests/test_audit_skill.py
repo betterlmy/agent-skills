@@ -174,5 +174,67 @@ class CliCompatibilityAuditTest(unittest.TestCase):
         self.assertFalse(any(item.startswith("FAIL") for item in results))
 
 
+class InstructionAuditRegressionTest(unittest.TestCase):
+    def test_npm_test_is_not_a_skill_invocation(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            skill = write_skill(root, "develop", "Run `npm test`.")
+            write_skill(root, "test")
+            self.assertFalse(any("cross-skill reference" in x for x in AUDIT_SKILL.audit(skill)))
+            (skill / "SKILL.md").write_text((skill / "SKILL.md").read_text() + "\nUse $test.\n")
+            self.assertTrue(any("cross-skill reference" in x for x in AUDIT_SKILL.audit(skill)))
+
+    def test_example_todo_is_not_unfinished_instruction(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            skill = write_skill(Path(temp_dir), "alpha", "Example: `<!-- TODO: image -->`.\n```text\n[TODO: example]\n```\n")
+            self.assertFalse(any("TODO placeholders" in x for x in AUDIT_SKILL.audit(skill)))
+            (skill / "SKILL.md").write_text((skill / "SKILL.md").read_text() + "\n[TODO: finish instructions]\n")
+            self.assertTrue(any("TODO placeholders" in x for x in AUDIT_SKILL.audit(skill)))
+
+    def test_plugin_boundary_allows_shared_but_rejects_escape(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            plugin = root / "plugin"
+            plugin.mkdir()
+            skill = write_skill(plugin, "alpha", "Read [shared](../shared.md).")
+            (plugin / "shared.md").write_text("shared")
+            self.assertFalse(any(x.startswith("FAIL") for x in AUDIT_SKILL.audit(skill, package_root=plugin)))
+            (skill / "SKILL.md").write_text((skill / "SKILL.md").read_text() + "\n[escape](../../outside.md)\n")
+            self.assertTrue(any("outside skill package" in x for x in AUDIT_SKILL.audit(skill, package_root=plugin)))
+
+    def test_missing_local_reference_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            skill = write_skill(Path(temp_dir), "alpha", "Read [missing](references/missing.md).")
+            self.assertTrue(any("missing local link" in x for x in AUDIT_SKILL.audit(skill)))
+
+    def test_metadata_cli_fields_are_read(self) -> None:
+        data, _ = AUDIT_SKILL.parse_frontmatter("---\nname: alpha\ndescription: Use when testing.\nmetadata:\n  external-cli: \"true\"\n  cli-compatibility: \"references/cli.md\"\n---\n")
+        self.assertEqual("true", data.get("external-cli"))
+        self.assertEqual("references/cli.md", data.get("cli-compatibility"))
+
+    def test_code_examples_are_not_markdown_links(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            skill = write_skill(Path(temp_dir), "alpha", "```cpp\nauto f = [](int x) { return x; };\n```\nInline `[](int x)` is code.\n")
+            (skill / "example.py").write_text('sample = "[missing](missing.md)"')
+            self.assertFalse(any("local link" in x for x in AUDIT_SKILL.audit(skill)))
+
+    def test_development_filename_is_not_develop_skill(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            skill = write_skill(root, "test", "This Skill uses development-and-testing.md.")
+            write_skill(root, "develop")
+            self.assertFalse(any("cross-skill reference" in x for x in AUDIT_SKILL.audit(skill)))
+
+    def test_binary_assets_and_oversized_text_are_not_read(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            asset = root / "large.pptx"
+            asset.write_bytes(b"binary")
+            self.assertIsNone(AUDIT_SKILL.read_text(asset))
+            text = root / "large.md"
+            text.write_bytes(b"x" * (AUDIT_SKILL.MAX_TEXT_BYTES + 1))
+            self.assertIsNone(AUDIT_SKILL.read_text(text))
+
+
 if __name__ == "__main__":
     unittest.main()

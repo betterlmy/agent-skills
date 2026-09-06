@@ -13,7 +13,7 @@
 
 | 用户意图 | 优先使用 | 关键边界 |
 | --- | --- | --- |
-| 创建、审查或改进项目级 `AGENTS.md` | `agents-md-expert` | 只处理 Agent 协作指令，不用于普通 README 或完整架构文档 |
+| 创建、审查或改进用户级与项目级 `AGENTS.md` | `agents-md-expert` | 按 global/repository/reference 区分用途，不用于普通 README 或完整架构文档 |
 | 扫描一个或多个仓库的过度工程、代码膨胀、无必要抽象或可删除内容 | `audit-overengineering` | 默认只输出证据报告；不用于单次 diff、通用正确性、安全或性能审查，也不直接实施重构 |
 | 跨语言审查代码、PR、架构、安全、性能或常见缺陷 | `code-review-skill` | Go 专项且需要 package、范围或影响上下文时优先使用 `go-auditor` |
 | 生成、优化或检查中文 commit message，或执行本地提交 | `commit` | 可按明确范围执行 `git add` 和 `git commit`；仅在用户明确要求且满足全局 push 策略（禁止 force、禁止 master/main 分支）时推送 |
@@ -24,7 +24,7 @@
 | 为产品生成简洁可爱的拟人化 IP 角色 Logo，或批量提出候选方向供确认 | `ip-as-logo` | 需要可编辑 SVG/矢量 Logo 时使用 `svg-logo-designer`；本 Skill 以方形角色构图和批量候选为主 |
 | 编写、审查、重构或排查 Go 代码、服务、API、并发和持久化 | `go-dev` | 先遵循仓库约束并识别实际技术栈；Go MCP Server 任务还必须组合 `go-mcp-builder` |
 | 审计 Go 仓库、模块、package、目录、文件集、高风险域或 diff | `go-auditor` | 输出证据报告但不直接修改代码；落实修复用 `go-dev` |
-| 使用 `mcp-go` 开发、修改或调试 Go MCP Server | `go-mcp-builder` | 仅讨论通用 Go 编码规范时使用 `go-dev` 即可 |
+| 开发、修改、审查或调试 Go MCP Server、Tool、Resource、Prompt、stdio 或 Streamable HTTP | `go-mcp-builder` | 先核对官方当前协议与 SDK；不用于普通 Go HTTP API |
 | 使用 Mermaid 创建可维护的文本图 | `mermaid-diagrams` | 需要品牌化 HTML/SVG/PNG 重绘时使用 `diagram-design`；需要 `.drawio` 文件或 Draw.io 专项导出时使用 `drawio-skill` |
 | 通过 CDP 启动或控制 Chrome、检查页面状态 | `playwright-cli-cdp` | 只允许 CDP 工作流，不使用普通 `playwright-cli open` |
 | 构建文档问答、知识库、企业搜索或其他 RAG 应用 | `rag-agent-builder` | 普通数据库查询或不涉及检索增强的搜索不触发 |
@@ -35,10 +35,10 @@
 
 ## 推荐组合
 
-- Go MCP Server：先用 `go-mcp-builder` 确定 MCP 结构、传输和安全边界，再用 `go-dev` 按仓库技术栈落实 Go 编码、错误、Context、日志和测试规范。
+- Go MCP Server：先用 `go-mcp-builder` 核对官方版本并确定 MCP 能力、传输和安全边界，再用 `go-dev` 按仓库技术栈落实 Go 编码、错误、Context、日志和测试规范。
 - 代码变更评审：跨语言或通用 PR 反馈使用 `code-review-skill`；Go diff 需要 package 语义、工作区或 revision 范围审计时使用 `go-auditor`；需要定位调用方或评估影响面时再叠加 `codegraph`。
 - Go 质量审计：用 `go-auditor` 审计整仓或局部范围，也可检查工作区、暂存区和 revision range；需定位调用方或评估影响面时叠加 `codegraph`，落实修复时参考 `go-dev`。
 - 软件图表：品牌化 HTML/SVG/PNG 编辑式交付或 Draw.io/Mermaid 重绘使用 `diagram-design`；Markdown 内联和文本维护使用 `mermaid-diagrams`；需要可编辑 Draw.io 文件或 Draw.io 专项视觉检查时使用 `drawio-skill`。
 - 软件设计文档：使用 `software-designer` 完成正向设计、代码逆向或增量维护；代码逆向需要调用关系和影响分析时可组合 `codegraph`，只需要单张图时使用对应图表能力。
-- Skill 维护：查找外部能力使用 `find-skills`；创建、修改、审查或验证 Skill 使用 `skill-engineer`。
+- Skill 维护：查找外部能力使用 `find-skills`；创建、修改、审查或验证 Skill 使用 `skill-engineer`；独立包与插件分发根分开检查。
 - 复杂度治理：只需要输出全仓候选证据时使用 `audit-overengineering`；需要把候选项追踪到消费者、动态边界、持久化契约，并在明确授权后完成删减时使用 `simplify-codebase`。

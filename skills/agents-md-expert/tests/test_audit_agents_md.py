@@ -43,6 +43,20 @@ Python。
 """
 
 
+class AuditScopeTest(unittest.TestCase):
+    def test_global_does_not_require_repository_headings(self) -> None:
+        findings = MODULE.audit_text("# User guidance\n\nKeep changes scoped.\n", scope="global")
+        self.assertFalse(any(x.severity == "ERROR" for x in findings))
+
+    def test_global_still_rejects_secrets(self) -> None:
+        findings = MODULE.audit_text("# User guidance\n-----BEGIN PRIVATE KEY-----\n", scope="global")
+        self.assertTrue(any(x.severity == "ERROR" for x in findings))
+
+    def test_dense_instructions_have_a_byte_warning(self) -> None:
+        findings = MODULE.audit_text("# Guidance\n" + "说明" * 6000, scope="global")
+        self.assertTrue(any("字节" in x.message for x in findings))
+
+
 class AuditAgentsMdTest(unittest.TestCase):
     def severities(self, text: str) -> list[str]:
         return [finding.severity for finding in MODULE.audit_text(text)]

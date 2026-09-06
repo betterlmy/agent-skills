@@ -1,9 +1,10 @@
 ---
+metadata:
+  external-cli: "true"
+  cli-compatibility: "references/cli-compatibility.md"
 name: playwright-cli-cdp
 description: CDP-only browser control with playwright-cli. Use for launching Chrome in remote debugging mode, attaching exclusively through --cdp endpoints, driving attached pages, inspecting console/network/storage, and sending raw Chrome DevTools Protocol commands. Do not use playwright-cli open, non-CDP browser launches, extension attach, or Playwright test debug attach workflows from this skill.
 allowed-tools: Bash(playwright-cli:*) Bash(npx:*) Bash(npm:*) Bash(bash:*) Bash(curl:*) Bash(lsof:*) Bash(pgrep:*) Bash(mkdir:*) Bash(pwsh:*) Bash(powershell:*) Bash(powershell.exe:*)
-external-cli: true
-cli-compatibility: references/cli-compatibility.md
 ---
 
 # playwright-cli CDP

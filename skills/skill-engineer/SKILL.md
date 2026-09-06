@@ -25,7 +25,7 @@ A production-ready skill is:
 - **Operational**: deterministic or repeated work lives in `scripts/`; reusable output material lives in `assets/`.
 - **Portable**: avoid private paths, time-sensitive facts, hidden environment assumptions, and tool names that are not actually available.
 - **命令兼容**：依赖外部命令行工具的 Skill 必须声明自包含的版本与能力契约，并验证运行时能力，不得假设文档与已安装工具一致。
-- **Independent**: a packaged skill does not name, invoke, link to, or depend on sibling skills; central repository indexes own cross-skill routing and composition guidance.
+- **Independent**: independently distributed skills keep resources inside their package; plugin skills may share resources within the explicit plugin distribution boundary. Do not apply standalone packaging rules to plugin internals.
 - **Validated**: run available validators and the bundled static audit script.
 - **Forward-tested**: important skills are tried on realistic prompts, preferably against a no-skill or previous-version baseline.
 
@@ -34,7 +34,7 @@ A production-ready skill is:
 1. Capture concrete use cases before writing.
    Ask only for missing information: task/domain, trigger phrases, expected outputs, required tools, reference material, and whether tests matter.
 2. Name the skill with lowercase letters, digits, and hyphens. Prefer action or role names, for example `review-api-contracts` or `skill-engineer`.
-3. Draft a pushy but accurate description:
+3. Draft a precise, task-oriented description with near-miss exclusions:
    - First sentence: what the skill does.
    - Second sentence: "Use when..." with triggers, file types, domains, and user intents.
    - Keep it under 1024 characters and avoid angle brackets.
@@ -45,7 +45,9 @@ A production-ready skill is:
 
 ## Review Workflow
 
-For reviews, read the skill directory first: `SKILL.md`, metadata files, scripts, references, assets list, and any tests/evals. Check that every required workflow, resource, fallback, and validation step remains usable when the skill is installed by itself. Then run:
+For reviews, read the skill directory first: `SKILL.md`, metadata files, scripts, references, assets list, and any tests/evals. Check that every required workflow, resource, fallback, and validation step remains usable when the skill is installed by itself. The default audit checks one standalone package. For a plugin or repository-bound skill, pass `--package-root <actual-distribution-root>`; never choose an unrelated ancestor merely to suppress a failure. Plain command names such as `npm test` are not skill invocations. Binary assets are not read as instructions; text above 1 MiB is reported as skipped.
+
+Then run:
 
 ```bash
 python3 scripts/audit_skill.py <path-to-skill>

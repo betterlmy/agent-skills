@@ -13,8 +13,10 @@ from urllib.parse import unquote, urlparse
 
 MAX_DESCRIPTION = 1024
 MAX_SKILL_MD_LINES = 140
-SKIP_DIRS = {".git", "__pycache__", "dist", "node_modules"}
-AMBIGUOUS_SKILL_NAMES = {"commit"}
+SKIP_DIRS = {".git", "__pycache__", "dist", "node_modules", ".venv", "venv"}
+MAX_TEXT_BYTES = 1024 * 1024
+TEXT_SUFFIXES = {".md", ".txt", ".py", ".sh", ".ps1", ".js", ".mjs", ".cjs", ".ts", ".tsx", ".json", ".yaml", ".yml", ".toml"}
+AMBIGUOUS_SKILL_NAMES = {"commit", "test", "develop", "index", "share", "audit", "research"}
 CLI_MENTION = re.compile(r"\bcli\b", re.IGNORECASE)
 CLI_CONTRACT_MARKER = "<!-- cli-compatibility-contract:v1 -->"
 TRIGGER_WORDING = re.compile(
@@ -50,6 +52,7 @@ def parse_frontmatter(text: str) -> tuple[dict[str, str], list[str]]:
     frontmatter: dict[str, str] = {}
     raw_lines = match.group(1).splitlines()
     index = 0
+    section = ""
     while index < len(raw_lines):
         raw_line = raw_lines[index]
         line = raw_line.strip()
@@ -57,6 +60,9 @@ def parse_frontmatter(text: str) -> tuple[dict[str, str], list[str]]:
             index += 1
             continue
         if raw_line[:1].isspace():
+            if section == "metadata" and re.match(r"^  (external-cli|cli-compatibility):", raw_line):
+                nested_key, nested_value = line.split(":", 1)
+                frontmatter[nested_key] = nested_value.strip().strip('"').strip("'")
             index += 1
             continue
         if ":" not in line:
@@ -65,6 +71,7 @@ def parse_frontmatter(text: str) -> tuple[dict[str, str], list[str]]:
             continue
         key, value = line.split(":", 1)
         key = key.strip()
+        section = key
         value = value.strip()
         if re.fullmatch(r"[|>][-+]?", value):
             block_lines: list[str] = []
@@ -93,12 +100,11 @@ def is_within(path: Path, directory: Path) -> bool:
 
 def package_files(skill_dir: Path) -> list[Path]:
     files: list[Path] = []
-    for path in skill_dir.rglob("*"):
-        relative = path.relative_to(skill_dir)
-        if any(part in SKIP_DIRS for part in relative.parts):
-            continue
-        if path.is_file() or path.is_symlink():
-            files.append(path)
+    for directory, dirs, names in os.walk(skill_dir, followlinks=False):
+        base = Path(directory)
+        files.extend(base / name for name in dirs if (base / name).is_symlink())
+        dirs[:] = [name for name in dirs if name not in SKIP_DIRS and not (base / name).is_symlink()]
+        files.extend(base / name for name in names)
     return sorted(files)
 
 
@@ -121,6 +127,10 @@ def sibling_skill_names(skill_dir: Path) -> list[str]:
 
 def read_text(path: Path) -> str | None:
     try:
+        if path.suffix not in TEXT_SUFFIXES and path.name not in {"LICENSE", "Makefile", "Dockerfile"}:
+            return None
+        if path.stat().st_size > MAX_TEXT_BYTES:
+            return None
         return path.read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError):
         return None
@@ -145,8 +155,8 @@ def cross_skill_reference_results(skill_dir: Path) -> list[str]:
                 if name in AMBIGUOUS_SKILL_NAMES:
                     patterns = (
                         rf"\${escaped}(?![a-z0-9-])",
-                        rf"\bskill\b[^\n]{{0,40}}`?{escaped}`?",
-                        rf"`?{escaped}`?[^\n]{{0,40}}\bskill\b",
+                        rf"\bskill\s+`?{escaped}(?![a-z0-9-])`?",
+                        rf"(?<![a-z0-9-])`?{escaped}`?\s+skill\b",
                         rf"(?:^|[/.])skills/{escaped}(?:/|$)",
                     )
                 else:
@@ -158,10 +168,10 @@ def cross_skill_reference_results(skill_dir: Path) -> list[str]:
     return results
 
 
-def external_link_results(skill_dir: Path) -> list[str]:
+def external_link_results(skill_dir: Path, package_root: Path | None = None) -> list[str]:
     results: list[str] = []
     link_pattern = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
-    root = skill_dir.resolve()
+    root = (package_root or skill_dir).resolve()
 
     for path in package_files(skill_dir):
         relative = path.relative_to(skill_dir)
@@ -174,6 +184,11 @@ def external_link_results(skill_dir: Path) -> list[str]:
         text = read_text(path)
         if text is None:
             continue
+        if path.suffix != ".md":
+            continue
+        # Preserve line numbers while excluding fenced/inline code, such as C++ lambdas.
+        text = re.sub(r"(?ms)^\s*(`{3,}|~{3,})[^\n]*\n.*?^\s*\1\s*$", lambda m: "\n" * m.group(0).count("\n"), text)
+        text = re.sub(r"`[^`\n]*`", lambda m: " " * len(m.group(0)), text)
         for line_number, line in enumerate(text.splitlines(), 1):
             for match in link_pattern.finditer(line):
                 raw_target = match.group(1).strip().strip("<>")
@@ -189,6 +204,8 @@ def external_link_results(skill_dir: Path) -> list[str]:
                     results.append(
                         fail(f"link points outside skill package: {relative}:{line_number} -> {target_text}")
                     )
+                elif not resolved.exists() and not re.search(r"[{}<>$*]", target_path):
+                    results.append(fail(f"missing local link: {relative}:{line_number} -> {target_text}"))
     return results
 
 
@@ -237,9 +254,11 @@ def cli_compatibility_results(
     return results
 
 
-def audit(skill_dir: Path) -> list[str]:
+def audit(skill_dir: Path, package_root: Path | None = None) -> list[str]:
     results: list[str] = []
     skill_md = skill_dir / "SKILL.md"
+    if package_root is not None and not is_within(skill_dir.resolve(), package_root.resolve()):
+        return [fail("skill directory must be inside package root")]
 
     if not skill_md.exists():
         return [fail(f"missing SKILL.md at {skill_md}")]
@@ -279,7 +298,10 @@ def audit(skill_dir: Path) -> list[str]:
     else:
         results.append(ok(f"SKILL.md length is {len(lines)} lines"))
 
-    if "TODO" in text or "[TODO" in text:
+    # Only standalone instruction placeholders are failures; examples may discuss TODO.
+    body = re.sub(r"^---\n.*?\n---\n?", "", text, count=1, flags=re.DOTALL)
+    body = re.sub(r"(?ms)^\s*(`{3,}|~{3,})[^\n]*\n.*?^\s*\1\s*$", "", body)
+    if description.startswith("[TODO:") or re.search(r"(?m)^\s*\[TODO:[^\n]*\]\s*$", body):
         results.append(fail("SKILL.md still contains TODO placeholders"))
 
     references_dir = skill_dir / "references"
@@ -311,8 +333,12 @@ def audit(skill_dir: Path) -> list[str]:
         else:
             results.append(warn("agents/openai.yaml is missing display_name or short_description"))
 
-    results.extend(cross_skill_reference_results(skill_dir))
-    results.extend(external_link_results(skill_dir))
+    if package_root is None or package_root.resolve() == skill_dir.resolve():
+        results.extend(cross_skill_reference_results(skill_dir))
+    results.extend(external_link_results(skill_dir, package_root))
+    for path in package_files(skill_dir):
+        if not path.is_symlink() and path.suffix in TEXT_SUFFIXES and path.stat().st_size > MAX_TEXT_BYTES:
+            results.append(warn(f"text scan skipped (> {MAX_TEXT_BYTES} bytes): {path.relative_to(skill_dir)}"))
     results.extend(cli_compatibility_results(skill_dir, text, frontmatter))
 
     return results
@@ -321,10 +347,11 @@ def audit(skill_dir: Path) -> list[str]:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Audit a skill folder for production readiness.")
     parser.add_argument("skill_dir", help="Path to a skill directory")
+    parser.add_argument("--package-root", type=Path, help="Explicit plugin/repository distribution boundary; shared resources inside it are allowed")
     args = parser.parse_args()
 
     skill_dir = Path(args.skill_dir).expanduser().resolve()
-    results = audit(skill_dir)
+    results = audit(skill_dir, package_root=args.package_root)
     for result in results:
         print(result)
 

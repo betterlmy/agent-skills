@@ -1,8 +1,9 @@
 ---
+metadata:
+  external-cli: "true"
+  cli-compatibility: "references/cli-compatibility.md"
 name: codegraph
 description: 使用 CodeGraph CLI 在本地代码库中进行语义探索、符号检索、源码读取、调用关系和改动影响分析。Use when 需要理解代码结构、追踪 callers/callees、评估重构影响或定位受影响测试；适用于 Windows、macOS 和 Linux，精确字符串与非代码文本检索不触发本 Skill。
-external-cli: true
-cli-compatibility: references/cli-compatibility.md
 ---
 
 # CodeGraph

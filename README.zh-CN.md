@@ -23,7 +23,7 @@
 | [`ip-as-logo`](skills/ip-as-logo/SKILL.md) | 生成简洁、可爱、拟人化的方形角色 Logo，采用圆润厚重造型与角落构图 | `npx skills add betterlmy/agent-skills --skill ip-as-logo` |
 | [`go-dev`](skills/go-dev/SKILL.md) | 按仓库约束和实际技术栈规范 Go 开发、评审、API、并发、持久化与测试 | `npx skills add betterlmy/agent-skills --skill go-dev` |
 | [`go-auditor`](skills/go-auditor/SKILL.md) | 审计仓库、模块、package、目录、文件集、高风险域或 Go diff，输出证据可追溯的质量报告 | `npx skills add betterlmy/agent-skills --skill go-auditor` |
-| [`go-mcp-builder`](skills/go-mcp-builder/SKILL.md) | 使用 `mcp-go` 和 Streamable HTTP 构建 Go MCP Server | `npx skills add betterlmy/agent-skills --skill go-mcp-builder` |
+| [`go-mcp-builder`](skills/go-mcp-builder/SKILL.md) | 基于最新官方规范与官方 Go SDK 构建安全的 Go MCP Server | `npx skills add betterlmy/agent-skills --skill go-mcp-builder` |
 | [`mermaid-diagrams`](skills/mermaid-diagrams/SKILL.md) | 使用 Mermaid 创建流程图、时序图、ER 图和 C4 模型等软件图表 | `npx skills add betterlmy/agent-skills --skill mermaid-diagrams` |
 | [`playwright-cli-cdp`](skills/playwright-cli-cdp/SKILL.md) | 使用 `playwright-cli` 通过 CDP 控制 Chrome 系浏览器 | `npx skills add betterlmy/agent-skills --skill playwright-cli-cdp` |
 | [`rag-agent-builder`](skills/rag-agent-builder/SKILL.md) | 使用嵌入、向量数据库、检索和评估能力构建 RAG 应用 | `npx skills add betterlmy/agent-skills --skill rag-agent-builder` |
@@ -58,7 +58,7 @@ npx skills add betterlmy/agent-skills --skill <skill-name> -a claude-code -g -y
 - `codegraph` 封装代码库索引、符号定位、调用分析和改动影响分析工作流。
 - `go-dev` 先识别仓库约束和实际技术栈，再提供 Go 编码、错误、Context、日志、HTTP/gRPC、持久化、并发和测试规范；统一响应等偏好只在仓库无相反约定时作为推荐默认值。
 - `go-auditor` 可审计整个 Go 仓库、模块、package、目录、文件集、高风险域或本地与指定 revision 的 diff，产出边界明确、按优先级排序的证据报告；`go-dev` 用于落实代码修改。
-- `go-mcp-builder` 提供基于 `mark3labs/mcp-go` 与 Streamable HTTP 的 Go MCP Server 完整开发流程。
+- `go-mcp-builder` 会先核对当前 MCP 日期版本与官方 Go SDK，再指导 Tool、Resource、Prompt、stdio 或 Streamable HTTP、认证、兼容和一致性验证。
 
 ### 设计与图表
 
@@ -105,3 +105,7 @@ skills/
 - [Skills CLI](https://github.com/vercel-labs/skills)
 - [Claude Code Skills](https://code.claude.com/docs/en/skills)
 - [Claude Code Agent SDK Skills](https://code.claude.com/docs/en/agent-sdk/skills)
+
+## 指令审计范围
+
+AGENTS 审计通过 --scope 区分仓库入口、用户全局规则和参考手册。Skill 默认按独立包检查；--package-root 明确插件或仓库分发边界。自有 CLI 扩展放入 metadata，其他宿主专用字段保留其契约。大文本跳过会明确报告，不把未扫描资源表述为已验证。
