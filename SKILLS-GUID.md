@@ -20,6 +20,7 @@
 | 探索代码结构、定位符号、分析调用关系或改动影响 | `codegraph` | 精确字符串、配置和非代码文本优先使用 `rg` |
 | 创建、编辑、审查或导出 Draw.io 图表 | `drawio-skill` | 需要 Mermaid 文本时使用 `mermaid-diagrams`；需要品牌化 HTML/SVG/PNG 重绘时使用 `diagram-design` |
 | 创建品牌化 HTML/SVG/PNG 编辑式图表，或将 Draw.io/Mermaid 重绘为可交付视觉稿 | `diagram-design` | 只需要可版本控制的 Mermaid 文本时使用 `mermaid-diagrams`；只需要编辑 Draw.io 源文件时使用 `drawio-skill` |
+| 构建或改版品牌页、仪表盘/后台、AI 工作台、交易页、H5/移动端页面、单组件的高级界面，或要求加动效/3D、做廉价感审计 | `finesse-ui` | 先读 brief 并等 Design Read 确认；`audit` 自动化路径依赖 Node.js，缺失时按人工清单降级；不用于纯后端逻辑、普通 CSS 缺陷修复或不产出界面的任务 |
 | 查找或安装外部 Skill | `find-skills` | 已经指定要修改某个现有 Skill 时不需要先搜索 |
 | 为产品生成简洁可爱的拟人化 IP 角色 Logo，或批量提出候选方向供确认 | `ip-as-logo` | 需要可编辑 SVG/矢量 Logo 时使用 `svg-logo-designer`；本 Skill 以方形角色构图和批量候选为主 |
 | 编写、审查、重构或排查 Go 代码、服务、API、并发和持久化 | `go-dev` | 先遵循仓库约束并识别实际技术栈；Go MCP Server 任务还必须组合 `go-mcp-builder` |

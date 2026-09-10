@@ -19,6 +19,7 @@
 | [`codegraph`](skills/codegraph/SKILL.md) | 索引本地代码库并分析符号、调用关系、改动影响和受影响测试 | `npx skills add betterlmy/agent-skills --skill codegraph` |
 | [`diagram-design`](skills/diagram-design/SKILL.md) | 创建具有品牌风格的 HTML/SVG/PNG 编辑式图表，重绘 Draw.io 或 Mermaid 源图，并遵循无障碍视觉规范 | `npx skills add betterlmy/agent-skills --skill diagram-design` |
 | [`drawio-skill`](skills/drawio-skill/SKILL.md) | 创建、编辑、审查、验证和导出 Draw.io 图表 | `npx skills add betterlmy/agent-skills --skill drawio-skill` |
+| [`finesse-ui`](skills/finesse-ui/SKILL.md) | 构建绝不廉价的高级网络界面，覆盖品牌页、仪表盘/后台、AI 工作台、交易页、H5 移动端页面与单组件，内置反 AI-slop 审计、动效/3D 增强与跨次构建防趋同旋转 | `npx skills add betterlmy/agent-skills --skill finesse-ui` |
 | [`find-skills`](skills/find-skills/SKILL.md) | 从开放的 agent skills 生态中发现并安装 Skill | `npx skills add betterlmy/agent-skills --skill find-skills` |
 | [`ip-as-logo`](skills/ip-as-logo/SKILL.md) | 生成简洁、可爱、拟人化的方形角色 Logo，采用圆润厚重造型与角落构图 | `npx skills add betterlmy/agent-skills --skill ip-as-logo` |
 | [`go-dev`](skills/go-dev/SKILL.md) | 按仓库约束和实际技术栈规范 Go 开发、评审、API、并发、持久化与测试 | `npx skills add betterlmy/agent-skills --skill go-dev` |
@@ -64,6 +65,7 @@ npx skills add betterlmy/agent-skills --skill <skill-name> -a claude-code -g -y
 
 - `diagram-design` 生成自包含 HTML/SVG/PNG 编辑式图表，提供模板、SVG 无障碍检查以及受约束的 Draw.io/Mermaid 重绘流程。
 - `drawio-skill` 支持 Draw.io 架构图、流程图、ER/UML/时序图、视觉检查及 Office 安全导出。
+- `finesse-ui` 按品牌、产品、交易、H5 四种寄存器设计绝不廉价的高级界面，内置反 AI-slop 审计（自动化路径依赖 Node.js 运行 `scripts/detect.mjs`）、动效/3D 增强，以及跨次构建防趋同旋转。
 - `ip-as-logo` 设计最简洁可爱的 IP 角色 Logo：紧凑、小尺寸仍可辨识，批量产出六个候选并交用户确认。
 - `mermaid-diagrams` 覆盖使用 Mermaid 语法维护可版本控制的软件图表。
 - `software-designer` 根据需求生成规模适度的 Markdown 软件设计文档，或依据代码、配置、Schema 和测试还原现状设计。

@@ -19,6 +19,7 @@ A collection of agent skills maintained by `betterlmy`, covering repository guid
 | [`codegraph`](skills/codegraph/SKILL.md) | Index local repositories and analyze symbols, call relationships, impact, and affected tests | `npx skills add betterlmy/agent-skills --skill codegraph` |
 | [`diagram-design`](skills/diagram-design/SKILL.md) | Create branded editorial HTML/SVG/PNG diagrams, redraw Draw.io or Mermaid sources, and apply accessible visual design rules | `npx skills add betterlmy/agent-skills --skill diagram-design` |
 | [`drawio-skill`](skills/drawio-skill/SKILL.md) | Create, edit, review, validate, and export Draw.io diagrams | `npx skills add betterlmy/agent-skills --skill drawio-skill` |
+| [`finesse-ui`](skills/finesse-ui/SKILL.md) | Build high-craft web interfaces — brand pages, dashboards, AI workbenches, commerce pages, H5/mobile screens, and single components — with anti-slop audits, motion/3D enhancement, and cross-run divergence rotation | `npx skills add betterlmy/agent-skills --skill finesse-ui` |
 | [`find-skills`](skills/find-skills/SKILL.md) | Discover and install skills from the open agent skills ecosystem | `npx skills add betterlmy/agent-skills --skill find-skills` |
 | [`ip-as-logo`](skills/ip-as-logo/SKILL.md) | Generate simple, cute, personified square character logos with rounded heavy forms and a dominant lower-corner composition | `npx skills add betterlmy/agent-skills --skill ip-as-logo` |
 | [`go-dev`](skills/go-dev/SKILL.md) | Guide Go development, review, APIs, concurrency, persistence, and testing from repository constraints and the detected stack | `npx skills add betterlmy/agent-skills --skill go-dev` |
@@ -64,6 +65,7 @@ Omit `--skill <skill-name>` to use the interactive selection provided by the Ski
 
 - `diagram-design` creates branded editorial diagrams as self-contained HTML/SVG/PNG, with templates, accessible SVG checks, and bounded Draw.io/Mermaid redraw workflows.
 - `drawio-skill` supports Draw.io architecture diagrams, flowcharts, ER/UML/sequence diagrams, visual QA, and Office-safe export.
+- `finesse-ui` designs never-cheap, high-craft interfaces across brand, product, commerce, and H5 registers, with an anti-slop audit (automated path via `scripts/detect.mjs`, which requires Node.js), motion/3D enhancement, and divergence rotation that keeps repeat builds distinct.
 - `ip-as-logo` designs the simplest cute IP character logos: compact, recognizable at small sizes, prototyped in batches of six candidates for approval.
 - `mermaid-diagrams` covers version-controlled software diagrams using Mermaid syntax.
 - `software-designer` creates proportionate Markdown software design documents from requirements or reconstructs as-is designs from code, configuration, schemas, and tests.
