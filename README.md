@@ -32,6 +32,7 @@ A collection of agent skills maintained by `betterlmy`, covering repository guid
 | [`simplify-codebase`](skills/simplify-codebase/SKILL.md) | Audit a codebase for evidence-backed simplification, or safely remove accidental complexity with explicit authorization | `npx skills add betterlmy/agent-skills --skill simplify-codebase` |
 | [`software-designer`](skills/software-designer/SKILL.md) | Create traceable software design documents from requirements or reverse-engineer them from existing code and evidence | `npx skills add betterlmy/agent-skills --skill software-designer` |
 | [`svg-logo-designer`](skills/svg-logo-designer/SKILL.md) | Design and deliver original, scalable, safe, and validated SVG logos and essential variants | `npx skills add betterlmy/agent-skills --skill svg-logo-designer` |
+| [`tavily-web`](skills/tavily-web/SKILL.md) | Retrieve live web data through the Tavily API: web search, URL content extraction, site mapping, section crawling, and cited multi-source research, authenticated via the `TAVILY_API_KEY` environment variable | `npx skills add betterlmy/agent-skills --skill tavily-web` |
 
 ## Installation
 
@@ -75,6 +76,7 @@ Omit `--skill <skill-name>` to use the interactive selection provided by the Ski
 
 - `playwright-cli-cdp` launches or reuses local Chrome debugging endpoints and drives attached browsers exclusively through CDP.
 - `rag-agent-builder` provides examples and utilities for document Q&A, knowledge bases, enterprise search, retrieval, and evaluation.
+- `tavily-web` retrieves live web data through the Tavily REST API (search, extract, map, crawl, research) using the `TAVILY_API_KEY` environment variable; pure standard-library script, no third-party dependencies.
 
 ### Skill Development
 

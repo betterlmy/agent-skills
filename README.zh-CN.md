@@ -32,6 +32,7 @@
 | [`simplify-codebase`](skills/simplify-codebase/SKILL.md) | 对现有代码库进行证据驱动的简化审计，或在明确授权后安全移除偶然复杂度 | `npx skills add betterlmy/agent-skills --skill simplify-codebase` |
 | [`software-designer`](skills/software-designer/SKILL.md) | 根据需求生成可追踪的软件设计文档，或根据现有代码和证据逆向还原设计 | `npx skills add betterlmy/agent-skills --skill software-designer` |
 | [`svg-logo-designer`](skills/svg-logo-designer/SKILL.md) | 设计并交付原创、可缩放、安全且经过验证的 SVG Logo 与必要变体 | `npx skills add betterlmy/agent-skills --skill svg-logo-designer` |
+| [`tavily-web`](skills/tavily-web/SKILL.md) | 基于 Tavily API 获取实时网页数据：网页搜索、URL 正文抽取、站点地图、章节爬取与带引用的多源研究，通过 `TAVILY_API_KEY` 环境变量认证 | `npx skills add betterlmy/agent-skills --skill tavily-web` |
 
 ## 安装
 
@@ -75,6 +76,7 @@ npx skills add betterlmy/agent-skills --skill <skill-name> -a claude-code -g -y
 
 - `playwright-cli-cdp` 启动或复用本地 Chrome 调试端点，并仅通过 CDP 操作已连接的浏览器。
 - `rag-agent-builder` 提供文档问答、知识库、企业搜索、检索与评估相关示例和工具。
+- `tavily-web` 通过 Tavily REST API 获取实时网页数据（search/extract/map/crawl/research），凭据读 `TAVILY_API_KEY` 环境变量，纯标准库脚本无第三方依赖。
 
 ### Skill 开发
 
