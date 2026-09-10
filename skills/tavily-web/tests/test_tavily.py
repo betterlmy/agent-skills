@@ -133,6 +133,34 @@ class PayloadTests(unittest.TestCase):
         self.assertEqual(payload["url"], "https://docs.example.com")
         self.assertEqual(payload["max_depth"], 2)
 
+    def test_crawl_payload(self):
+        captured = []
+        code, out, _ = run_main(
+            ["crawl", "https://docs.example.com", "--max-depth", "2", "--max-breadth", "10"],
+            captured_call=captured,
+            responses=[(200, {"results": [{"url": "https://docs.example.com/p1"}]})],
+        )
+        self.assertEqual(code, 0)
+        self.assertEqual(captured[0][0], "/crawl")
+        self.assertEqual(captured[0][1]["url"], "https://docs.example.com")
+        self.assertEqual(captured[0][1]["max_depth"], 2)
+        self.assertEqual(captured[0][1]["max_breadth"], 10)
+        parsed = json.loads(out)
+        self.assertIn("results", parsed)
+
+    def test_crawl_defaults(self):
+        captured = []
+        code, _, _ = run_main(
+            ["crawl", "https://docs.example.com"],
+            captured_call=captured,
+            responses=[(200, {"results": []})],
+        )
+        self.assertEqual(code, 0)
+        self.assertEqual(captured[0][0], "/crawl")
+        self.assertEqual(captured[0][1]["url"], "https://docs.example.com")
+        self.assertNotIn("max_depth", captured[0][1])
+        self.assertNotIn("max_breadth", captured[0][1])
+
     def test_research_no_wait_payload(self):
         captured = []
         code, _, _ = run_main(

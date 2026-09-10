@@ -6,7 +6,7 @@
   search <query> [--depth D] [--topic T] [--days N] [--max-results N] [--include-answer]
   extract <url> [<url> ...] [--include-images]
   map <url>
-  crawl <url> [--max-depth N] [--max-pages N]
+  crawl <url> [--max-depth N] [--max-breadth N]
   research <query> [--model pro] [--no-wait]
   research-status <job-id>
   research-poll <job-id> [--timeout S] [--interval S]
