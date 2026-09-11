@@ -1,441 +1,211 @@
 ---
 name: rag-agent-builder
-description: Build Retrieval-Augmented Generation (RAG) applications that combine LLM capabilities with external knowledge sources. Covers vector databases, embeddings, retrieval strategies, and response generation. Use when building document Q&A systems, knowledge base applications, enterprise search, or combining LLMs with custom data.
+description: 构建结合大语言模型能力与外部知识源的检索增强生成（RAG）应用。覆盖向量数据库选型、Embedding 向量化、检索策略优化与回答生成。Use when 开发文档问答系统、知识库检索、企业私有数据搜索，或将 LLM 与定制数据源结合；不用于常规数据库 CRUD 查询或不涉及外部检索增强的通用搜索任务。
 ---
 
 # RAG Agent Builder
 
-Build powerful Retrieval-Augmented Generation (RAG) applications that enhance LLM capabilities with external knowledge sources, enabling accurate, contextualized AI responses.
+构建高可用、生产级的检索增强生成（Retrieval-Augmented Generation，RAG）应用，通过外部专业知识库扩展大语言模型的能力边界，生成精准、基于事实且具备上下文依据的回答。
 
-## Quick Start
+## 快速上手与示例工具
 
-Get started with RAG implementations in the examples and utilities:
+本 Skill 在配套目录中提供了完整的实现范例与实用工具模块：
 
-- **Examples**: See [`examples/`](examples/) directory for complete implementations:
-  - [`basic_rag.py`](examples/basic_rag.py) - Simple chunk-embed-retrieve-generate pipeline
-  - [`retrieval_strategies.py`](examples/retrieval_strategies.py) - Hybrid search, reranking, and filtering
-  - [`agentic_rag.py`](examples/agentic_rag.py) - Agent-controlled retrieval with iterative refinement
+- **代码范例**：查阅 [`examples/`](examples/) 目录：
+  - [`basic_rag.py`](examples/basic_rag.py)：分块、向量化、检索、生成的经典流水线；
+  - [`retrieval_strategies.py`](examples/retrieval_strategies.py)：混合检索（BM25+向量）、重排序（Reranking）与元数据过滤；
+  - [`agentic_rag.py`](examples/agentic_rag.py)：由 Agent 自主控制的多轮迭代检索与意图细化。
+- **公用工具**：查阅 [`scripts/`](scripts/) 目录：
+  - [`embedding_management.py`](scripts/embedding_management.py)：向量生成、归一化与本地缓存管理；
+  - [`vector_db_manager.py`](scripts/vector_db_manager.py)：主流向量数据库的统一抽象与工厂模式封装；
+  - [`rag_evaluation.py`](scripts/rag_evaluation.py)：检索准确率与回答生成质量量化评估指标。
 
-- **Utilities**: See [`scripts/`](scripts/) directory for helper modules:
-  - [`embedding_management.py`](scripts/embedding_management.py) - Embedding generation, normalization, and caching
-  - [`vector_db_manager.py`](scripts/vector_db_manager.py) - Vector database abstraction and factory
-  - [`rag_evaluation.py`](scripts/rag_evaluation.py) - Retrieval and answer quality metrics
+## 系统核心架构概述
 
-## Overview
+一个标准的 RAG 系统由三大核心环节协同构成：
+1. **文档检索（Document Retrieval）**：从结构化或非结构化知识库中精准检索与问题高度相关的信息片段；
+2. **上下文整合（Context Integration）**：对检索出的多源片段进行清洗、排序、压缩，并组装进 Prompt 上下文窗口；
+3. **回答生成（Response Generation）**：引导 LLM 基于提供的上下文事实生成严谨、带溯源引用的答案。
 
-RAG systems combine three key components:
-1. **Document Retrieval** - Find relevant information from knowledge bases
-2. **Context Integration** - Pass retrieved context to the LLM
-3. **Response Generation** - Generate answers grounded in the retrieved information
+### 为什么需要 RAG？
 
-This skill covers building production-ready RAG applications with various frameworks and approaches.
+- **无 RAG 模式**：LLM 仅依赖训练时的预训练权重，存在知识时效滞后、无法触达私有数据、容易产生事实幻觉的问题；
+- **RAG 增强模式**：LLM 结合实时、动态的垂直业务知识，产出事实可考、来源可溯的可靠回答。
 
-## Core Concepts
+### 核心适用场景
 
-### What is RAG?
+- **私有文档问答**：针对 PDF、技术手册、合同报告、产品文档进行精准解答；
+- **知识库智能搜索**：企业内网 Wiki、Notion、Confluence 文档智能检索；
+- **企业级统一搜索**：打通多系统异构数据孤岛；
+- **特定上下文辅助助手**：客户服务机器人、HR 规章答疑、技术支持助手；
+- **强事实敏感型领域**：法律法规条文比对、医疗健康知识库、金融投研分析。
 
-RAG augments LLM knowledge with external data:
-- **Without RAG**: LLM relies on training data (may be outdated or limited)
-- **With RAG**: LLM uses real-time, custom knowledge + training knowledge
+### 不适合采用 RAG 的场景
 
-### When to Use RAG
+- 通用常识闲聊与开放性创意写作；
+- 秒级高频变动的纯实时交易流数据（优先采用实时 Tool 调用）；
+- 简单的主键查找或单表结构化精确过滤（直接编写 SQL 数据库查询更稳定）。
 
-- **Document Q&A**: Answer questions about PDFs, books, reports
-- **Knowledge Base Search**: Query internal documentation, wikis
-- **Enterprise Search**: Search proprietary company data
-- **Context-Specific Assistants**: Customer support, HR assistants
-- **Fact-Heavy Applications**: Legal docs, medical records, financial data
+## 核心架构演进模式
 
-### When RAG Might Not Be Needed
-
-- General knowledge questions (ChatGPT-like)
-- Real-time data that changes constantly (use tools instead)
-- Very simple lookup tasks (use database queries)
-
-## Architecture Patterns
-
-### Basic RAG Pipeline
-
+### 1. 经典基础流水线（Basic RAG）
+```text
+原始文档 → 分块（Chunks） → 向量化（Embeddings） → 存入向量数据库
+                                                         ↓
+用户提问 → 向量化查询 → 相似度检索 → 拼装 Prompt → LLM → 生成最终回答
+                            ↑           ↓
+                        向量数据库    检索上下文
 ```
-Documents → Chunks → Embeddings → Vector DB
-                                        ↓
-User Question → Embedding → Retrieval → LLM → Answer
-                              ↑         ↓
-                         Vector DB    Context
-```
+- **优势**：结构清晰、开发周期短，适用于基础单轮问答。
+- **局限**：对复杂多跳问题缺乏深挖能力，一次检索质量决定成败。
 
-### Advanced RAG Patterns
+### 2. Agent 驱动型检索（Agentic RAG）
+- 由 Agent 自主判断是否需要检索、何时检索；
+- 能够根据中间推理结果动态重写并多轮迭代检索查询；
+- 擅长处理多步骤、多线索的复杂推理与长链路任务。
 
-#### 1. Agentic RAG
-- Agent decides what to retrieve and when
-- Can refine queries iteratively
-- Better for complex reasoning
+### 3. 分层检索架构（Hierarchical RAG）
+- 建立多层级文档拓扑结构（篇章级摘要 → 小节级细粒度块）；
+- 先锁定高层概括主题，再深入定位局部细节块，大幅优化召回效率与上下文相关度。
 
-#### 2. Hierarchical RAG
-- Multi-level document structure
-- Search at different levels of detail
-- More flexible organization
+### 4. 混合检索模式（Hybrid Search RAG）
+- 结合传统关键词检索（BM25 / 倒排索引）与语义向量相似度检索（Dense Embeddings）；
+- 兼顾专业专有名词、编号的精准命中与抽象语义泛化匹配；
+- 显著提升混合复杂查询的召回稳定性。
 
-#### 3. Hybrid Search RAG
-- Combines keyword search (BM25) + semantic search (embeddings)
-- Captures both exact matches and meaning
-- Better for mixed query types
+### 5. 矫正性检索（CRAG，Corrective RAG）
+- 检索后先由评价模型对文档相关性进行质量打分；
+- 若相关性不足，自动触发备选检索策略、扩大检索范围或回退到网络搜索；
+- 确保注入上下文的信息真实可靠。
 
-#### 4. Corrective RAG (CRAG)
-- Evaluates retrieved documents for relevance
-- Retrieves additional sources if needed
-- Ensures high-quality context
+## 关键实施组件与技术实现
 
-## Implementation Components
+### 1. 文档解析与分块策略（Chunking）
 
-### 1. Document Processing
-
-**Chunking Strategies**:
 ```python
-# Simple fixed-size chunks
+# 1. 简单固定大小分块（带重叠区）
 chunks = split_text(doc, chunk_size=1000, overlap=100)
 
-# Semantic chunks (group by meaning)
+# 2. 语义分块（按语义段落连贯度切分）
 chunks = semantic_chunking(doc, max_tokens=512)
 
-# Hierarchical chunks (different levels)
+# 3. 结构化分层切分（保持标题与小节层级）
 chapters = split_by_heading(doc)
 chunks = split_each_chapter(chapters, size=1000)
 ```
 
-**Key Considerations**:
-- Chunk size affects retrieval quality and cost
-- Overlap helps maintain context between chunks
-- Semantic chunking preserves meaning better
+**设计关键考量：**
+- 分块过小会丢失宏观语境，分块过大会引入噪声并挤占 Token 预算；
+- 设置适度重叠区（Overlap，通常 10%–20%）可防止关键信息在切割边界处断裂；
+- 保留元数据（如章节标题、页码、文档更新时间）对后续精准过滤至关重要。
 
-### 2. Embedding Generation
+### 2. 向量嵌入（Embeddings）
 
-**Popular Embedding Models**:
-- OpenAI: `text-embedding-3-small`, `text-embedding-3-large`
-- Open Source: `all-MiniLM-L6-v2`, `all-mpnet-base-v2`
-- Domain-Specific: Domain-trained embeddings for specialized knowledge
+- **主流商业模型**：OpenAI `text-embedding-3-small` / `text-embedding-3-large`、Cohere Embed v3；
+- **主流开源模型**：BGE 系列（如 `bge-large-zh`）、`all-MiniLM-L6-v2`、`all-mpnet-base-v2`；
+- **垂直领域模型**：在医疗、金融、法律等专业术语密集领域，采用微调或垂直领域 Embedding 模型。
 
-**Best Practices**:
-- Use consistent embedding model for retrieval and queries
-- Store embeddings with normalized vectors
-- Update embeddings when documents change
+**工程准则：**
+- 文档建库索引与查询提问必须使用完全相同的 Embedding 模型；
+- 存入前对向量执行归一化（L2 Normalization），便于使用更高效的点积代替余弦距离；
+- 文档内容变更时建立版本更新与增量刷新机制。
 
-### 3. Vector Databases
+### 3. 向量数据库选型考量
 
-**Popular Options**:
-- **Pinecone**: Managed, serverless, easy to scale
-- **Weaviate**: Open-source, self-hosted, flexible
-- **Milvus**: Open-source, high performance
-- **Chroma**: Lightweight, good for prototypes
-- **Qdrant**: Production-grade, high-performance
+- **Pinecone**：全托管云原生 Serverless 架构，开箱即用，高弹性扩展；
+- **Weaviate**：开源且支持自托管，内置混合检索与模块化向量化管线；
+- **Milvus / Zilliz**：面向超大规模亿级向量的高性能分布式系统；
+- **Qdrant**：Rust 构建的高性能向量数据库，支持极强且丰富的 Payload 过滤；
+- **Chroma**：极轻量、内嵌式，适合原型验证与单机中小规模应用；
+- **pgvector**：PostgreSQL 插件，适合已有成熟关系型数据库且数据量处于中等规模的业务。
 
-**Selection Criteria**:
-- Scale requirements (data volume, queries per second)
-- Latency needs (real-time vs batch)
-- Cost considerations
-- Deployment preferences (managed vs self-hosted)
+### 4. 检索优化与重排序（Reranking）
 
-### 4. Retrieval Strategies
-
-**Retrieval Methods**:
 ```python
-# Similarity search (most common)
-results = vector_db.query(question_embedding, k=5)
+# 1. 向量相似度初筛检索（Top-K）
+semantic_results = vector_db.query(question_embedding, k=10)
 
-# Hybrid search (keyword + semantic)
-keyword_results = bm25.search(question, k=3)
-semantic_results = vector_db.query(embedding, k=3)
-results = combine_and_rank(keyword_results, semantic_results)
+# 2. 关键词检索
+keyword_results = bm25.search(question, k=10)
 
-# Reranking (improve relevance)
-retrieved = initial_retrieval(query)
-reranked = rerank_by_relevance(retrieved, query)
+# 3. 结果合并与初步去重
+candidates = combine_results(semantic_results, keyword_results)
+
+# 4. 交叉编码重排序（Cross-Encoder Rerank，大幅提升前置精度）
+reranked_results = reranker.rank(query=question, documents=candidates, top_n=3)
 ```
 
-**Retrieval Parameters**:
-- **k** (number of results): Balance between context and relevance
-- **Similarity threshold**: Filter out low-relevance results
-- **Diversity**: Return varied results vs best matches
+### 5. 上下文组装与 Prompt 模板设计
 
-### 5. Context Integration
+```text
+你是一位严谨的专业知识助手。请严格依据下方提供的参考材料回答用户提问。
+若参考材料中未包含能回答该问题的信息，请如实告知“参考资料中没有相关信息”，切勿自行臆造事实。
 
-**Context Window Management**:
-```python
-# Fit retrieved documents into context window
-def prepare_context(retrieved_docs, max_tokens=3000):
-    context = ""
-    for doc in retrieved_docs:
-        if len(tokenize(context + doc)) <= max_tokens:
-            context += doc
-        else:
-            break
-    return context
-```
-
-**Prompt Design**:
-```
-You are a helpful assistant. Answer the question based on the provided context.
-
-Context:
+[参考材料]
 {retrieved_documents}
 
-Question: {user_question}
+[用户问题]
+{user_question}
 
-Answer:
+[回答要求]
+1. 观点明确、结构清晰；
+2. 涉及具体事实或数据时，在对应陈述后注明引用来源编号（例如 [1]）。
 ```
 
-### 6. Response Generation
+## 关键生产级框架集成示例
 
-**Generation Strategies**:
-- **Direct Generation**: LLM answers from context
-- **Summarization**: Summarize multiple retrieved docs first
-- **Fact-Grounding**: Ensure answer cites sources
-- **Iterative Refinement**: Refine based on user feedback
-
-## Implementation Patterns
-
-### Pattern 1: Basic RAG
-
-Simplest RAG implementation:
-1. Split documents into chunks
-2. Generate embeddings for each chunk
-3. Store in vector database
-4. Retrieve top-k similar chunks for query
-5. Pass to LLM with context
-
-**Pros**: Simple, fast, works well for straightforward QA
-**Cons**: May miss relevant context, no refinement
-
-### Pattern 2: Agentic RAG
-
-Agent controls retrieval:
-1. Agent receives user question
-2. Decides whether to retrieve documents
-3. Formulates retrieval query (may differ from original)
-4. Retrieves relevant documents
-5. Can iterate or use tools
-6. Generates final answer
-
-**Pros**: Better for complex questions, iterative improvement
-**Cons**: More complex, higher costs
-
-### Pattern 3: Corrective RAG (CRAG)
-
-Validates retrieved documents:
-1. Retrieve documents for question
-2. Grade each document for relevance
-3. If poor relevance:
-   - Try different retrieval strategy
-   - Expand search scope
-   - Retrieve from different sources
-4. Generate answer from validated context
-
-**Pros**: Higher quality answers, adapts to failures
-**Cons**: More API calls, slower
-
-## Popular Frameworks
-
-### LangChain
+### LangChain 示例
 ```python
-from langchain.document_loaders import PDFLoader
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.vectorstores import Pinecone
-from langchain.chains import RetrievalQA
+from langchain_community.document_loaders import PyPDFLoader
+from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+from langchain_community.vectorstores import Pinecone
+from langchain.chains import create_retrieval_chain
+from langchain.chains.combine_documents import create_stuff_documents_chain
 
-# Load documents
-loader = PDFLoader("document.pdf")
+# 加载文档并提取
+loader = PyPDFLoader("handbook.pdf")
 docs = loader.load()
 
-# Create RAG chain
-embeddings = OpenAIEmbeddings()
-vectorstore = Pinecone.from_documents(docs, embeddings)
-qa = RetrievalQA.from_chain_type(
-    llm=ChatOpenAI(),
-    chain_type="stuff",
-    retriever=vectorstore.as_retriever()
-)
+# 构建向量检索链
+embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+vectorstore = Pinecone.from_documents(docs, embeddings, index_name="knowledge-base")
+retriever = vectorstore.as_retriever(search_kwargs={"k": 4})
 
-answer = qa.run("What is the document about?")
+# 组装问答流水线
+combine_docs_chain = create_stuff_documents_chain(ChatOpenAI(model="gpt-4o"), prompt)
+rag_chain = create_retrieval_chain(retriever, combine_docs_chain)
+response = rag_chain.invoke({"input": "核心报销流程是什么？"})
 ```
 
-### LlamaIndex
+### LlamaIndex 示例
 ```python
-from llama_index import GPTVectorStoreIndex, SimpleDirectoryReader
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
 
-# Load documents
+# 自动读取并构建索引
 documents = SimpleDirectoryReader("./data").load_data()
+index = VectorStoreIndex.from_documents(documents)
 
-# Create index
-index = GPTVectorStoreIndex.from_documents(documents)
-
-# Query
-response = index.as_query_engine().query("What is the main topic?")
+# 创建查询引擎并问答
+query_engine = index.as_query_engine(similarity_top_k=3)
+response = query_engine.query("项目核心架构是如何设计的？")
 ```
 
-### CrewAI with RAG
-```python
-from crewai import Agent, Task, Crew
-from tools import retrieval_tool
+## 生产落地的黄金法则
 
-researcher = Agent(
-    role="Research Assistant",
-    goal="Research topics using knowledge base",
-    tools=[retrieval_tool]
-)
+1. **源头数据清洗**：剔除冗余页眉页脚、扫描件水印噪点；对表格数据采用 Markdown 或专用 JSON 格式表述；
+2. **混合检索先行**：生产环境强烈建议将 BM25 稀疏检索与密集向量检索结合，避免专有名词漏召回；
+3. **引入重排序（Reranking）**：初筛召回 15–20 条候选，通过 Cross-Encoder 重排选出最优 3–5 条，质效提升最明显；
+4. **强制溯源标记**：在输出回答中明确标注引用的文档标题与段落锚点；
+5. **建立全链路评测体系**：
+   - 检索侧评估：命中率（Hit Rate）、召回率（Recall）、MRR（平均倒数排名）；
+   - 生成侧评估：真实性（Faithfulness，是否脱离上下文幻觉）、相关性（Answer Relevance）。
 
-research_task = Task(
-    description="Research the topic: {topic}",
-    agent=researcher
-)
-```
+## 常见瓶颈与对策速查
 
-## Best Practices
-
-### Document Preparation
-- ✓ Clean and normalize text (remove headers, footers)
-- ✓ Preserve document structure when possible
-- ✓ Add metadata (source, date, category)
-- ✓ Handle PDFs with OCR if scanned
-- ✓ Test chunk sizes for your domain
-
-### Embedding Strategy
-- ✓ Use same embedding model for indexing and queries
-- ✓ Fine-tune embeddings for domain-specific needs
-- ✓ Normalize embeddings for consistency
-- ✓ Monitor embedding quality metrics
-
-### Retrieval Optimization
-- ✓ Tune k (number of results) for your use case
-- ✓ Use reranking for quality improvement
-- ✓ Implement relevance filtering
-- ✓ Monitor retrieval precision and recall
-- ✓ Cache frequently retrieved documents
-
-### Generation Quality
-- ✓ Include source citations in answers
-- ✓ Prompt LLM to indicate confidence
-- ✓ Ask to cite specific documents
-- ✓ Generate summaries for long contexts
-- ✓ Validate answers against context
-
-### Monitoring & Evaluation
-- ✓ Track retrieval metrics (precision, recall, MRR)
-- ✓ Monitor answer quality and relevance
-- ✓ Log failed retrievals for improvement
-- ✓ Collect user feedback
-- ✓ Iterate based on failures
-
-## Common Challenges & Solutions
-
-### Challenge: Irrelevant Retrieval
-**Solutions**:
-- Improve chunking strategy
-- Better embedding model
-- Add document metadata to queries
-- Implement reranking
-- Use hybrid search
-
-### Challenge: Context Too Large
-**Solutions**:
-- Reduce chunk size
-- Retrieve fewer results (smaller k)
-- Summarize retrieved context
-- Use hierarchical retrieval
-- Filter by relevance score
-
-### Challenge: Missing Information
-**Solutions**:
-- Increase k (retrieve more)
-- Improve embedding model
-- Better preprocessing
-- Use multiple search strategies
-- Add document hierarchy
-
-### Challenge: Slow Performance
-**Solutions**:
-- Use managed vector database
-- Cache embeddings
-- Batch process documents
-- Optimize chunk size
-- Use smaller embedding model for speed
-
-## Evaluation Metrics
-
-**Retrieval Metrics**:
-- **Precision**: % of retrieved docs that are relevant
-- **Recall**: % of relevant docs that are retrieved
-- **MRR (Mean Reciprocal Rank)**: Rank of first relevant result
-- **NDCG (Normalized DCG)**: Quality of ranking
-
-**Answer Quality Metrics**:
-- **Relevance**: Does answer address the question?
-- **Correctness**: Is the answer factually accurate?
-- **Grounding**: Is answer supported by context?
-- **User Satisfaction**: Would user find answer helpful?
-
-## Advanced Techniques
-
-### 1. Query Expansion
-```python
-# Expand query with related terms
-expanded_query = query + " " + synonym_expansion(query)
-results = retrieve(expanded_query)
-```
-
-### 2. Document Compression
-```python
-# Compress retrieved docs before passing to LLM
-compressed = compress_documents(retrieved_docs, query)
-context = format_context(compressed)
-```
-
-### 3. Active Retrieval
-```python
-# Iteratively refine retrieval based on LLM output
-query = user_question
-while iterations < max:
-    results = retrieve(query)
-    answer = generate_with_context(results)
-    if answer_complete(answer):
-        break
-    query = refine_query(answer)
-```
-
-### 4. Multi-Modal RAG
-```python
-# Retrieve both text and images
-text_results = text_retriever.query(question)
-image_results = image_retriever.query(question)
-context = combine_multimodal(text_results, image_results)
-```
-
-## Resources & References
-
-### Key Papers
-- "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks" (Lewis et al.)
-- "REALM: Retrieval-Augmented Language Model Pre-Training" (Guu et al.)
-
-### Frameworks
-- LangChain: https://python.langchain.com/
-- LlamaIndex: https://www.llamaindex.ai/
-- HayStack: https://haystack.deepset.ai/
-
-### Vector Databases
-- Pinecone: https://www.pinecone.io/
-- Weaviate: https://weaviate.io/
-- Qdrant: https://qdrant.tech/
-
-### Embedding Models
-- OpenAI: https://platform.openai.com/docs/guides/embeddings
-- Hugging Face: https://huggingface.co/models?pipeline_tag=sentence-similarity
-
-## Next Steps
-
-1. **Choose your stack**: Decide on framework (LangChain, LlamaIndex, etc.)
-2. **Prepare documents**: Process and chunk your knowledge base
-3. **Select embeddings**: Choose embedding model for your domain
-4. **Pick vector DB**: Select storage solution for scale
-5. **Build pipeline**: Implement retrieval and generation
-6. **Evaluate**: Test on sample questions and iterate
-7. **Monitor**: Track quality metrics in production
-
+| 痛点问题 | 根因定位 | 推荐排查与优化对策 |
+|---|---|---|
+| **检索出大量无关内容** | 分块过大或查询意图漂移 | 减小分块尺寸；使用语义分块；引入查询意图改写（Query Rewriting） |
+| **关键信息漏召回** | 专有名词不匹配或相似度阈值过死 | 启用 BM25+向量混合检索；引入假设性文档嵌入（HyDE）；扩大初筛 Top-K |
+| **上下文溢出或费用过高** | 注入过多冗余上下文 | 引入 Reranker 过滤低分块；在注入 Prompt 前使用上下文压缩算法 |
+| **LLM 生成事实幻觉** | 检索上下文不够明确或 Prompt 约束弱 | 强化系统级 Prompt“未提及则声明不知道”；使用带引用标注模板 |
+| **检索延迟过长** | 未建向量索引或网络链路开销 | 启用 HNSW/IVF 向量索引；对高频问题嵌入及检索结果增加 Redis 缓存 |

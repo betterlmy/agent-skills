@@ -1,8 +1,8 @@
-# Draw.io XML authoring and layout rules
+# Draw.io XML 编写与布局规范
 
-Read this file when generating or editing `.drawio` XML. Keep source text editable with `html=1`; solve Office font compatibility during export, not by rewriting source labels.
+在生成或编辑 `.drawio` XML 时阅读本文档。始终保持源码文本标签的 `html=1` 可编辑性；对于 Office 字体渲染兼容性，在导出阶段解决，切勿通过破坏性篡改源码标签文本模式来妥协。
 
-## Minimal document
+## 最小合法文档结构
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -18,17 +18,17 @@ Read this file when generating or editing `.drawio` XML. Keep source text editab
 </mxfile>
 ```
 
-Required invariants:
+必须遵守的硬性约束：
 
-- Include root cells `id="0"` and `id="1"` in every diagram page.
-- Give every cell a unique ID within its page.
-- Make top-level cells children of `1`; nested cells use their real container as `parent`.
-- Escape `&`, `<`, `>`, and quotes in attribute values.
-- Use `&#xa;` for label line breaks, never a literal `\n`.
-- Never put `--` inside XML comments.
-- Keep `html=1` for editable source labels. Do not bulk-change it to fix PowerPoint fonts.
+- 每个图表页面必须包含 `id="0"` 和 `id="1"` 两个根级节点；
+- 页面内每个 cell 的 ID 必须全局唯一；
+- 顶层元素作为 `1` 的子节点；嵌套元素使用真实的容器作为 `parent`；
+- XML 属性中的 `&`、`<`、`>` 以及双引号必须正确转义；
+- 标签换行统一使用 `&#xa;`，严禁直接在属性值中插入字面换行符 `\n`；
+- XML 注释内部严禁连续出现 `--`；
+- 保持可编辑标签的 `html=1` 属性，切勿为了迁就 PowerPoint 批量删除该属性。
 
-## Vertices
+## 节点图元（Vertices）
 
 ```xml
 <mxCell id="service" value="API Service&#xa;REST / gRPC"
@@ -38,23 +38,23 @@ Required invariants:
 </mxCell>
 ```
 
-Common structural styles:
+常见结构化样式前缀：
 
-| Element | Style prefix |
+| 图元类型 | 样式前缀 |
 |---|---|
-| Rectangle | `rounded=0` |
-| Rounded service | `rounded=1` |
-| Database | `shape=cylinder3` |
-| Decision | `rhombus` |
-| Start/end | `ellipse` |
-| Titled container | `swimlane;startSize=30` |
-| External system | `rounded=1;dashed=1` |
+| 普通矩形 | `rounded=0` |
+| 圆角微服务组件 | `rounded=1` |
+| 数据库存储 | `shape=cylinder3` |
+| 决策条件菱形 | `rhombus` |
+| 起始 / 终结端点 | `ellipse` |
+| 带标题的分组容器 | `swimlane;startSize=30` |
+| 外部第三方系统 | `rounded=1;dashed=1` |
 
-Set `fillColor=none` for transparent shapes. A transparent diagram also requires no page/background shape covering the canvas.
+需要透明背景的形状设置 `fillColor=none`。透明图表同时要求画布底面不得放置全屏纯色遮挡块。
 
-## Containers
+## 分组容器（Containers）
 
-Use containment rather than placing children visually on top of a large rectangle.
+使用真实的容器包含关系（Containment），而不是单纯在大矩形上面叠放小节点。
 
 ```xml
 <mxCell id="platform" value="Platform"
@@ -69,11 +69,11 @@ Use containment rather than placing children visually on top of a large rectangl
 </mxCell>
 ```
 
-Child coordinates are relative to the parent. Add `pointerEvents=0` to visual containers that should not capture child-to-child connections.
+子节点的坐标相对于其父容器。若容器不应拦截子节点之间的连线点击，添加 `pointerEvents=0` 样式。
 
-## Edges
+## 连接线（Edges）
 
-Every edge must have a non-self-closing geometry child:
+每条连线必须包含非自闭合的几何属性子标签：
 
 ```xml
 <mxCell id="edge-api-db" value="SQL"
@@ -83,7 +83,7 @@ Every edge must have a non-self-closing geometry child:
 </mxCell>
 ```
 
-For explicit routing:
+若需要显式指定连线折点（Waypoints）：
 
 ```xml
 <mxGeometry relative="1" as="geometry">
@@ -93,47 +93,9 @@ For explicit routing:
 </mxGeometry>
 ```
 
-Routing rules:
+布线设计原则：
 
-- Use orthogonal edges for architecture and flow diagrams unless the style preset says otherwise.
-- Pin entry and exit points when a side has multiple connections.
-- Space three connections on one side at `0.25`, `0.5`, and `0.75`.
-- Keep the last straight segment before an arrowhead at least 20 px long.
-- Route long edges through empty corridors, not through unrelated shapes.
-- Use `dashed=1` only when it has semantic meaning such as optional, async, or external.
-
-Port positions:
-
-| Side | X | Y |
-|---|---:|---:|
-| Top center | 0.5 | 0 |
-| Right center | 1 | 0.5 |
-| Bottom center | 0.5 | 1 |
-| Left center | 0 | 0.5 |
-
-## Built-in palette
-
-Use only when no user style preset is active.
-
-| Role | Fill | Stroke |
-|---|---|---|
-| Service | `#dae8fc` | `#6c8ebf` |
-| Database/success | `#d5e8d4` | `#82b366` |
-| Queue/decision | `#fff2cc` | `#d6b656` |
-| Gateway/API | `#ffe6cc` | `#d79b00` |
-| Error/alert | `#f8cecc` | `#b85450` |
-| External/neutral | `#f5f5f5` | `#666666` |
-| Security | `#e1d5e7` | `#9673a6` |
-
-## Layout
-
-- Snap `x`, `y`, `width`, and `height` to a 10 px grid.
-- Start with 200 px horizontal / 150 px vertical gaps for up to five nodes.
-- Use about 280 / 200 px for 6–10 nodes and 350 / 250 px above ten nodes.
-- Reserve roughly 80 px routing corridors between dense bands.
-- Align child centers under parent centers for straight vertical edges.
-- Put buses, queues, and other hubs in the middle of their consumer row.
-- Group related nodes in consistent rows, columns, or containers.
-- Prefer concise two-line labels over shrinking text below readable size.
-
-For ERD, UML, sequence, architecture, ML, and flowchart-specific structure, read `diagram-types.md`. If a style preset is active, preserve these structural keywords while applying the preset's colors, font, edges, and extras.
+- 架构图与流程图统一采用正交连线（orthogonal），除非用户样式预设另有规定；
+- 当一个节点的某一边引出或接入多条连线时，显式固定进出桩位（exitX/exitY/entryX/entryY）；
+- 若同侧有 3 条连线，均匀分布在 `0.25`、`0.5` 和 `0.75` 处；
+- 确保连线终点在接入目标前保留至少 20px 的直线延伸段，防止箭头在转角折线处产生畸变重叠。

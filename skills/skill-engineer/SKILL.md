@@ -1,87 +1,84 @@
 ---
 name: skill-engineer
-description: Create, improve, and review production-ready agent skills with concise structure, strong trigger descriptions, bundled resources, validation, and realistic forward testing. Use when the user wants to write a new skill, make an existing skill production-ready, audit or review a skill, compare skill-creator approaches, or decide whether a skill needs scripts, references, assets, metadata, packaging, or evaluation.
+description: 创建、改进和审查具备生产级可用性的 Agent Skill，确保其结构精炼、触发描述精准、自带完备资源、通过静态审计且经受真实前向评测。Use when 用户希望编写新 Skill、使现有 Skill 达到生产级标准、审计或审查 Skill 代码与文档、对比 Skill 设计方案，或评估 Skill 是否需要配套脚本、参考文档、资源模板、元数据、打包归档及前向评测。
 ---
 
 # Skill Engineer
 
-## Operating Mode
+## 工作模式判定
 
-First classify the request:
+在开始前，先判断当前任务属于以下哪种模式：
 
-1. **Create**: user wants a new skill.
-2. **Review**: user wants an existing skill audited.
-3. **Improve**: user has a draft or installed skill and wants it production-ready.
-4. **Evaluate**: user asks whether a skill actually works better than no skill or an older version.
+1. **新建（Create）**：用户需要从零创建一个全新的 Skill；
+2. **审查（Review）**：用户要求对已有 Skill 执行静态审计与质量审查；
+3. **改进（Improve）**：用户已有草稿或已安装的 Skill，希望将其重构或完善至生产就绪（Production-ready）标准；
+4. **评测（Evaluate）**：用户希望验证 Skill 的实际效果是否优于无 Skill 基线或旧版实现。
 
-For create/improve work, prefer the host's official skill initializer when one exists. In Codex, default new user skills to `${CODEX_HOME:-$HOME/.codex}/skills` unless the user names another path. For review-only work, do not edit until the user asks for changes or the issue is clearly meant to be fixed.
+执行新建或改进任务时，优先使用宿主环境官方提供的 Skill 初始化工具。在 Codex 环境中，新用户 Skill 默认存放在 `${CODEX_HOME:-$HOME/.codex}/skills`，除非用户指定了其他路径。对于纯审查任务，在用户明确要求修改或存在明确待修复问题之前，不要直接改动文件。
 
-## Production Standard
+## 生产级 Skill 核心标准
 
-A production-ready skill is:
+一个达到生产级就绪标准的 Skill 必须满足：
 
-- **Discoverable**: frontmatter `description` names both capability and concrete trigger contexts.
-- **Small by default**: keep `SKILL.md` close to 100 lines when practical; split rare or detailed material into one-level `references/` files.
-- **Operational**: deterministic or repeated work lives in `scripts/`; reusable output material lives in `assets/`.
-- **Portable**: avoid private paths, time-sensitive facts, hidden environment assumptions, and tool names that are not actually available.
-- **命令兼容**：依赖外部命令行工具的 Skill 必须声明自包含的版本与能力契约，并验证运行时能力，不得假设文档与已安装工具一致。
-- **Independent**: independently distributed skills keep resources inside their package; plugin skills may share resources within the explicit plugin distribution boundary. Do not apply standalone packaging rules to plugin internals.
-- **Validated**: run available validators and the bundled static audit script.
-- **Forward-tested**: important skills are tried on realistic prompts, preferably against a no-skill or previous-version baseline.
+- **可发现性（Discoverable）**：frontmatter 中的 `description` 既明确说明“具备什么能力”，又使用 `Use when...` 给出具体的“触发上下文、文件类型与排除边界”；
+- **默认精炼（Small by default）**：`SKILL.md` 正文尽量保持紧凑（推荐在 100 行左右）；将深入细节、垂直领域知识拆分到单级 `references/` 目录中按需渐进加载；
+- **可操作性（Operational）**：确定性或高频重复的操作提取为 `scripts/` 中的可执行脚本；可复用的模版与生成素材归档在 `assets/` 或 `templates/` 中；
+- **可移植性（Portable）**：坚决杜绝个人私有机器绝对路径、时效性易失效事实、隐式环境假设，以及当前环境未实际安装的工具调用；
+- **命令兼容（Command Compatibility）**：依赖外部命令行工具的 Skill 必须声明自包含的版本与能力契约，并在运行时动态探测命令可用性，严禁假设文档与用户机器环境天然一致；
+- **独立性（Independent）**：独立分发的 Skill 必须将所需资源完全闭环在自身包目录内；插件级 Skill 可在明确的插件分发根边界内共享资源。不得将单包打包规则生搬硬套到插件内部；
+- **经过静态校验（Validated）**：运行可用的格式检查工具以及包内自带的静态审计脚本，确保无报错、无断链；
+- **经过前向评测（Forward-tested）**：重要 Skill 必须在真实 Prompt 场景下进行实际演练，优先与“无 Skill”或“旧版 Skill”进行对照测试。
 
-## Create Workflow
+## 新建工作流（Create Workflow）
 
-1. Capture concrete use cases before writing.
-   Ask only for missing information: task/domain, trigger phrases, expected outputs, required tools, reference material, and whether tests matter.
-2. Name the skill with lowercase letters, digits, and hyphens. Prefer action or role names, for example `review-api-contracts` or `skill-engineer`.
-3. Draft a precise, task-oriented description with near-miss exclusions:
-   - First sentence: what the skill does.
-   - Second sentence: "Use when..." with triggers, file types, domains, and user intents.
-   - Keep it under 1024 characters and avoid angle brackets.
-4. Keep `SKILL.md` as the route map. Move detail into `references/` when it is long, domain-specific, or rarely needed.
-5. Add scripts only when they remove repeated code generation, make validation deterministic, or handle fragile file operations.
-6. Add `agents/openai.yaml` when the environment supports it. Keep UI metadata aligned with the actual skill.
-7. Validate and forward-test before calling the skill production-ready.
+1. **捕获具体用例**：编写前梳理完整上下文。仅针对缺失的关键要素向用户提问：任务领域、触发词、预期交付物、依赖工具、参考材料以及测试标准；
+2. **命名规范**：使用纯小写字母、数字和连字符命名目录与 Skill，优先使用动作或角色词（例如 `review-api-contracts` 或 `skill-engineer`），确保目录名与 `name` 字段一致；
+3. **编写精准触发描述**：
+   - 第一句：清晰说明本 Skill 做什么；
+   - 第二句：以 `Use when...` 开头，列出触发场景、关联文件类型、专业领域及用户意图，并声明不适用的边界场景；
+   - 长度控制在 1024 字符以内，避免在描述中使用尖括号；
+4. **将 `SKILL.md` 定位为路由地图**：保持主干清晰精炼，将长篇大论、专业词库或低频材料下沉至 `references/`；
+5. **按需引入脚本**：仅当能消除重复代码生成、提供确定性校验或处理脆弱的文件操作时，才在 `scripts/` 下编写辅助脚本；
+6. **对齐环境元数据**：当宿主环境支持时，在 `agents/openai.yaml` 中配置显示名与简短描述，并与 Skill 真实能力严格保持一致；
+7. **校验与测试**：在宣布生产就绪前，必须执行静态审计与真实场景前向测试。
 
-## Review Workflow
+## 审查工作流（Review Workflow）
 
-For reviews, read the skill directory first: `SKILL.md`, metadata files, scripts, references, assets list, and any tests/evals. Check that every required workflow, resource, fallback, and validation step remains usable when the skill is installed by itself. The default audit checks one standalone package. For a plugin or repository-bound skill, pass `--package-root <actual-distribution-root>`; never choose an unrelated ancestor merely to suppress a failure. Plain command names such as `npm test` are not skill invocations. Binary assets are not read as instructions; text above 1 MiB is reported as skipped.
+执行审查时，先阅读目标 Skill 完整目录：`SKILL.md`、元数据文件、配套脚本、参考文档、资源清单以及任何测试/评测用例。验证当该 Skill 被独立安装时，其所有工作流程、资源引用、降级路径和验证手段是否均完整可用。默认审计单个独立包。对于插件或绑定在仓库内的 Skill，通过 `--package-root <实际分发根目录>` 参数指定分发根目录；绝不可为了规避报错而随意选取不相关的祖先目录。普通的常用命令行调用（如 `npm test`）不被视作 Skill 调用。二进制资产不作为指令读取；超过 1 MiB 的大文本文件将直接跳过。
 
-Then run:
+随后执行内置静态审计：
 
 ```bash
 python3 scripts/audit_skill.py <path-to-skill>
 ```
 
-Use [references/review-rubric.md](references/review-rubric.md) for severity and findings. Lead with bugs and production risks, not praise. Give file/line references where possible.
+参考 [references/review-rubric.md](references/review-rubric.md) 判定缺陷严重等级与发现项。优先指出潜在缺陷、断链、安全隐患与生产风险，而非泛泛赞美。在报告中尽可能指明具体文件的行号位置。
 
-审查调用外部命令行工具的 Skill 时，遵循 [外部命令兼容性契约](references/external-command-compatibility.md)，验证其基线版本、能力探测、版本不一致处理和安装边界。
+若审查调用外部命令行工具的 Skill，遵循 [外部命令兼容性契约](references/external-command-compatibility.md)，严格核验其基线版本、能力探测手段、版本漂移处理方案与安装授权边界。
 
-## Evaluation Workflow
+## 评测工作流（Evaluation Workflow）
 
-Use [references/eval-workflow.md](references/eval-workflow.md) when the skill is important, ambiguous, or user-facing enough that static review is not enough.
+当 Skill 面向关键生产场景、触发边界模糊或直接对用户暴露时，单纯的静态审查不够充分，应参考 [references/eval-workflow.md](references/eval-workflow.md) 展开系统评测。
 
-Minimum viable evaluation:
+最小可行评测流程：
 
-1. Pick 2-3 realistic prompts, including one edge case and one near miss.
-2. Run with the skill and compare against no skill or the previous version.
-3. Record output quality, missing steps, unnecessary work, token/time if available, and whether the description triggered appropriately.
-4. Revise the skill based on generalizable failures, not overfit examples.
+1. 精选 2–3 个真实的测试用例，包含一个极端边界情况（edge case）和一个极度相似但不该触发的近似用例（near miss）；
+2. 运行加载该 Skill 的任务，并与“未加载 Skill”或“旧版 Skill”进行横向效果对照；
+3. 记录产物质量、是否存在遗漏步骤、是否存在多余操作、耗时与 Token 开销，以及 `description` 是否精准触发；
+4. 基于具备普适性的失败模式反思并优化 Skill，切勿为了迎合单一测试用例而过度拟合。
 
-## Domain-Specific Guardrails
+## 垂直领域防御护栏
 
-When creating SDK/API skills, require current source material such as package name, official docs URL, repo, or local implementation. For Azure SDK or Microsoft Foundry skills, follow Microsoft-style constraints: fresh docs first, explicit auth/lifecycle guidance, language-specific client setup, and test scenarios.
+- **SDK / API 类 Skill**：必须提供权威且最新的事实依据，如官方包名、官方文档链接、权威源码仓库或本地已安装版本；针对 Azure SDK 或微软系服务，遵循其设计规范：最新官方文档优先、明确的认证鉴权与生命周期指引、语言专属客户端初始化及测试用例；
+- **通用效能与编码类 Skill**：倡导精炼原则：紧凑的 `SKILL.md`、详实具体的正反范例、单层级 references 结构以及清晰明确的审查清单；
+- **核心关键生产 Skill**：借鉴系统级防错范式：设立基线对比、输出用户可见的审查产物、使用客观判定断言，并针对“应当触发”与“不应触发”的两类输入用例进行双向回归测试。
 
-For generic productivity or coding skills, favor the Matt Pocock constraint: shorter `SKILL.md`, concrete examples, one-level references, and clear review checklist.
+## 交付与收尾标准
 
-For critical production skills, borrow the Anthropic pattern: baseline comparison, user-visible review artifacts, objective assertions where possible, and trigger-description tests for should-trigger and should-not-trigger prompts.
+在完成 Skill 的创建、重构或审查后，在最终报告中明确交代：
 
-## Completion Criteria
-
-Before finishing, report:
-
-- Skill path and name.
-- What files changed.
-- Validation commands run and results.
-- Forward tests run, or why they were skipped.
-- Any remaining risks or recommended follow-up.
+- Skill 的本地路径与规范名称；
+- 本次改动或新增的文件清单；
+- 实际执行的校验命令及其输出结果；
+- 实际运行的前向评测用例（若跳过则说明具体理由）；
+- 识别出的残留风险或后续优化建议。

@@ -1,66 +1,44 @@
-# Security and Authorization
+# 安全防护与认证鉴权
 
-## Trust Boundary
+## 信任边界划分
 
-An MCP Tool is model-invoked but still crosses an ordinary application security
-boundary. Derive tenant and user identity only from verified credentials, apply
-authorization on every request, and re-check ownership for every opaque handle.
-Tool descriptions and annotations are untrusted metadata from a client's point
-of view and do not enforce policy.
+尽管 MCP Tool 是由大语言模型自主发起的，但其调用依然跨越了常规应用程序的安全防线。租户标识与用户身份必须仅从经过强校验的凭据中提取；对每个请求均执行权限判定，并对每一次传入的不透明句柄重新做属主校验。在客户端看来，Tool 的描述文本与各种标注属于不可信元数据，切勿依赖 Prompt 描述来实现安全策略。
 
-## Streamable HTTP
+## Streamable HTTP 安全准则
 
-- Require TLS outside loopback. If TLS terminates at a gateway, restrict direct
-  backend reachability and document trusted proxy behavior.
-- Validate `Origin` on every browser-originated request. Keep DNS-rebinding and
-  Host protection enabled.
-- Bound request bodies before decoding and bound result size before returning.
-- Accept credentials only in `Authorization: Bearer ...`; never in query strings.
-- Forward `Mcp-Protocol-Version`, `Mcp-Method`, `Mcp-Name`, and supported
-  `Mcp-Param-*` headers unchanged through gateways. The handler must reject
-  header/body mismatches.
-- Rate limit after authentication when the limit is tenant- or user-scoped.
+- **全链路加密**：除本地回环测试外，所有流量必须强制使用 TLS。若 TLS 在 API 网关层终结，必须限制内网对后端真实端口的直接可达性，并在文档中详细声明受信任代理的行为规范。
+- **严格 Origin 校验**：对所有来自浏览器的跨域请求，逐一验证 `Origin` 请求头。始终保持 DNS 重绑定（DNS-rebinding）与 Host 校验功能开启。
+- **体积限制防 DoS**：在解码前限制请求 Body 的体积上限，并在返回结果前对输出数据体积做硬性拦截。
+- **凭据传输通道**：仅接受通过 `Authorization: Bearer ...` 传递的令牌；严禁在 URL Query 参数中携带任何认证凭据。
+- **协议头透传与一致性**：网关层必须完整原样透传 `Mcp-Protocol-Version`、`Mcp-Method`、`Mcp-Name` 以及支持的 `Mcp-Param-*` 等协议头。Handler 内部必须严格校验协议头与 Body 声明是否匹配。
+- **后置按需限流**：在完成身份认证后，按租户或用户维度实施精准的请求频控限流。
 
-## Authorization Choices
+## 认证方案选择
 
-For public third-party HTTP interoperability, implement the MCP authorization
-profile: OAuth 2.1, Protected Resource Metadata, authorization-server discovery,
-resource indicators and audience validation, PKCE, and least-privilege Scope
-challenges.
+若面向公共第三方环境提供标准 HTTP 互操作性，推荐实现 MCP 官方认证规范：OAuth 2.1、受保护资源元数据（Protected Resource Metadata）、认证授权服务器发现机制、资源标识符与受众校验（Audience Validation）、PKCE 校验，以及遵循最小权限原则的 Scope 权限挑战机制。
 
-For a controlled internal client, a documented opaque Bearer API key may be an
-intentional custom authorization scheme. It must still have rotation, expiry or
-revocation, audience/service binding, tenant binding, Scope checks, and TLS. Do
-not describe this narrower scheme as full MCP OAuth conformance.
+若面向可控的内部系统集成，采用经过清晰定义的 Bearer API Key 也是常见且合理的自研方案。但该方案必须具备密钥轮转、过期与撤销机制、受众/服务绑定、租户隔离、权限 Scope 检查，且全链路基于 TLS 传输。注意在对外宣称时，不可将此类内部定制方案称为完全符合 MCP OAuth 规范。
 
-The official SDK provides `auth.RequireBearerToken`. Its `TokenVerifier` should:
+官方 SDK 提供了 `auth.RequireBearerToken` 中间件，其 `TokenVerifier` 应：
 
-- verify the token using the host service's authority;
-- return `auth.ErrInvalidToken` for invalid credentials;
-- populate stable user or key identity, scopes, expiration when available, and
-  allowlisted context metadata;
-- never pass an upstream token to another service.
+- 基于宿主系统的授权中心验证 Token 的合法性；
+- 当凭据无效或已失效时，统一返回 `auth.ErrInvalidToken`；
+- 正确填充稳定的用户或密钥标识、已授权 Scope 列表、有效期限（若支持），以及合法的白名单上下文元数据；
+- 严禁将上游传入的用户令牌无脑透传给其他不相关的第三方服务。
 
-Handlers read verified token information from `req.Extra.TokenInfo`; they must
-not parse `Authorization` again.
+业务 Handler 应直接从 `req.Extra.TokenInfo` 中读取已解析验证好的用户信息，绝不可在业务逻辑中重新解析 `Authorization` 头。
 
-## Logging and Errors
+## 日志审计与脱敏规范
 
-Allowlist metadata such as request ID, MCP method, Tool name, authenticated
-tenant or subject identifier, result class, and duration. Never log:
+仅允许输出白名单元数据，例如：Request ID、MCP 调用方法名、Tool 名称、认证后的租户或用户标识、执行结果分类以及整体耗时。严厉禁止在日志中打印以下内容：
 
-- Authorization, API keys, cookies, refresh tokens, or token metadata;
-- complete headers, request bodies, Tool arguments, or results;
-- prompts, retrieved private content, model output, SQL parameters, or stacks;
-- URLs containing query strings or fragments when they may carry data.
+- Authorization 凭据、API Key、Cookie、Refresh Token 或底层令牌元数据；
+- 完整的 HTTP 请求头、请求 Body、Tool 完整入参或业务明细结果；
+- Prompt 提示词文本、检索出的私有上下文内容、模型原始生成文本、SQL 参数或崩溃堆栈；
+- 可能夹带敏感数据的 URL 查询字符串或 Hash 锚点。
 
-Keep client-visible errors stable and bounded. Authentication errors must not
-reveal whether a tenant, key, or resource exists.
+向客户端返回的错误信息必须保持稳定且边界严格。认证错误中绝对不得泄露特定租户、密钥或资源是否真实存在。
 
-## External Content
+## 外部未知网络内容防护
 
-Only Tools that fetch caller-selected network locations need SSRF, redirect,
-DNS pinning, response decompression, and remote body-size defenses. Do not add
-fetch-specific machinery to a server that only reads its own database. When a
-Tool does fetch URLs, validate every redirect hop, block private and link-local
-destinations, apply an egress policy, and treat returned content as untrusted.
+仅当 Tool 需要主动抓取调用方指定的网络目标时，才需要部署 SSRF 防护、重定向跳数限制、DNS 固定、响应解压缩保护以及远程 Body 体积限制策略。对于仅访问自身数据库的普通服务器，切勿添加复杂的抓取防护链条。当 Tool 确需抓取外部 URL 时，逐跳校验所有重定向链路、禁止访问内网私有与本地链路地址（Link-local）、实施严格的出向流量策略，并将所有返回内容视作不可信数据。

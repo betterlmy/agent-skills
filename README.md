@@ -58,6 +58,7 @@ Omit `--skill <skill-name>` to use the interactive selection provided by the Ski
 - `audit-overengineering` audits one or more repositories for unnecessary abstractions, delegation layers, duplicate capabilities, dead extension points, and replaceable dependencies; it reports evidence-backed candidates without modifying code.
 - `code-review-skill` provides cross-language review guidance for architecture, security, performance, quality, and correctness.
 - `codegraph` wraps CodeGraph workflows for repository indexing, symbol discovery, call analysis, and change-impact analysis.
+- `commit` drafts, verifies, and formats concise Chinese commit messages based on user instructions or Git changes, executing local commits when explicitly authorized.
 - `go-dev` inspects repository constraints and the actual stack before applying Go guidance for code, errors, context, logging, HTTP/gRPC, persistence, concurrency, and testing; response-style preferences are defaults only when the repository is silent.
 - `go-auditor` audits Go repositories, modules, packages, directories, file sets, hotspots, and local or revision-based diffs, producing an evidence-driven report with explicit scope boundaries; use `go-dev` to implement fixes.
 - `go-mcp-builder` verifies the current dated MCP specification and official Go SDK before guiding Tools, Resources, Prompts, stdio or Streamable HTTP, authorization, compatibility, and conformance testing.

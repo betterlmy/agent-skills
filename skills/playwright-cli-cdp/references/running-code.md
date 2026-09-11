@@ -1,47 +1,48 @@
-# Custom Playwright Code
+# 自定义 Playwright 代码执行指南
 
-Examples use the Bash wrapper. On Windows PowerShell replace `bash scripts/playwright-cdp.sh` with `powershell -ExecutionPolicy Bypass -File scripts\playwright-cdp.ps1`.
+在 Windows PowerShell 环境中，将 `bash scripts/playwright-cdp.sh` 替换为 `powershell -ExecutionPolicy Bypass -File scripts\playwright-cdp.ps1`。
 
-Use `run-code` to execute arbitrary Playwright code for scenarios the CLI commands do not cover directly.
+当 CLI 内置指令无法覆盖复杂业务操作时，使用 `run-code` 直接在页面上下文中执行任意 Playwright 异步代码。
 
-## Syntax
+## 基础语法
 
 ```bash
 bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
-  // Playwright code here
-  // page.context() is available for browser context operations
+  // 此处编写标准的 Playwright 代码
+  // 可通过 page.context() 调用浏览器上下文级操作
 }"
 ```
 
-Load from a file instead of an inline string:
+也可以从外部独立脚本文件中加载执行：
 
 ```bash
 bash scripts/playwright-cdp.sh -s=cdp run-code --filename=./my-script.js
 ```
 
-The argument must be a single function expression. `import`, `export`, and `require` are not supported.
+传入的参数必须为一个独立的异步函数表达式，不支持顶层的 `import`、`export` 或 `require` 模块语句。
 
-## Geolocation
+## 地理位置模拟（Geolocation）
 
 ```bash
+# 模拟旧金山地理坐标
 bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
   await page.context().grantPermissions(['geolocation']);
   await page.context().setGeolocation({ latitude: 37.7749, longitude: -122.4194 });
 }"
 
-# London
+# 模拟伦敦地理坐标
 bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
   await page.context().grantPermissions(['geolocation']);
   await page.context().setGeolocation({ latitude: 51.5074, longitude: -0.1278 });
 }"
 
-# Clear permissions
+# 清除所有已授权权限
 bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
   await page.context().clearPermissions();
 }"
 ```
 
-## Permissions
+## 权限授权（Permissions）
 
 ```bash
 bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
@@ -53,7 +54,7 @@ bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
   ]);
 }"
 
-# Grant to a specific origin
+# 仅向特定 Origin 授权读取剪贴板
 bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
   await page.context().grantPermissions(['clipboard-read'], {
     origin: 'https://example.com'
@@ -61,149 +62,40 @@ bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
 }"
 ```
 
-## Media emulation
+## 媒体特性模拟（Media Emulation）
 
 ```bash
-# Dark mode
+# 暗色模式（Dark mode）
 bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
   await page.emulateMedia({ colorScheme: 'dark' });
 }"
 
-# Reduced motion
+# 减少动态效果偏好（prefers-reduced-motion）
 bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
 }"
 
-# Print media
+# 打印媒体样式模拟（Print styles）
 bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
   await page.emulateMedia({ media: 'print' });
 }"
 ```
 
-## Wait strategies
+## 等待策略（Wait Strategies）
 
 ```bash
-# Wait for network idle
+# 等待网络空闲（Network Idle）
 bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
   await page.waitForLoadState('networkidle');
 }"
 
-# Wait for an element to disappear
+# 等待特定加载动画遮罩消失
 bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
   await page.locator('.loading').waitFor({ state: 'hidden' });
 }"
 
-# Wait for a JavaScript condition
+# 等待特定的全局 JavaScript 条件为真
 bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
   await page.waitForFunction(() => window.appReady === true);
-}"
-
-# Wait with explicit timeout
-bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
-  await page.locator('.result').waitFor({ timeout: 10000 });
-}"
-```
-
-## Frames and iframes
-
-```bash
-# Interact with an iframe
-bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
-  const frame = page.locator('iframe#my-iframe').contentFrame();
-  await frame.locator('button').click();
-}"
-
-# List all frame URLs
-bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
-  return page.frames().map(f => f.url());
-}"
-```
-
-## File download
-
-```bash
-bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
-  const downloadPromise = page.waitForEvent('download');
-  await page.getByRole('link', { name: 'Download' }).click();
-  const download = await downloadPromise;
-  await download.saveAs('./downloaded-file.pdf');
-  return download.suggestedFilename();
-}"
-```
-
-## Clipboard
-
-```bash
-# Read clipboard (requires permission)
-bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
-  await page.context().grantPermissions(['clipboard-read']);
-  return await page.evaluate(() => navigator.clipboard.readText());
-}"
-
-# Write to clipboard
-bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
-  await page.evaluate(text => navigator.clipboard.writeText(text), 'Hello clipboard!');
-}"
-```
-
-## Page information
-
-```bash
-bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
-  return {
-    title: await page.title(),
-    url: page.url(),
-    viewport: page.viewportSize()
-  };
-}"
-
-# Get full page HTML
-bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
-  return await page.content();
-}"
-```
-
-## JavaScript evaluation
-
-```bash
-bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
-  return await page.evaluate(() => ({
-    userAgent: navigator.userAgent,
-    language: navigator.language,
-    cookiesEnabled: navigator.cookieEnabled
-  }));
-}"
-
-# Pass arguments into evaluate
-bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
-  const multiplier = 5;
-  return await page.evaluate(m => document.querySelectorAll('li').length * m, multiplier);
-}"
-```
-
-## Error handling
-
-```bash
-bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
-  try {
-    await page.getByRole('button', { name: 'Submit' }).click({ timeout: 1000 });
-    return 'clicked';
-  } catch (e) {
-    return 'element not found';
-  }
-}"
-```
-
-## Multi-page data collection
-
-```bash
-bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
-  const results = [];
-  for (let i = 1; i <= 3; i++) {
-    await page.goto(\`https://example.com/page/\${i}\`);
-    const items = await page.locator('.item').allTextContents();
-    results.push(...items);
-  }
-  return results;
 }"
 ```

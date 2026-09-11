@@ -1,63 +1,63 @@
-# Skill Review Rubric
+# Skill 审查判定准则
 
-Use this rubric when reviewing or improving an existing skill.
+在审查、评估或改进现有 Skill 时遵循本准则。
 
-## Severity
+## 缺陷严重等级划分
 
-- **High**: likely to prevent correct triggering, produce unsafe or wrong outputs, rely on unavailable tools, leak private information, or fail basic validation.
-- **Medium**: likely to waste substantial context, confuse execution, overfit to examples, omit important edge cases, or make future maintenance difficult.
-- **Low**: style, naming, organization, or clarity issues that do not block production use.
+- **高风险（High）**：极可能导致 Skill 无法被正常触发、产出不安全或错误的结果、强依赖环境中实际不存在的工具、泄露私有敏感信息，或无法通过基础静态审计校验。
+- **中风险（Medium）**：极可能造成大量的上下文浪费、引发模型执行流程混乱、对特定示例过度拟合、遗漏核心边界情况，或给后续维护带来严重障碍。
+- **低风险（Low）**：纯代码风格、命名规范、组织排版或行文清晰度问题，不阻碍实际生产环境使用。
 
-## Review Checklist
+## 审查核对清单
 
-### Frontmatter
+### Frontmatter 元数据
 
-- `name` is lowercase hyphen-case and matches the folder name.
-- `description` explains capability and trigger contexts.
-- Trigger information is in `description`, not only in body text.
-- Description is neither too broad nor too narrow.
-- Description is under 1024 characters and has no angle brackets.
+- `name` 严格为小写字母与连字符组合，并与外层目录名保持完全一致。
+- `description` 明确说明核心能力定位与具体触发上下文。
+- 触发信息必须写在 `description` 中，而非仅隐藏在正文文本内。
+- 描述既不可过度宽泛导致误触发，也不可过度狭隘导致漏触发。
+- 描述长度控制在 1024 字符以内，且不得包含尖括号。
 
-### Body
+### 正文结构
 
-- `SKILL.md` is a route map, not a full manual.
-- Instructions are imperative and actionable.
-- The skill explains why fragile steps matter.
-- It avoids time-sensitive facts unless it tells the agent to verify them.
-- It avoids private local paths, secrets, or organization-only assumptions unless the skill is explicitly private.
+- `SKILL.md` 定位为高效的路由地图，而非事无巨细的冗长百科全书。
+- 指令语气必须明确、具备直接可操作性。
+- 针对脆弱或容易出错的步骤，必须阐明其背后的核心原因。
+- 避免直接固化时效性易失效的事实，除非在文中明确要求 Agent 在执行时动态核验。
+- 坚决杜绝个人机器的私有绝对路径、认证密钥或仅在特定组织内成立的隐式假设。
 
-### Resources
+### 资源组织
 
-- `references/` contains detailed material that should be loaded only when needed.
-- Reference files are directly linked from `SKILL.md`.
-- `scripts/` contains deterministic repeated operations, not throwaway examples.
-- Scripts have clear arguments, useful errors, and have been run at least once.
-- `assets/` contains output resources, templates, images, or boilerplate that should not be loaded into context.
+- `references/` 仅存放深入的专项技术资料，遵循按需加载原则。
+- 参考文档必须从 `SKILL.md` 中有清晰的直接超链接指向。
+- `scripts/` 用于收纳具备确定性的高频重复操作，严禁存放临时一次性脚本。
+- 脚本必须具备清晰的参数说明、实用的错误提示，且在提交前经过实际运行测试。
+- `assets/` 存放模版文件、图片或固定样板，绝不在开始时一股脑全量载入上下文。
 
-### Production Behavior
+### 生产环境就绪行为
 
-- A new agent can use the skill without hidden conversation context.
-- Standalone packages do not depend on sibling skills; plugin/repository distributions may share resources inside their declared package root. Plain CLI commands and code examples are not skill dependencies.
-- Markdown links and symlinks stay inside the package unless they target public external documentation.
-- The skill does not depend on a tool, MCP, package, or environment variable unless documented.
-- 强依赖外部 CLI 的 Skill 在 metadata 设置 `external-cli: "true"`，用 metadata 的 `cli-compatibility` 指向包内契约，记录本机验证版本或明确说明不可用，探测必需能力，并定义版本不一致时的行为。
-- Domain-specific skills cite or request current source material.
-- Important claims are tested on realistic prompts.
-- The skill includes enough negative guidance to avoid over-triggering.
+- 任何全新的 Agent 实例在无任何既有对话上下文时，均能独立顺利使用该 Skill。
+- 独立分发包不得隐式依赖其他同级 Skill；插件或仓库内置分发包可在声明的包根目录内共享资源。常规的命令调用与代码示例不属于依赖。
+- Markdown 内部超链接与软链接必须收敛在包内，除非是指向公共权威在线文档。
+- 未在文档中明确说明的前提下，Skill 不得隐式假设存在特定工具、MCP 服务、包依赖或环境变量。
+- 强依赖外部命令行工具的 Skill 必须在 metadata 设置 `external-cli: "true"`，用 metadata 的 `cli-compatibility` 指向包内契约，记录本机验证版本或明确说明不可用，探测必需能力，并定义版本不一致时的处理策略。
+- 垂直领域 Skill 必须引用或明确索取权威的最新技术事实。
+- 核心断言与关键规则在真实的 Prompt 用例下进行过验证。
+- 包含充分的反向排除约束，避免在不相关的场景下过度误触发。
 
-## Review Output Format
+## 审查输出模板
 
-Start with findings, ordered by severity:
+优先输出发现的问题项，按严重级别由高到低排列：
 
 ```text
-High: <issue title>
-Path: <file>:<line>
-Why it matters: <production impact>
-Fix: <specific change>
+高风险: <问题简述>
+位置: <文件名>:<行号>
+影响说明: <对实际生产调用的具体危害>
+修复建议: <明确可落地的修改方案>
 ```
 
-Then include:
+随后补充：
 
-- Open questions or assumptions.
-- Validation performed.
-- Short change summary if edits were made.
+- 待确认的开放性问题或假设边界；
+- 实际执行的各项静态与动态校验；
+- 若已执行代码编辑，附上修改内容简短摘要。

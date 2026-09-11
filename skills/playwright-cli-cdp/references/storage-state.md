@@ -1,27 +1,27 @@
-# Storage Management
+# 会话存储与 Cookie 管理
 
-Examples use the Bash wrapper. On Windows PowerShell replace `bash scripts/playwright-cdp.sh` with `powershell -ExecutionPolicy Bypass -File scripts\playwright-cdp.ps1`.
+在 Windows PowerShell 环境中，将 `bash scripts/playwright-cdp.sh` 替换为 `powershell -ExecutionPolicy Bypass -File scripts\playwright-cdp.ps1`。
 
-Manage cookies, localStorage, sessionStorage, and full browser storage state. CDP attach connects to the external browser's existing profile and may include real session data — be aware of sensitive information before saving state files.
+本功能用于检查、持久化与恢复 Cookie、localStorage、sessionStorage 以及完整的全量浏览器状态。注意：通过 CDP 连接已有浏览器时会复用用户的真实配置目录，在导出保存状态文件时请注意脱敏。
 
-## Storage state
+## 全量状态保存与恢复（Storage State）
 
-Save and restore complete browser state (cookies + localStorage).
+一次性保存或加载包含 Cookie 与 localStorage 的完整状态快照：
 
 ```bash
-# Save to an auto-generated filename
+# 保存到自动生成的唯一文件名
 bash scripts/playwright-cdp.sh -s=cdp state-save
 
-# Save to a specific file
+# 保存到指定的文件路径
 bash scripts/playwright-cdp.sh -s=cdp state-save auth.json
 
-# Load storage state
+# 恢复并加载已有状态文件
 bash scripts/playwright-cdp.sh -s=cdp state-load auth.json
-# Reload the page so cookies take effect
+# 重新刷新当前页面以使注入的 Cookie 即刻生效
 bash scripts/playwright-cdp.sh -s=cdp goto https://example.com
 ```
 
-Saved files follow this structure:
+保存的 JSON 结构规范：
 
 ```json
 {
@@ -48,22 +48,29 @@ Saved files follow this structure:
 }
 ```
 
-## Cookies
+## Cookie 细粒度操作
 
 ```bash
+# 列出所有 Cookie
 bash scripts/playwright-cdp.sh -s=cdp cookie-list
+# 按域名或路径过滤
 bash scripts/playwright-cdp.sh -s=cdp cookie-list --domain=example.com
 bash scripts/playwright-cdp.sh -s=cdp cookie-list --path=/api
+
+# 获取特定 Cookie 的值
 bash scripts/playwright-cdp.sh -s=cdp cookie-get session_id
+
+# 注入单个 Cookie
 bash scripts/playwright-cdp.sh -s=cdp cookie-set session_id abc123
 bash scripts/playwright-cdp.sh -s=cdp cookie-set session_id abc123 \
   --domain=example.com --path=/ --httpOnly --secure --sameSite=Lax
-bash scripts/playwright-cdp.sh -s=cdp cookie-set remember_me token123 --expires=1735689600
+
+# 删除特定 Cookie 或清空所有 Cookie
 bash scripts/playwright-cdp.sh -s=cdp cookie-delete session_id
 bash scripts/playwright-cdp.sh -s=cdp cookie-clear
 ```
 
-For multiple cookies or complex options use `run-code`:
+批量操作可借助 `run-code`：
 
 ```bash
 bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
@@ -74,18 +81,23 @@ bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
 }"
 ```
 
-## localStorage
+## localStorage 交互命令
 
 ```bash
+# 查看所有键值
 bash scripts/playwright-cdp.sh -s=cdp localstorage-list
+
+# 获取与设置具体键值
 bash scripts/playwright-cdp.sh -s=cdp localstorage-get token
 bash scripts/playwright-cdp.sh -s=cdp localstorage-set theme dark
-bash scripts/playwright-cdp.sh -s=cdp localstorage-set user_settings '{"theme":"dark","language":"en"}'
+bash scripts/playwright-cdp.sh -s=cdp localstorage-set user_settings '{"theme":"dark","language":"zh"}'
+
+# 删除指定键或完全清空
 bash scripts/playwright-cdp.sh -s=cdp localstorage-delete token
 bash scripts/playwright-cdp.sh -s=cdp localstorage-clear
 ```
 
-## sessionStorage
+## sessionStorage 交互命令
 
 ```bash
 bash scripts/playwright-cdp.sh -s=cdp sessionstorage-list
@@ -94,43 +106,3 @@ bash scripts/playwright-cdp.sh -s=cdp sessionstorage-set step 3
 bash scripts/playwright-cdp.sh -s=cdp sessionstorage-delete step
 bash scripts/playwright-cdp.sh -s=cdp sessionstorage-clear
 ```
-
-## IndexedDB
-
-```bash
-# List databases
-bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
-  return await page.evaluate(async () => indexedDB.databases());
-}"
-
-# Delete a database
-bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
-  await page.evaluate(() => indexedDB.deleteDatabase('myDatabase'));
-}"
-```
-
-## Reuse authentication state
-
-```bash
-# Step 1: attach and complete login
-bash scripts/playwright-cdp.sh -s=cdp attach --cdp=http://127.0.0.1:9222
-bash scripts/playwright-cdp.sh -s=cdp goto https://app.example.com/login
-bash scripts/playwright-cdp.sh -s=cdp snapshot
-bash scripts/playwright-cdp.sh -s=cdp fill e1 "user@example.com"
-bash scripts/playwright-cdp.sh -s=cdp fill e2 "password123"
-bash scripts/playwright-cdp.sh -s=cdp click e3
-
-# Save state after a successful login
-bash scripts/playwright-cdp.sh -s=cdp state-save auth.json
-
-# Step 2: restore state in a later session to skip login
-bash scripts/playwright-cdp.sh -s=cdp state-load auth.json
-bash scripts/playwright-cdp.sh -s=cdp goto https://app.example.com/dashboard
-```
-
-## Security notes
-
-- Do not commit state files containing auth tokens.
-- Add `*.auth-state.json` to `.gitignore`.
-- Delete sensitive state files after use.
-- CDP attach may expose the real browser's session — confirm necessity before reading or exporting.

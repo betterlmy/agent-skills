@@ -1,192 +1,70 @@
-# Architecture Diagrams Reference
+# 云架构与基础设施图设计指南（Architecture Diagrams）
 
-Architecture diagrams visualize cloud services, CI/CD deployments, and infrastructure relationships. Introduced in Mermaid v11.1.0.
+用于直观表达现代云原生基础设施、跨可用区容灾、微服务网格与 CI/CD 构建流水线。
 
-## Basic Syntax
+## 云原生高可用架构范例
 
-```mermaid
-architecture-beta
-    group public_api(cloud)[Public API]
-    service api1(server)[API Server] in public_api
-    service db(database)[Database]
-
-    api1:R --> L:db
-```
-
-## Building Blocks
-
-### Groups
-
-Group related services together:
-
-```
-group {groupId}({icon})[{title}] (in {parentId})?
-```
+结合子图与正交连线绘制经典的云端多可用区（Multi-AZ）生产部署架构：
 
 ```mermaid
-architecture-beta
-    group public_api(cloud)[Public API]
-    group private_api(cloud)[Private API] in public_api
+flowchart TB
+    subgraph 互联网接入端
+        DNS[云 DNS / Route53]
+        CDN[全局内容分发网络 CDN]
+    end
+
+    subgraph VPC 虚拟专有网络
+        subgraph 公有子网 Public Subnet
+            ALB[应用型负载均衡 ALB]
+            NAT[NAT 网关]
+        end
+
+        subgraph 私有子网 AZ-A
+            AppA[微服务容器实例 A]
+            WorkerA[异步任务处理节点 A]
+        end
+
+        subgraph 私有子网 AZ-B
+            AppB[微服务容器实例 B]
+            WorkerB[异步任务处理节点 B]
+        end
+
+        subgraph 数据持久层
+            DB_Master[(主数据库 Primary)]
+            DB_Replica[(从只读库 Read Replica)]
+            RedisCluster[(Redis 缓存集群)]
+        end
+    end
+
+    DNS --> CDN
+    CDN --> ALB
+    ALB --> AppA
+    ALB --> AppB
+    AppA --> RedisCluster
+    AppB --> RedisCluster
+    AppA --> DB_Master
+    AppB --> DB_Replica
+    DB_Master -. 异步复制 .-> DB_Replica
 ```
 
-### Services
-
-Declare services (nodes):
-
-```
-service {serviceId}({icon})[{title}] (in {parentId})?
-```
+## CI/CD 自动化流水线拓扑
 
 ```mermaid
-architecture-beta
-    service api(server)[API Server]
-    service db(database)[Database]
-    service cache(redis)[Cache] in api
+flowchart LR
+    Dev([开发者提交代码]) --> Git[(Git 代码仓库)]
+    Git --> Webhook{触发 Webhook}
+
+    subgraph CI 持续集成
+        Webhook --> Lint[静态语法与规范检查]
+        Lint --> Unit[运行单元测试]
+        Unit --> Build[编译 Docker 镜像]
+        Build --> Scan[容器镜像安全扫描]
+    end
+
+    subgraph CD 持续部署
+        Scan --> Staging[部署至预发环境]
+        Staging --> E2E[自动化回归验收测试]
+        E2E --> Approval{人工确认上线}
+        Approval -->|确认| Prod[滚动发布至生产集群]
+    end
 ```
-
-### Edges
-
-Connect services with edges:
-
-```
-{serviceId}{{group}}?:{T|B|L|R} {<}?--{>}? {T|B|L|R}:{serviceId}{{group}}?
-```
-
-**Directions:** `T` (top), `B` (bottom), `L` (left), `R` (right)
-
-**Arrows:** `<` for incoming, `>` for outgoing
-
-```mermaid
-architecture-beta
-    service client(browser)[Client]
-    service api(server)[API]
-    service db(database)[Database]
-
-    client:B --> T:api
-    api:R --> L:db
-```
-
-### Junctions
-
-Create 4-way splits:
-
-```
-junction {junctionId} (in {parentId})?
-```
-
-```mermaid
-architecture-beta
-    service input(server)[Input]
-    service output1(server)[Output 1]
-    service output2(server)[Output 2]
-
-    junction j1
-
-    input:R --> L:j1
-    j1:T --> B:output1
-    j1:B --> T:output2
-```
-
-## Icons
-
-**Default icons:** `cloud`, `database`, `disk`, `internet`, `server`
-
-**Custom icons:** Use any of 200,000+ icons from iconify.design:
-
-```mermaid
-architecture-beta
-    service web(aws:ec2)[Web Server]
-    service storage(aws:s3)[Storage]
-```
-
-### Using @iconify-json Icon Packs
-
-Use npm icon packs with Mermaid CLI for a wide variety of technology logos:
-
-```bash
-npm install @iconify-json/logos @mermaid-js/mermaid-cli
-mmdc --iconPacks @iconify-json/logos -i ./diagram.mmd -o ./output.svg
-```
-
-Use icons with the `logos:` prefix:
-
-```mermaid
-architecture-beta
-    service web(logos:docker)[Docker Container]
-    service k8s(logos:kubernetes)[Kubernetes Cluster]
-    service aws(logos:aws)[AWS Services]
-    service github(logos:github)[GitHub Actions]
-
-    web:R --> L:k8s
-    k8s:R --> L:aws
-    web:R --> L:github
-```
-
-**Popular icon packs:**
-
-| Icon Pack                    | Description                                   | Install                            |
-| ---------------------------- | --------------------------------------------- | ---------------------------------- |
-| `@iconify-json/logos`        | Technology brands (Docker, AWS, GitHub, etc.) | `npm i @iconify-json/logos`        |
-| `@iconify-json/bi`           | Bootstrap icons                               | `npm i @iconify-json/bi`           |
-| `@iconify-json/mdi`          | Material Design icons                         | `npm i @iconify-json/mdi`          |
-| `@iconify-json/simple-icons` | Simple icons                                  | `npm i @iconify-json/simple-icons` |
-
-Usage: `pack:icon-name` (e.g., `logos:docker`, `mdi:database`)
-
-## Complex Example
-
-```mermaid
-architecture-beta
-    group internet(cloud)[Internet]
-    group private_vpc(cloud)[Private VPC]
-
-    service lb(load_balancer)[Load Balancer] in internet
-    service api1(api)[API Server 1] in private_vpc
-    service api2(api)[API Server 2] in private_vpc
-    service db(database)[Primary Database] in private_vpc
-    service replica(database)[Read Replica] in private_vpc
-
-    lb:R --> L:api1
-    lb:R --> L:api2
-    api1:R --> L:db
-    api2:R --> L:db
-    db:R --> L:replica
-```
-
-## Edge Patterns
-
-| Pattern              | Description               |
-| -------------------- | ------------------------- |
-| `A:R -- L:B`         | Horizontal edge           |
-| `A:T -- B:B`         | Vertical edge (90 degree) |
-| `A:R --> L:B`        | Edge with arrow           |
-| `A:R <--> L:B`       | Bidirectional edge        |
-| `A{group}:R --> L:B` | Edge from group boundary  |
-
-## Group Edges
-
-Connect groups using the `{group}` modifier:
-
-```mermaid
-architecture-beta
-    group frontend(cloud)[Frontend]
-    group backend(cloud)[Backend]
-
-    service client(browser)[Client] in frontend
-    service api(server)[API] in backend
-
-    client{group}:B --> T:api{group}
-```
-
-## Best Practices
-
-1. Group services by environment (public/private) or layer (frontend/backend)
-2. Use consistent icons for service types
-3. Label edges with protocols (HTTPS, TCP, etc.)
-4. Use junctions for fan-out patterns
-5. Keep diagrams focused; split complex architectures into multiple views
-
-## Reference
-
-- [Official Documentation](https://mermaid.js.org/syntax/architecture.html)
-- [Iconify Icons](https://iconify.design)

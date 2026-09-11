@@ -1,46 +1,46 @@
-# Evaluation record — drawio-skill 1.6.0
+# 评测历史归档记录 — drawio-skill 1.6.0
 
-Date: 2026-07-16
+日期：2026-07-16
 
-## Scope
+## 评测范围
 
-Compared the 1.5.3 frontmatter/workflow with 1.6.0 using `trigger-cases.json`, deterministic script tests, and a real architecture diagram from the active workspace.
+对比 1.5.3 版本的 Frontmatter 与工作流和 1.6.0 版本，使用 `trigger-cases.json`、确定性脚本测试集以及真实工作区系统架构图进行综合评测。
 
-## Trigger review
+## 触发精准度审查
 
-The set contains six should-trigger prompts and four near misses.
+评测集包含 6 个应当触发的 Prompt 用例与 4 个相近但不应触发的边界用例。
 
-| Version | Should-trigger | Should-not-trigger | Notes |
+| 版本 | 应当触发命中率 | 正确排除相近用例率 | 审查备注 |
 |---|---:|---:|---|
-| 1.5.3 | 6/6 | 2/4 | Broad “visualizations” wording could capture quantitative charts and explicit Mermaid requests |
-| 1.6.0 | 6/6 | 4/4 | Description adds concrete Draw.io/export triggers and explicit data-chart/Mermaid exclusions |
+| 1.5.3 | 6/6 | 2/4 | 原有宽泛的“visualizations”表述容易误捕获量化数据图表与显式的 Mermaid 诉求 |
+| 1.6.0 | 6/6 | 4/4 | 补充了具体的 Draw.io/导出触发词，并显式排除了数据图表与纯 Mermaid 场景 |
 
-This is a manual description-level review, not a model-runtime benchmark.
+该评测属于规则描述层面的静态比对，非模型运行时的基准耗时评测。
 
-## Forward tests
+## 前向实操测试结果
 
-- Validated a real 42-cell architecture `.drawio` file.
-- Exported a PPT-safe SVG to a path containing spaces.
-- Confirmed the SVG starts with `<svg`, contains paths, and contains no `<text>` or `foreignObject`.
-- Confirmed the PDF-generated white page background was removed.
-- Exported an embedded transparent PNG and ran the idempotent repair helper.
-- Generated a diagrams.net viewer URL from the real source.
-- Visually checked an opaque preview; labels, layout, colors, and routing rendered correctly.
-- Observed that a transparent preview with black labels appears empty in viewers that composite alpha over black; added explicit dual-preview guidance.
+- 成功静态验证一个包含 42 个真实单元的复杂系统架构 `.drawio` 文件；
+- 将 PPT 安全 SVG 导出至带有空格的复杂系统路径下；
+- 确认导出的 SVG 文件严格以 `<svg` 开头，包含封闭矢量路径，且绝无遗留的 `<text>` 或 `<foreignObject>` 标签；
+- 验证 PDF 自动生成的白色背景底板被精准剔除；
+- 导出包含内嵌 XML 的透明 PNG 并成功运行了幂等性修复工具；
+- 基于真实源码成功生成了 diagrams.net 在线查看链接；
+- 人工目测验证了不透明预览图，确认标签、布局、配色与走线均渲染准确；
+- 记录了在黑色混合底色的看图器中透明黑色文本容易被遮蔽的现象，并在文档中补充了双预览图质检准则。
 
-## Script tests
+## 脚本覆盖项
 
-Covered:
+测试覆盖：
 
-- uncompressed Draw.io XML;
-- compressed Draw.io pages;
-- missing edge geometry rejection;
-- valid embedded PNG no-op;
-- known IEND truncation repair;
-- unknown PNG corruption rejection.
+- 未压缩的 Draw.io XML 结构；
+- 压缩格式的 Draw.io 页面；
+- 针对缺少连线几何数据的严格拦截报错；
+- 对正常内嵌 PNG 的无害幂等处理；
+- 已知 IEND 截断缺陷的无损修复；
+- 对未知损坏 PNG 的安全拦截。
 
-## Remaining limits
+## 残留约束与边界
 
-- PPT-safe export requires Draw.io Desktop, Poppler `pdftocairo`, and the intended font on the export host.
-- Image-based style extraction still depends on a vision-capable model and remains inference-based.
-- Trigger results should be rerun with an actual model harness if the skill is published broadly.
+- PPT 安全导出强依赖本地 Draw.io Desktop、Poppler `pdftocairo` 工具包以及系统中预装的对应字体；
+- 基于位图图像的样式提取仍然依赖视觉模型推理能力；
+- 若后续广泛公开发布该 Skill，应在实际模型框架中执行自动化回归评测。

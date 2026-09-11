@@ -1,110 +1,75 @@
-# Style Presets — Learn, Apply, Manage
+# 样式预设系统：提取、应用与管理
 
-A **style preset** is a named JSON file capturing a user's visual preferences — palette, shape vocabulary, fonts, edge style. When a preset is active, it fully replaces the built-in color/font/edge conventions in `xml-authoring.md`.
+**样式预设（Style Preset）** 是一个结构化的 JSON 文件，用于沉淀用户的视觉偏好——涵盖调色板、形状图形库、字体层级以及连线风格。当一个预设被激活时，它将完全替换 `xml-authoring.md` 中的内置颜色与连线规范。
 
-Read this file when:
-- The user asks to "learn", "save", "remember", or "extract" a style from a file
-- The user wants to manage existing presets (list, set default, delete, rename)
-- The main workflow resolved an active preset and needs the application rules
-- You need to validate a preset file before loading it
+在以下场景查阅本文档：
+- 用户要求从文件或参考图中“学习”、“保存”、“记住”或“提取”样式；
+- 用户希望管理已有预设（查看列表、设置默认预设、删除、重命名）；
+- 主工作流确定了激活的预设，需要执行具体的应用规则；
+- 在加载前对预设 JSON 执行校验。
 
-## Locations and lookup order
+## 预设存放路径与查找优先级
 
-1. `~/.drawio-skill/styles/<name>.json` — user presets (survive `git pull`).
-2. `<this-skill-dir>/styles/built-in/<name>.json` — built-ins shipped with the skill (`default`, `corporate`, `handdrawn`).
+1. `~/.drawio-skill/styles/<name>.json`：用户自定义预设（在项目拉取或更新时持久保留）；
+2. `<this-skill-dir>/styles/built-in/<name>.json`：Skill 随附的内置预设（如 `default`, `corporate`, `handdrawn`）。
 
-A user preset shadows a built-in of the same name.
+同名的用户自定义预设优先级高于内置预设。
 
-Only user presets can have `"default": true`. When the user says *"make `<built-in-name>` my default"*, copy the built-in JSON to `~/.drawio-skill/styles/<name>.json` first, then set `default: true` on the copy — leave the shipped built-in untouched.
+仅用户预设允许包含 `"default": true` 标志。当用户说“把某内置预设设为我的默认”时，先将内置 JSON 复制到 `~/.drawio-skill/styles/<name>.json`，再在副本中设置 `default: true`，严禁修改包内内置文件。
 
-**Name normalisation:** always lowercase the user-provided name before writing or looking up files (the preset schema enforces lowercase; uppercase names will fail validation).
+**名称规范化**：在读写文件或检索前，始终将用户输入的预设名称统一转换为纯小写。
 
-## Applying a preset
+## 应用样式预设的核心规则
 
-When the workflow identifies a preset, it fully replaces the built-in palette, shape keywords, edge defaults, and font for this diagram — do not mix values from `xml-authoring.md`'s built-in palette.
+一旦确定了生效的预设，图表的配色板、形状关键字、连线默认值和字体全部遵从该预设，切勿混合使用内置调色板。
 
-**Color lookup.** For each role a shape plays (service / database / queue / gateway / error / external / security), resolve `preset.roles[role]` to a slot name, then `preset.palette[<slot>]` to the `(fillColor, strokeColor)` pair. If `roles[role]` is unset or the resolved slot is `null`, follow this fallback ladder:
+**色彩映射逻辑**：对图元扮演的角色（service / database / queue / gateway / error / external / security），按 `preset.roles[role]` 解析到槽位（Slot），再从 `preset.palette[<slot>]` 获取 `(fillColor, strokeColor)` 颜色对。若该角色未定义或对应的槽位为空，按以下梯度回退：
 
-1. Try the role's canonical slot (`service→primary`, `database→success`, `queue→warning`, `gateway→accent`, `error→danger`, `external→neutral`, `security→secondary`).
-2. If that slot is also empty, pick the most-populated non-null slot in the preset.
-3. Never reach into the built-in color table — the preset is authoritative.
+1. 尝试使用角色的规范标准槽位（`service→primary`, `database→success`, `queue→warning`, `gateway→accent`, `error→danger`, `external→neutral`, `security→secondary`）；
+2. 若该槽位依然为空，选取预设中被最多节点使用的非空槽位；
+3. 严禁回退到系统内置的默认颜色表中，必须保证预设的绝对权威性。
 
-**Decision and container shapes** are not in `preset.roles` — they have shape vocabulary (`preset.shapes.decision`, `preset.shapes.container`) but no role-to-slot mapping. Pick their colors as follows:
-- **Decision** (rhombus) → use `preset.palette.warning` (the canonical yellow slot in the built-in conventions). If `warning` is empty, apply the slot-fallback ladder above starting from `warning`.
-- **Container** (swimlane) → use the palette slot matching the tier/grouping the container represents (e.g. a "Services" tier container uses `primary`; a "Data" tier uses `success`). If no tier signal is available, default to `primary`.
+**判断框与容器图元**：
+- **判断条件框（菱形）**：使用 `preset.palette.warning` 对应槽位；
+- **分组容器（泳道）**：使用与容器所代表的分层对应的槽位（如服务层使用 `primary`，数据层使用 `success`），未明确时默认为 `primary`。
 
-**Shape keywords.** Use `preset.shapes[role]` as the **prefix** of the vertex style string (before `whiteSpace=wrap;html=1;...`). Example: for a database role, if `preset.shapes.database = "shape=cylinder3"`, the vertex style starts `shape=cylinder3;whiteSpace=wrap;html=1;fillColor=...`. The six named shape keys are `service`, `database`, `queue`, `decision`, `external`, `container`. Roles `gateway`, `error`, and `security` reuse `preset.shapes.service` unless the preset explicitly populates a key with their name.
+**图元样式前缀**：使用 `preset.shapes[role]` 作为 vertex 样式字符串的前缀（置于 `whiteSpace=wrap;html=1;...` 之前）。
 
-**Edges.** Use `preset.edges.style` as the base edge style string. Append `preset.edges.arrow`. Per-edge routing keys (`exitX/exitY/entryX/entryY/...`) are still added using `xml-authoring.md`. If the flow between two shapes matches a token from `preset.edges.dashedFor` (either because the user's prompt used that word, or because one end of the edge plays a role whose typical relation is "optional"), append `;dashed=1` to the edge style.
+**连线样式**：以 `preset.edges.style` 作为基础样式，并拼接 `preset.edges.arrow`。各连线的具体走线桩位（exitX/entryX 等）依然按 `xml-authoring.md` 添加。若两个形状之间的关联属于可选链路（命中 `preset.edges.dashedFor`），追加 `;dashed=1`。
 
-**Fonts.** Append `fontFamily=<preset.font.fontFamily>;fontSize=<preset.font.fontSize>` to every vertex style. Container headers and swimlane titles additionally get `fontSize=<preset.font.titleFontSize>;fontStyle=1` when `preset.font.titleBold` is `true`.
+**字体设置**：在所有 vertex 样式中追加 `fontFamily=<preset.font.fontFamily>;fontSize=<preset.font.fontSize>`。容器大标题当 `preset.font.titleBold` 为 `true` 时，额外配置字阶并加粗。
 
-**Extras.**
-- `preset.extras.sketch === true` → append `sketch=1` to every vertex style and every edge style.
-- `preset.extras.globalStrokeWidth !== 1` (any value other than the drawio default of 1, including `0.5`) → append `strokeWidth=<n>` to every vertex style and every edge style.
+**附加特性（Extras）**：
+- `preset.extras.sketch === true`：在所有节点与连线中追加 `sketch=1` 手绘效果；
+- `preset.extras.globalStrokeWidth !== 1`：在所有图元与连线中追加 `strokeWidth=<n>` 边框粗细。
 
-**Interaction with diagram-type presets** (ERD / UML / Sequence / ML / Flowchart). Diagram-type presets set structural style keywords that the user preset must preserve (e.g. ERD tables rely on `shape=table;startSize=30;container=1;childLayout=tableLayout;...`). The rule: keep the diagram-type preset's structural keywords, then layer the user preset's color / font / edge / extras on top. When a diagram-type preset hardcodes a color (`fillColor=#dae8fc`, etc.) that conflicts with the user preset, the user preset's color wins. Exception: `fillColor=none` is structural — do not replace it with a palette color.
+**与图表类型预设的叠加关系**：保持图表类型预设（如 ERD、UML）的骨架样式结构，在此之上覆盖应用当前预设的色彩、字体与连线。类型预设中硬编码的颜色让位于用户预设（但 `fillColor=none` 作为结构性透明设置应予以保留）。
 
-## Learn flow
+## 样式学习工作流（Learn Flow）
 
-**Triggers:** "learn my style from `<path>` as `<name>`", "save this as `<name>` style", "remember this style as `<name>`".
+触发语境：“从 `<path>` 学习我的样式并命名为 `<name>`”、“将此保存为 `<name>` 样式预设”。
 
-**Dispatch by file extension:**
-- `.drawio`, `.xml` → XML path
-- `.png`, `.jpg`, `.jpeg`, `.svg` (rasterized flat image) → image path
+根据文件后缀分流：
+- `.drawio`, `.xml`：走 XML 提取管线；
+- `.png`, `.jpg`, `.jpeg`, `.svg`：走图片视觉提取管线。
 
-**Steps:**
+核心步骤：
+1. 阅读 `references/style-extraction.md`；
+2. 依据文档流程完成参数提取；
+3. 将预设名规范化为纯小写，生成临时候选文件 `/tmp/drawio-preset-<name>.json`（此时先不写入持久目录）；
+4. 基于 `style-extraction.md` 中的样本骨架渲染一份样例图，导出不带 `-e` 的纯净预览图 `./preset-<name>-sample.png`；
+5. 向用户展示提取摘要（各槽位 Hex 色值、字体、线型）、样例图路径以及置信度评估；
+6. 经用户确认满意后，正式落盘至 `~/.drawio-skill/styles/<name>.json` 并清理临时文件；用户要求调整则修改候选后重新预览。
 
-1. **Load the extraction reference.** Read `references/style-extraction.md` into context.
-2. **Extract** following the XML path or image path procedure in the reference.
-3. **Normalize and build candidate.** Convert the user-provided preset name to lowercase. Use this normalized name for ALL file paths in this flow. Build the candidate preset JSON and write it to `/tmp/drawio-preset-<name>.json` (where `<name>` is the already-normalized name). Do **not** save to `~/.drawio-skill/styles/<name>.json` yet.
-4. **Render a sample** using the sample-diagram skeleton in `references/style-extraction.md`, parameterized by the candidate preset. Export a clean preview without `-e`: `draw.io -x -f png -s 2 -o ./preset-<name>-sample.png /tmp/drawio-preset-<name>.drawio`.
-5. **Show the user:**
-   - Preset summary table (palette hex values, shapes per role, font, edge style, extras).
-   - The sample PNG path (and embed the image if the environment supports it).
-   - Provenance line: `source.type`, `source.path`, `extracted_at`, `confidence`.
-6. **Wait for approval:**
-   - "save" / "looks good" → write candidate to `~/.drawio-skill/styles/<name>.json`. Create `~/.drawio-skill/styles/` if it doesn't exist. Delete tempfile and sample PNG.
-   - "change `<field>` to `<value>`" → edit the in-memory candidate, re-render, re-ask.
-   - "cancel" / "abort" / "no" → delete tempfile and sample PNG; nothing saved.
+## 日常管理操作
 
-**Error behavior:**
+所有管理指令均支持自然语言交互：
 
-| Failure | Behavior |
+| 用户提问 | Agent 执行行为 |
 |---|---|
-| Source path does not exist | Stop; report path not found. |
-| XML parse fails | Stop; report the parse error; suggest opening the file in drawio desktop to repair. |
-| Image vision unavailable | Stop; tell user to re-run on a vision-capable model or provide the `.drawio` file. |
-| Extraction yields 0 vertices / shapes | Stop; refuse to save. |
-| Extraction yields <3 distinct color pairs | Continue; mark `confidence: "low"` (image) or `"medium"` (XML); warn in summary. |
-| Preset name collides with existing user preset | Ask: overwrite, or pick a new name. |
-| Preset name collides with a built-in preset | Save to user dir (shadows the built-in); warn once. |
-| Sample render fails | Still show summary; note "could not render sample — saving on your OK anyway". Do not block. |
-
-## Management operations
-
-All operations are natural language — no slash commands.
-
-*Apply name normalisation (lowercase) to all `<name>`, `<a>`, `<b>` arguments before any file operation.*
-
-| User says | Agent does |
-|---|---|
-| "list my styles", "what styles do I have", "show me my style presets" | Read `~/.drawio-skill/styles/` and `<this-skill-dir>/styles/built-in/`. Print a table: `name`, `location` (user/built-in), `source.type`, `confidence`, `default` flag. Built-ins shadowed by a user preset are marked so. |
-| "show my `<name>` style", "what's in `<name>`" | Print the preset JSON (pretty-printed) + a one-line summary (source, confidence, is-default). |
-| "make `<name>` the default", "set `<name>` as default" | If `<name>` is a user preset: set `default: true` on it; clear `default` on any other user preset that had it; save both files. If `<name>` is a built-in: copy `<this-skill-dir>/styles/built-in/<name>.json` → `~/.drawio-skill/styles/<name>.json` first, then set `default: true` on the copy. Never mutate the shipped built-in. |
-| "remove default", "unset default" | Clear `default: true` from whichever user preset has it. |
-| "delete `<name>`", "remove `<name>`" | Confirm first. Then `rm ~/.drawio-skill/styles/<name>.json`. Refuse to delete files under `<this-skill-dir>/styles/built-in/` — suggest shadowing with a user preset of the same name. |
-| "rename `<a>` to `<b>`" | `mv ~/.drawio-skill/styles/<a>.json ~/.drawio-skill/styles/<b>.json`, then update the `name` field inside. Fails if `<a>` is a built-in (offer to copy-then-rename instead). |
-| "learn my style from `<path>` as `<name>`" | Dispatch to the Learn flow above. |
-
-## Preset file validation
-
-When loading any preset (for generation or management), do a lightweight structural check:
-- Required top-level fields present (`name`, `version`, `palette`, `roles`, `shapes`, `font`, `edges`).
-- `version === 1`.
-- Every populated palette slot has both `fillColor` and `strokeColor` as `#RRGGBB`.
-- `confidence` ∈ {`"low"`, `"medium"`, `"high"`} if present.
-
-On validation failure:
-- **During generation:** warn the user, fall back to built-in conventions for this one diagram, do not mutate the file.
-- **During learn:** refuse to save the candidate; report which field failed.
+| “列出我的所有样式预设”、“我有哪些样式” | 读取 `~/.drawio-skill/styles/` 与内置目录，以表格输出各预设名称、来源路径、默认状态及置信度 |
+| “查看 `<name>` 样式详情” | 美化打印该预设的 JSON 内容及核心特征摘要 |
+| “将 `<name>` 设为默认样式” | 在对应的用户预设中将 `default: true` 置位，并清除其余预设的默认标志；若目标为内置预设，先复制到用户目录再设置 |
+| “取消默认样式” | 清除所有用户预设中的 `default: true` 标记 |
+| “删除 `<name>` 预设” | 必须先向用户确认，确认后删除 `~/.drawio-skill/styles/<name>.json`（禁止直接删除内置预设） |
+| “将样式 `<a>` 重命名为 `<b>`” | 重命名对应的 JSON 文件并同步修改文件内部的 `name` 字段 |

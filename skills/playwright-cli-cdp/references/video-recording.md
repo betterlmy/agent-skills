@@ -1,103 +1,72 @@
-# Video Recording
+# 页面视频录制与章节标注
 
-Examples use the Bash wrapper. On Windows PowerShell replace `bash scripts/playwright-cdp.sh` with `powershell -ExecutionPolicy Bypass -File scripts\playwright-cdp.ps1`.
+在 Windows PowerShell 环境中，将 `bash scripts/playwright-cdp.sh` 替换为 `powershell -ExecutionPolicy Bypass -File scripts\playwright-cdp.ps1`。
 
-Record browser automation as video (WebM, VP8/VP9 codec). Useful for demos, documentation, and acceptance evidence.
+本功能用于将浏览器自动化全过程录制为视频格式（WebM 格式，VP8/VP9 编码），极其适合用于产品 Demo 演示、功能文档展示以及验收证据归档。
 
-## Basic recording
+## 基础录屏流程
 
 ```bash
+# 启动录屏并指定目标视频文件名
 bash scripts/playwright-cdp.sh -s=cdp video-start demo.webm
-bash scripts/playwright-cdp.sh -s=cdp video-chapter "Getting Started" --description="Opening the homepage" --duration=2000
+
+# 添加章节打标卡片（全屏提示，停留 2000 毫秒）
+bash scripts/playwright-cdp.sh -s=cdp video-chapter "快速入门" --description="打开系统首页" --duration=2000
 bash scripts/playwright-cdp.sh -s=cdp goto https://example.com
 bash scripts/playwright-cdp.sh -s=cdp click e1
-bash scripts/playwright-cdp.sh -s=cdp video-chapter "Filling Form" --description="Entering test data" --duration=2000
-bash scripts/playwright-cdp.sh -s=cdp fill e2 "test input"
+
+# 添加第二阶段章节说明
+bash scripts/playwright-cdp.sh -s=cdp video-chapter "填写表单" --description="自动录入业务数据" --duration=2000
+bash scripts/playwright-cdp.sh -s=cdp fill e2 "测试录入"
+
+# 停止录屏并完成文件编码落盘
 bash scripts/playwright-cdp.sh -s=cdp video-stop
 ```
 
-## Scripted demo with overlays
+## 通过脚本制作高品质视觉标注演示视频
 
-For polished demos with precise timing and visual annotations, write a `run-code` script and execute it with `--filename`.
+若需制作带有精准打字延迟、视觉聚光高亮以及气泡说明的精美演示视频，使用 `run-code --filename=...` 运行自动化脚本。
 
-> `page.screencast` is a playwright-cli internal API injected onto the `Page` object when running inside `run-code`. It is not part of the standard `@playwright/test` public API and will not be available in regular Playwright test files.
+在 `run-code` 内部，脚本注入了 `page.screencast` 扩展 API（该 API 仅在包装脚本环境有效）：
 
-1. Run through the scenario interactively to capture all locators and actions.
-2. Write the script using `pressSequentially` with character delays and `waitForTimeout` pauses between steps.
-3. Execute: `bash scripts/playwright-cdp.sh -s=cdp run-code --filename=demo-script.js`
-
-Overlays are `pointer-events: none` and do not interfere with page interaction.
-
-```js
+```javascript
 async page => {
   await page.screencast.start({ path: 'video.webm', size: { width: 1280, height: 800 } });
   await page.goto('https://demo.playwright.dev/todomvc');
 
-  await page.screencast.showChapter('Adding Todo Items', {
-    description: 'We will add several items to the todo list.',
+  // 展示章节卡片
+  await page.screencast.showChapter('添加待办项', {
+    description: '演示如何向列表中批量追加待办项',
     duration: 2000,
   });
 
+  // 模拟拟人化打字速度
   await page.getByRole('textbox', { name: 'What needs to be done?' })
-    .pressSequentially('Walk the dog', { delay: 60 });
+    .pressSequentially('遛狗', { delay: 80 });
   await page.getByRole('textbox', { name: 'What needs to be done?' }).press('Enter');
   await page.waitForTimeout(1000);
 
-  await page.screencast.showChapter('Verifying Results', {
-    description: 'Checking the item appeared in the list.',
-    duration: 2000,
-  });
-
+  // 注入局部高亮气泡标注
   const annotation = await page.screencast.showOverlay(`
-    <div style="position: absolute; top: 8px; right: 8px;
-      padding: 6px 12px; background: rgba(0,0,0,0.7);
-      border-radius: 8px; font-size: 13px; color: white;">
-      Item added successfully
+    <div style="position: absolute; top: 12px; right: 12px;
+      padding: 8px 16px; background: rgba(0,0,0,0.75);
+      border-radius: 8px; font-size: 14px; color: white;">
+      首个条目添加成功
     </div>
   `);
 
-  await page.getByRole('textbox', { name: 'What needs to be done?' })
-    .pressSequentially('Buy groceries', { delay: 60 });
-  await page.getByRole('textbox', { name: 'What needs to be done?' }).press('Enter');
   await page.waitForTimeout(1500);
-
-  await annotation.dispose();
-
-  const bounds = await page.getByText('Walk the dog').boundingBox();
-  await page.screencast.showOverlay(`
-    <div style="position: absolute;
-      top: ${bounds.y}px; left: ${bounds.x}px;
-      width: ${bounds.width}px; height: ${bounds.height}px;
-      border: 2px solid red;">
-    </div>
-    <div style="position: absolute;
-      top: ${bounds.y + bounds.height + 5}px;
-      left: ${bounds.x + bounds.width / 2}px;
-      transform: translateX(-50%);
-      padding: 6px; background: #808080;
-      border-radius: 10px; font-size: 14px; color: white;">
-      Check it out, it is right above this text
-    </div>
-  `, { duration: 2000 });
+  await annotation.dispose(); // 移除气泡
 
   await page.screencast.stop();
 }
 ```
 
-## Overlay API
+## Screencast 浮层 API 摘要
 
-| Method | Use case |
+| 接口方法 | 用途与场景 |
 |---|---|
-| `page.screencast.showChapter(title, { description?, duration?, styleSheet? })` | Full-screen chapter card for stage transitions |
-| `page.screencast.showOverlay(html, { duration? })` | Custom HTML overlay for callouts, labels, highlights |
-| `disposable.dispose()` | Remove a sticky overlay that has no `duration` |
-| `page.screencast.hideOverlays()` / `showOverlays()` | Temporarily hide or show all overlays |
-
-## Tracing vs video
-
-| Feature | Video | Tracing |
-|---|---|---|
-| Output | WebM file | Trace file (Trace Viewer) |
-| Shows | Visual recording | DOM snapshots, network, console, actions |
-| Best for | Demos, documentation | Debugging, analysis |
-| File size | Larger | Smaller |
+| `page.screencast.showChapter(title, options)` | 全屏展示阶段过渡章节卡片 |
+| `page.screencast.showOverlay(html, options)` | 渲染自定义 HTML 浮层用于高亮标注、边框提示与引导文案 |
+| `disposable.dispose()` | 手动关闭未设置持续时间的常驻浮层 |
+| `page.screencast.hideOverlays()` / `showOverlays()` | 临时批量隐藏或重新显示所有当前活跃浮层 |

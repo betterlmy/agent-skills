@@ -1,40 +1,40 @@
-# CDP Startup and Troubleshooting
+# CDP 启动与故障排查指南
 
-This skill is CDP-only. Start or reuse a Chrome DevTools Protocol endpoint, then attach with `playwright-cli attach --cdp=...`.
+本 Skill 专用于纯 CDP（Chrome DevTools Protocol）操作。启动或复用 Chrome 远程调试端点后，使用 `playwright-cli attach --cdp=...` 挂载连接。
 
-If a CDP endpoint is already reachable, reuse it and leave it running. Do not close, kill, restart, detach, or otherwise clean up an existing browser or debugging port unless the user explicitly asks.
+若当前环境中已存在可连通的 CDP 端点，直接复用并保持其持续运行。严禁在任务完成时擅自关闭、kill、重启或分离现有浏览器进程与调试端口，除非用户明确指示。
 
-## Platform support
+## 多平台支持矩阵
 
-| Platform | Supported | Startup path |
+| 操作系统环境 | 是否支持 | 推荐启动脚本路径 |
 | --- | --- | --- |
-| macOS | Yes | `bash scripts/open-chrome-remote.sh` |
-| Linux | Yes | `bash scripts/open-chrome-remote.sh` |
-| Windows | Yes | `powershell -ExecutionPolicy Bypass -File scripts\open-chrome-remote.ps1` |
-| WSL2 with Linux Chrome/Chromium | Yes | `bash scripts/open-chrome-remote.sh` inside WSL2 |
-| WSL2 connecting to Windows Chrome | Yes, with networking caveats | Start Windows Chrome with PowerShell, then attach from WSL2 to a reachable endpoint |
+| macOS | 是 | `bash scripts/open-chrome-remote.sh` |
+| Linux | 是 | `bash scripts/open-chrome-remote.sh` |
+| Windows | 是 | `powershell -ExecutionPolicy Bypass -File scripts\open-chrome-remote.ps1` |
+| WSL2（使用 Linux 原生 Chrome/Chromium） | 是 | 在 WSL2 内部运行 `bash scripts/open-chrome-remote.sh` |
+| WSL2（连接 Windows 宿主 Chrome） | 是（注意网络路由） | 在 Windows 端用 PowerShell 启动 Chrome，再从 WSL2 挂载到宿主网络端点 |
 
-## Environment check
+## 环境预检（Environment Check）
 
-Run preflight before startup or attach unless the task is already in a known-good active CDP session.
+在启动或挂载前先执行环境检查，除非当前任务已在正常运行的活动 CDP 会话中：
 
-macOS, Linux, or WSL2:
+macOS, Linux 或 WSL2：
 
 ```bash
 bash scripts/check-environment.sh
 ```
 
-Windows PowerShell:
+Windows PowerShell：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\check-environment.ps1
 ```
 
-The preflight scripts do not launch Chrome. They check `playwright-cli`, endpoint reachability, Chrome-family browser discovery, basic port conflicts, risky `CDP_HOST=0.0.0.0` binding, and WSL2 guidance.
+预检脚本不会启动 Chrome，而是负责探测 `playwright-cli` 命令可用性、端点连通性、本地 Chrome 家族浏览器安装路径、基础端口冲突、危险的 `CDP_HOST=0.0.0.0` 绑定风险以及 WSL2 网络适配提示。
 
-## macOS, Linux, or WSL2 Linux browser
+## macOS, Linux 或 WSL2 内部 Linux 浏览器
 
-Use the bundled Bash script to launch Chrome remote debugging with an isolated profile:
+使用内置 Bash 脚本启动带有独立隔离用户配置的 Chrome 远程调试模式：
 
 ```bash
 bash scripts/check-environment.sh
@@ -42,14 +42,13 @@ bash scripts/open-chrome-remote.sh
 bash scripts/playwright-cdp.sh -s=cdp attach --cdp=http://127.0.0.1:9222
 ```
 
-The Bash script defaults to:
+Bash 脚本默认配置：
+- Host 监听地址：`127.0.0.1`
+- 调试端口：`9222`
+- 用户配置目录：`$HOME/.cache/playwright-cli-cdp/chrome-profile`
+- 初始打开页面：`about:blank`
 
-- Host: `127.0.0.1`
-- Port: `9222`
-- Profile: `$HOME/.cache/playwright-cli-cdp/chrome-profile`
-- First page: `about:blank`
-
-Override defaults with environment variables:
+通过环境变量覆盖默认参数：
 
 ```bash
 CDP_PORT=9333 bash scripts/check-environment.sh
@@ -58,7 +57,7 @@ CDP_USER_DATA_DIR=/tmp/chrome-cdp-profile bash scripts/open-chrome-remote.sh
 CHROME_BIN="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" bash scripts/open-chrome-remote.sh
 ```
 
-Manual macOS startup:
+macOS 手工启动参考：
 
 ```bash
 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
@@ -69,7 +68,7 @@ Manual macOS startup:
   --no-default-browser-check
 ```
 
-Manual Linux startup:
+Linux 手工启动参考：
 
 ```bash
 google-chrome \
@@ -82,7 +81,7 @@ google-chrome \
 
 ## Windows PowerShell
 
-Use the bundled PowerShell script:
+使用内置 PowerShell 脚本：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\check-environment.ps1
@@ -90,124 +89,24 @@ powershell -ExecutionPolicy Bypass -File scripts\open-chrome-remote.ps1
 powershell -ExecutionPolicy Bypass -File scripts\playwright-cdp.ps1 -s=cdp attach --cdp=http://127.0.0.1:9222
 ```
 
-The PowerShell script defaults to:
+PowerShell 脚本默认配置：
+- Host：`127.0.0.1`
+- Port：`9222`
+- 用户配置目录：`%LOCALAPPDATA%\playwright-cli-cdp\chrome-profile`
+- 初始页面：`about:blank`
 
-- Host: `127.0.0.1`
-- Port: `9222`
-- Profile: `%LOCALAPPDATA%\playwright-cli-cdp\chrome-profile`
-- First page: `about:blank`
-
-Override defaults with environment variables:
+通过环境变量覆盖默认配置：
 
 ```powershell
 $env:CDP_PORT = "9333"
-$env:CDP_USER_DATA_DIR = "$env:TEMP\chrome-cdp-profile"
-$env:CHROME_BIN = "C:\Program Files\Google\Chrome\Application\chrome.exe"
-powershell -ExecutionPolicy Bypass -File scripts\check-environment.ps1
 powershell -ExecutionPolicy Bypass -File scripts\open-chrome-remote.ps1 https://example.com
 ```
 
-Manual Windows startup:
+## 常见排障速查
 
-```powershell
-& "C:\Program Files\Google\Chrome\Application\chrome.exe" `
-  --remote-debugging-address=127.0.0.1 `
-  --remote-debugging-port=9222 `
-  --user-data-dir="$env:LOCALAPPDATA\playwright-cli-cdp\chrome-profile" `
-  --no-first-run `
-  --no-default-browser-check
-```
-
-## WSL2 connecting to Windows Chrome
-
-There are two valid WSL2 setups:
-
-- Chrome/Chromium installed inside WSL2: use the Bash script and attach to `http://127.0.0.1:9222` from WSL2.
-- Windows Chrome controlled from WSL2: start Windows Chrome with the PowerShell script through `powershell.exe`, then attach from WSL2 to whichever endpoint WSL2 can reach.
-
-If the skill is installed under the WSL filesystem, do not assume the script exists under `C:\Users\...`. Convert the bundled script path to a Windows-visible path and pass it as an argument:
-
-```bash
-win_script="$(wslpath -w scripts/open-chrome-remote.ps1)"
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$win_script"
-```
-
-To start at a URL:
-
-```bash
-win_script="$(wslpath -w scripts/open-chrome-remote.ps1)"
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$win_script" https://example.com
-```
-
-If you hand-write a UNC path such as `\\wsl.localhost\...` in Bash, do not put the literal path inside Bash double quotes because backslashes can be consumed before PowerShell receives them. Prefer `wslpath -w`; otherwise wrap the PowerShell command in Bash single quotes:
-
-```bash
-powershell.exe -NoProfile -ExecutionPolicy Bypass -Command '& "\\wsl.localhost\Ubuntu\home\you\.claude\skills\playwright-cli-cdp\scripts\open-chrome-remote.ps1"'
-```
-
-Recommended checks from WSL2:
-
-```bash
-bash scripts/check-environment.sh
-curl -fsS http://127.0.0.1:9222/json/version
-bash scripts/playwright-cdp.sh -s=cdp attach --cdp=http://127.0.0.1:9222
-```
-
-If WSL2 cannot reach Windows Chrome through `127.0.0.1`, use the Windows host IP. This may require starting Chrome with `CDP_HOST=0.0.0.0` in the PowerShell process and allowing the port through Windows Firewall:
-
-```bash
-win_script="$(wslpath -w scripts/open-chrome-remote.ps1)"
-powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "\$env:CDP_HOST='0.0.0.0'; & '$win_script'"
-```
-
-```bash
-WINDOWS_HOST=$(awk '/nameserver/ { print $2; exit }' /etc/resolv.conf)
-CDP_ENDPOINT="http://${WINDOWS_HOST}:9222" bash scripts/check-environment.sh
-curl -fsS "http://${WINDOWS_HOST}:9222/json/version"
-bash scripts/playwright-cdp.sh -s=cdp attach --cdp="http://${WINDOWS_HOST}:9222"
-```
-
-Use the `0.0.0.0` bind only when needed. It can expose CDP to other machines on the network.
-
-## Verify endpoint
-
-```bash
-curl -fsS http://127.0.0.1:9222/json/version
-curl -fsS http://127.0.0.1:9222/json/list
-bash scripts/playwright-cdp.sh -s=cdp attach --cdp=http://127.0.0.1:9222
-```
-
-If `/json/version` fails, Chrome is not listening on that host and port. If `/json/list` is empty, open a tab in Chrome or pass a startup URL to the script.
-
-## Port conflicts
-
-macOS/Linux/WSL2:
-
-```bash
-lsof -iTCP:9222 -sTCP:LISTEN
-CDP_PORT=9333 bash scripts/check-environment.sh
-CDP_PORT=9333 bash scripts/open-chrome-remote.sh
-bash scripts/playwright-cdp.sh -s=cdp attach --cdp=http://127.0.0.1:9333
-```
-
-Windows PowerShell:
-
-```powershell
-netstat -ano | findstr :9222
-$env:CDP_PORT = "9333"
-powershell -ExecutionPolicy Bypass -File scripts\check-environment.ps1
-powershell -ExecutionPolicy Bypass -File scripts\open-chrome-remote.ps1
-powershell -ExecutionPolicy Bypass -File scripts\playwright-cdp.ps1 -s=cdp attach --cdp=http://127.0.0.1:9333
-```
-
-Prefer changing ports over killing unknown processes. Kill a process only when the user explicitly asks to close or kill Chrome.
-
-## Existing Chrome profiles
-
-Do not attach remote debugging to the user's daily Chrome profile by default. Use an isolated `--user-data-dir` so cookies, extensions, and profile locks do not interfere with the task.
-
-If the user explicitly wants their logged-in Chrome, ask for the intended profile or endpoint. A browser launched without `--remote-debugging-port` cannot be attached by endpoint until restarted with remote debugging enabled.
-
-## Security
-
-CDP can inspect pages, cookies, local storage, network traffic, and browser internals. Keep it bound to `127.0.0.1` unless the user explicitly asks for a remote bind and understands the exposure.
+| 故障现象 | 根因与修复操作 |
+|---|---|
+| 端口 `9222` 已被占用 | 使用 `lsof -iTCP:9222 -sTCP:LISTEN`（macOS/Linux）或 `netstat -ano \| findstr :9222`（Windows）排查进程。若非 CDP 进程占用，通过 `CDP_PORT=9333` 切换端口 |
+| Chrome 启动后立即退出 | 检查是否已存在使用相同 `user-data-dir` 的活跃 Chrome 实例；Chrome 不允许多个进程复用同一配置目录 |
+| `curl http://127.0.0.1:9222/json/version` 报错拒绝连接 | 说明远程调试模式尚未启动成功，需检查 Chrome 实际启动日志 |
+| WSL2 无法访问宿主 Windows 的 `127.0.0.1:9222` | 在 WSL2 中应通过宿主机器的虚拟网卡 IP 连接，或使用 Mirrored 网络模式（`.wslconfig` 配置 `networkingMode=mirrored`） |

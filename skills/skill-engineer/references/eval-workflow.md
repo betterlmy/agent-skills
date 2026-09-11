@@ -1,54 +1,53 @@
-# Skill Evaluation Workflow
+# Skill 评测工作流程
 
-Use this when static review is not enough to know whether a skill works.
+当静态审查不足以确定一个 Skill 的真实运行效果时，执行本工作流。
 
-## Choose Evaluation Depth
+## 选择评测深度
 
-- **Lightweight**: 2-3 prompts, manual comparison. Use for normal private skills.
-- **Baseline comparison**: run with-skill and without-skill or old-skill outputs. Use for production or shared skills.
-- **Trigger evaluation**: include should-trigger and should-not-trigger prompts. Use when the main risk is under-triggering or over-triggering.
-- **Full benchmark**: assertions, timing, token counts, and user review artifacts. Use for high-value skills or public distribution.
+- **轻量评测（Lightweight）**：精选 2–3 个测试 Prompt 进行人工结果对比。适用于一般的私有定制 Skill。
+- **基线对照（Baseline comparison）**：分别测试“加载 Skill”与“未加载 Skill”或“旧版 Skill”的输出表现。适用于团队共享或生产级核心 Skill。
+- **触发精度评测（Trigger evaluation）**：构建包含“应当触发”与“不应触发”的专用测试集。适用于主要风险在于误触发或漏触发的 Skill。
+- **全量基准评测（Full benchmark）**：包含断言校验、耗时统计、Token 开销分析与人工质量打分。适用于高价值、广泛对外分发的关键 Skill。
 
-## Prompt Set
+## 构建 Prompt 测试集
 
-Create realistic prompts:
+构建具有真实代表性的测试用例：
 
-- One common happy path.
-- One edge case with missing, ambiguous, or messy inputs.
-- One near miss that should not trigger the skill or should route to another skill.
-- For domain skills, include a prompt that requires current source material.
+- 1 个覆盖最典型场景的常规黄金路径（Happy path）；
+- 1 个带有输入缺失、语意模糊或排版混乱的边界用例（Edge case）；
+- 1 个极为相似但不应触发本 Skill 的相近用例（Near miss）；
+- 对于垂直技术领域的 Skill，包含 1 个必须依赖最新事实源的测试用例。
 
-Avoid toy prompts such as "make a PDF" or "write a skill". They do not test whether the skill guides hard decisions.
+避免使用“生成一份 PDF”或“写一个 skill”等玩具式用例，这类用例无法有效检验 Skill 是否能在困难决策点给出正确指引。
 
-## Baselines
+## 设定对照基线
 
-- New skill: compare against no skill.
-- Existing skill: snapshot the old version before edits and compare against it.
-- Major rewrite: compare old, new, and no-skill if time allows.
+- 全新 Skill：与“无 Skill”的原生状态对比；
+- 现有 Skill：在修改前先对旧版本建立快照，作为对比基准；
+- 重大重构：在条件允许时，横向对比旧版本、新版本与无 Skill 三者表现。
 
-## What to Record
+## 评测数据记录要点
 
-For each run, capture:
+对每次评测演练，完整记录：
 
-- Prompt.
-- Skill version or baseline label.
-- Output files or final answer.
-- Whether the expected workflow was followed.
-- Missing or unnecessary steps.
-- Objective assertions if available.
-- Time and token usage if the runtime reports them.
-- User feedback if review is subjective.
+- 测试 Prompt 原文；
+- Skill 版本或基线标签；
+- 生成的最终文件产物或回答内容；
+- 模型是否严格遵循了预期的工作流程；
+- 是否存在步骤遗漏或冗余无用操作；
+- 自动化断言结果（若有）；
+- 运行时报告的耗时与 Token 消耗；
+- 人工审查反馈（若涉及主观评价）。
 
-## Trigger Checks
+## 触发精准度排查
 
-Create 8-20 queries when trigger quality matters:
+当触发质量至关重要时，构建 8–20 个测试查询：
 
-- Should-trigger queries: varied phrasings, casual wording, real file names, adjacent tasks that still require this skill.
-- Should-not-trigger queries: near misses, shared keywords with different intent, tasks better handled by another skill.
+- **应当触发的查询**：涵盖不同的提问句式、口语化表达、真实文件路径，以及需要本能力配合的相近任务；
+- **不应触发的查询**：高相似度但不属于本范围的意图、包含相同关键词但语义完全不同的提问，以及更适合由其他能力处理的场景。
 
-Improve `description` based on failures. Do not broaden it until every keyword triggers; broad descriptions cause the wrong skill to load.
+根据实际测试反馈迭代修正 `description`。切勿为了追求匹配而无限制扩大描述范围；过于宽泛的描述极易引发错误的加载。
 
-## Iteration Rule
+## 迭代优化准则
 
-Only revise based on failures that generalize. Do not hard-code one eval prompt into the skill. If the same helper code appears in multiple eval runs, move it into `scripts/`. If agents repeatedly search for the same domain facts, move stable facts into `references/` and require live verification for unstable facts.
-
+仅针对具有普适性的失败模式进行规则调整，切勿为了迎合某个特定的测试 Prompt 而在 Skill 中硬编码死逻辑。若在多次测试中反复需要相同的辅助代码，将其提取进 `scripts/`；若 Agent 反复检索相同的领域事实，将稳定的知识沉淀至 `references/`，对易变事实明确要求运行时动态核验。

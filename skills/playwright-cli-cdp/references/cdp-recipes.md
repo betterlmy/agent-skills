@@ -1,6 +1,8 @@
-# CDP Protocol Recipes
+# CDP 原生协议高级配方
 
-Use `playwright-cli run-code` to send raw Chrome DevTools Protocol commands from the active page. The examples use the Bash wrapper; on Windows PowerShell use `powershell -ExecutionPolicy Bypass -File scripts\playwright-cdp.ps1 ...` with the same arguments. Create a CDP session per page:
+使用 `playwright-cli run-code` 直接向当前活动页面发送原生 Chrome DevTools Protocol 指令。在 Windows PowerShell 下将 `bash scripts/playwright-cdp.sh` 替换为 `powershell -ExecutionPolicy Bypass -File scripts\playwright-cdp.ps1` 即可。
+
+每个页面创建独立的 CDP 会话：
 
 ```bash
 bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
@@ -9,7 +11,7 @@ bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
 }"
 ```
 
-## Runtime evaluation
+## 运行时 JS 表达式执行（Runtime.evaluate）
 
 ```bash
 bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
@@ -21,9 +23,9 @@ bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
 }"
 ```
 
-## Network diagnostics
+## 网络层深度诊断（Network Domain）
 
-Enable the domain before issuing domain-specific commands:
+在调用特定域的指令前先显式启用该域：
 
 ```bash
 bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
@@ -35,14 +37,14 @@ bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
 }"
 ```
 
-For normal request inspection after attaching through `--cdp`, use:
+在挂载会话后，常规的网络请求排查使用内置命令更便捷：
 
 ```bash
 bash scripts/playwright-cdp.sh -s=cdp requests
 bash scripts/playwright-cdp.sh -s=cdp request 3
 ```
 
-## Performance metrics
+## 性能指标采集（Performance.getMetrics）
 
 ```bash
 bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
@@ -52,27 +54,29 @@ bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
 }"
 ```
 
-## CPU throttling
+## CPU 降频模拟（Emulation.setCPUThrottlingRate）
+
+限制为 4 倍降频：
 
 ```bash
 bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
-  return 'CPU throttling set to 4x';
+  return 'CPU 限速已设置为 4 倍';
 }"
 ```
 
-Reset:
+恢复正常频率：
 
 ```bash
 bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
-  return 'CPU throttling reset';
+  return 'CPU 限速已重置';
 }"
 ```
 
-## Device metrics
+## 移动端设备视口与缩放模拟
 
 ```bash
 bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
@@ -83,52 +87,26 @@ bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
     deviceScaleFactor: 3,
     mobile: true
   });
-  return 'mobile metrics applied';
+  return '已应用移动端设备参数';
 }"
 ```
 
-Clear:
+清除模拟并恢复默认视口：
 
 ```bash
 bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('Emulation.clearDeviceMetricsOverride');
-  return 'device metrics cleared';
+  return '已恢复默认设备参数';
 }"
 ```
 
-## Security state
+## 安全与证书状态检查（Security.getVisibleSecurityState）
 
 ```bash
 bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('Security.enable');
-  return await cdp.send('Security.getCertificate', {
-    origin: new URL(page.url()).origin
-  });
+  return await cdp.send('Security.getVisibleSecurityState');
 }"
 ```
-
-## Coverage
-
-```bash
-bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
-  const cdp = await page.context().newCDPSession(page);
-  await cdp.send('Profiler.enable');
-  await cdp.send('Profiler.startPreciseCoverage', {
-    callCount: true,
-    detailed: true
-  });
-  await page.waitForTimeout(1000);
-  const coverage = await cdp.send('Profiler.takePreciseCoverage');
-  await cdp.send('Profiler.stopPreciseCoverage');
-  return coverage.result.map(script => ({
-    url: script.url,
-    functions: script.functions.length
-  }));
-}"
-```
-
-## Attached commands vs raw protocol
-
-This skill is still CDP-only: first attach with `playwright-cli attach --cdp=...`, then use attached wrapper commands for clicking, typing, snapshots, screenshots, cookies, local storage, and tabs. Use raw CDP when the task needs a protocol domain such as `Browser`, `Network`, `Performance`, `Emulation`, `Security`, `Profiler`, or `Runtime`.

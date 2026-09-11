@@ -1,31 +1,23 @@
-# Forward Evaluation Prompts
+# 前向评测提示词
 
-Compare the revised Skill with the previous version and with no Skill. Record
-whether official current sources were checked, the selected protocol and SDK
-were pinned, repository constraints were preserved, and security-sensitive data
-was kept out of logs.
+将修改后的 Skill 与旧版本以及“未加载任何 Skill”的基线进行横向评测对比。重点记录：是否检索了官方当前最新来源、所选协议与 SDK 是否锁定了具体版本、宿主仓库的架构约束是否得到尊重，以及安全敏感数据是否彻底杜绝在日志中打印。
 
-## Should Trigger
+## 应当触发本 Skill 的场景
 
-1. "Add a `memory_search` MCP Tool to this existing Gin service. Use the newest
-   stable MCP protocol, keep its API-key tenant boundary, and support the prior
-   protocol revision."
-2. "Build a local Go MCP subprocess that exposes two read-only filesystem
-   resources over stdio; do not add an HTTP listener."
-3. "Review this Go Streamable HTTP MCP server: it logs every Tool argument,
-   accepts any Origin, and still uses session IDs with MCP 2026-07-28."
+1. “为现有的 Gin Web 服务添加一个 `memory_search` MCP Tool。采用最新的稳定版 MCP 协议，保持其既有的 API Key 租户隔离边界，并兼容上一版协议。”
+2. “用 Go 构建一个本地 MCP 子进程，通过 stdio 管道对外暴露两个只读的文件系统资源（Resource）；不要启动任何 HTTP 端口监听。”
+3. “审查这段 Go Streamable HTTP MCP 服务端代码：它在日志中打印了所有 Tool 的入参明细，接收任意来源的跨域 Origin 请求，并且在 MCP 2026-07-28 规范下依然在维护 Session ID。”
 
-## Should Not Trigger
+## 不应触发本 Skill 的场景
 
-1. "Add an ordinary JSON REST health endpoint to this Go service."
-2. "Explain what MCP means in manufacturing process control."
-3. "Create a TypeScript MCP server; no Go code is involved."
+1. “为这个 Go Web 服务添加一个常规的 JSON REST 健康检查端点。”
+2. “解释制造业过程控制领域（Manufacturing Process Control）中的 MCP 代表什么。”
+3. “创建一个基于 TypeScript 的 MCP 服务器，完全不涉及任何 Go 代码。”
 
-## Expected Improvements
+## 预期达成的关键改进
 
-- Chooses the official Go SDK by default instead of a hard-coded third-party SDK.
-- Verifies current official sources instead of treating this package's baseline
-  as permanently latest.
-- Distinguishes Streamable HTTP 2026 lifecycle from legacy sessions.
-- Does not log complete requests or results.
-- Uses repository architecture rather than forcing a standalone directory tree.
+- 默认优先选用官方 Go SDK，而非硬编码第三方非官方库；
+- 主动核实官方最新来源，不将包内基线版本视作永久最新的静态事实；
+- 准确辨析 Streamable HTTP 2026 无状态生命周期与陈旧的 Session 会话机制差异；
+- 杜绝在日志中记录完整的请求报文与业务返回数据；
+- 严格贴合宿主仓库现有的架构风格，而非强行引入独立的目录结构。

@@ -1,6 +1,6 @@
 ---
 name: diagram-design
-description: Create branded editorial diagrams as standalone HTML/SVG/PNG. Use when the user wants a polished diagram or visual redraw; do not use for plain Mermaid source, editable Draw.io XML, or information clearer in prose.
+description: 创建具有品牌特色和出版级品质的独立 HTML/SVG/PNG 图表。Use when 用户需要高精度的视觉图表或对已有草图进行专业重绘；不用于单纯生成 Mermaid 文本、可编辑的 Draw.io XML 文件，或更适合用纯文字清晰说明的场景。
 metadata:
   external-cli: "true"
   cli-compatibility: "references/cli-compatibility.md"
@@ -12,37 +12,37 @@ license: MIT
 
 ## 范围与执行
 
-产物按用户指定的 HTML/SVG/PNG 交付；默认生成静态、自包含 HTML。先复用项目明确的配色和版式；无品牌要求时使用默认主题并说明，不为选择样式重复暂停。只在品牌选择实质改变结果且上下文无法确定时提问。
+产物按用户指定的 HTML/SVG/PNG 交付；默认生成静态、自包含的 HTML。优先复用项目既有的明确配色与版式规范；无品牌要求时使用默认主题并主动说明，避免为选择视觉样式频繁中断暂停。仅在品牌方案的选择会从根本上改变交付结果且上下文完全无法推断时发起确认。
 
-- 用户当前要求、项目硬约束和已有授权优先；参考中的视觉禁令、数值预算和示例是匹配目标后的选择，不是额外产品需求。
-- 先查看相关页面、品牌资料与构建文件，以一句话说明设计方向和验收目标；已能可靠确定的事项直接推进。
-- 只改变需求范围内的视觉与交互；不因素材、安装表或预检清单而擅自安装新库、上传数据、发布站点或调用额外付费服务。
-- 仅加载下表当前任务命中的章节；选中的章节完整读取，不把全部词库加载作为每次任务前置条件。
-- 参考节号与原指南一致；涉及第三方版本时查对应官方文档，示例安装命令不是已验证的当前环境命令。
+- 用户当前诉求、项目硬约束与已有明确授权优先；参考文档中的视觉规范、尺寸数值和示例是达成目标后的技术约束，不可演变为超出范围的额外产品需求。
+- 开始前先查阅相关页面、品牌设计资产与构建配置，以一句话明确设计方向与验收目标；已有充分信息的事项直接推进。
+- 仅改动需求范围内的视觉与交互实现；严禁因参考资料提及的第三方库、安装清单或预检项而擅自引入新依赖、外发数据、公开发布或调用未授权的付费服务。
+- 仅按需加载下表当前任务命中的参考章节；命中的章节需完整通读，严禁在任务开始前将所有非必要章节全量加载到上下文。
+- 参考节号与原始指南保持一致；涉及第三方工具版本时查阅对应官方文档，示例安装命令不代表当前环境已验证可用。
 
 ## 按需参考索引
 
-重设计读取对应 redesign 章节；动效仅在需要时读取 motion；主题仅在需要时读取 theme/dark；导入与导出只在对应交付时读取。绘图必须读所选类型的参考，技术验证不能由审美偏好替代。
+重绘已有图表请查阅对应的 redesign 章节；仅在有动态呈现诉求时查阅 motion；仅在明确涉及暗色模式或主题切换时查阅 theme/dark；导入与导出规范仅在涉及对应格式交付时查阅。绘制具体图表必须通读所选类型的专门指南，技术正确性必须优先于纯粹的主观审美偏好。
 
-| 任务对应章节 | 参考 |
-| --- | --- |
-| 0. First-time setup — style guide gate | [guide-00.md](references/guide-00.md) |
-| 1. Philosophy | [guide-01.md](references/guide-01.md) |
-| 2. When to Use | [guide-02.md](references/guide-02.md) |
-| 3. Selection: semantic pattern, then visual type | [guide-03.md](references/guide-03.md) |
-| 4. Universal Anti-patterns | [guide-04.md](references/guide-04.md) |
-| 5. Design System | [guide-05.md](references/guide-05.md) |
-| 6. Core SVG Primitives | [guide-06.md](references/guide-06.md) |
-| 7. Layout & Spacing | [guide-07.md](references/guide-07.md) |
-| 8. Summary Card Pattern | [guide-08.md](references/guide-08.md) |
-| 9. Pre-Output Checklist (Taste Gate) | [guide-09.md](references/guide-09.md) |
-| 10. Templates & Variants | [guide-10.md](references/guide-10.md) |
-| 11. Importing an Existing Diagram (draw.io) and Mermaid | [guide-11.md](references/guide-11.md) |
-| 12. Output | [guide-12.md](references/guide-12.md) |
+| 任务对应章节 | 参考文档 | 核心内容 |
+|---|---|---|
+| 0. 首次设置与风格门禁 | [guide-00.md](references/guide-00.md) | 设计系统门禁、样式规范提取 |
+| 1. 设计哲学 | [guide-01.md](references/guide-01.md) | 图表核心表达原则、高品质视觉基准 |
+| 2. 适用场景与边界 | [guide-02.md](references/guide-02.md) | 格式选择判定、适用与不适用场景 |
+| 3. 图表选型：语义模式与视觉形态 | [guide-03.md](references/guide-03.md) | 流程、时序、架构、对比等图表模式匹配 |
+| 4. 通用视觉反模式 | [guide-04.md](references/guide-04.md) | 避免视觉杂乱、无效装饰与廉价质感 |
+| 5. 设计系统规范 | [guide-05.md](references/guide-05.md) | 配色板、对比度、字体层级与间距体系 |
+| 6. 核心 SVG 图元 | [guide-06.md](references/guide-06.md) | 几何容器、路径、连接线与端点标记 |
+| 7. 布局与间距 | [guide-07.md](references/guide-07.md) | 网格对齐、留白规范、层次分区 |
+| 8. 摘要卡片模式 | [guide-08.md](references/guide-08.md) | 关键数据看板、统计摘要与标注卡片 |
+| 9. 产出前品味门禁清单 | [guide-09.md](references/guide-09.md) | 交付前严苛视觉与信息自查清单 |
+| 10. 模板与变体 | [guide-10.md](references/guide-10.md) | 现成经典布局模板与变体库 |
+| 11. 导入已有图表（Draw.io 与 Mermaid） | [guide-11.md](references/guide-11.md) | 将 Draw.io XML 或 Mermaid 文本重构为精美图表 |
+| 12. 最终输出与导出 | [guide-12.md](references/guide-12.md) | HTML、SVG、PNG 交付标准与导出技巧 |
 
 ## 验证与交付
 
-- 先确认内容、关系和关键交互正确，再检查遮挡、溢出、键盘、可访问性和约定视口；沿用宿主已选择的浏览器。
-- 运行项目已有且与修改相关的检查；相同输入通过后不重复，未运行的浏览器/导出检查明确说明。
-- 不编造真实数据、来源、图片或已执行测试；交付请求的产物和简短说明，不自动增加多套主题或格式。
-- 首次调用导出工具前读 [CLI 兼容性](references/cli-compatibility.md)；使用包内 scripts/self_check.py 检查可访问 SVG、自包含结构和实际选择的动效。
+- 先核验信息层级、结构关系与核心交互是否准确无误，再排查元素遮挡、文本溢出、键盘可访问性以及预设视口适配；严格沿用宿主已选择的浏览器环境。
+- 执行项目中已有且与当前修改相关的校验脚本；相同输入已通过验证的项不重复执行，未实际运行的浏览器或导出校验项需在报告中明确说明。
+- 绝不伪造真实业务数据、引用来源、图片资源或声称已完成未实际执行的测试；仅交付用户明确要求的产物及简短说明，不擅自增添多余的主题或无关格式。
+- 首次调用导出工具前阅读 [CLI 兼容性契约](references/cli-compatibility.md)；使用包内 `scripts/self_check.py` 验证 SVG 结构合规性、HTML 自包含完整性以及实际选用的动效安全性。

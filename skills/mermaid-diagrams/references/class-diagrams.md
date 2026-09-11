@@ -1,15 +1,15 @@
-# Class Diagrams
+# 类图设计与语法指南（Class Diagrams）
 
-Class diagrams model object-oriented designs and domain models. They show entities (classes), their attributes/methods, and relationships.
+类图用于面向对象架构设计与领域驱动建模（DDD），表达系统中的实体类、属性方法及其拓扑关系。
 
-## Basic Syntax
+## 基础语法范式
 
 ```mermaid
 classDiagram
     ClassName
 ```
 
-## Defining Classes with Members
+## 定义包含成员属性与方法的类
 
 ```mermaid
 classDiagram
@@ -23,28 +23,28 @@ classDiagram
     }
 ```
 
-**Visibility modifiers:**
-- `+` Public
-- `-` Private
-- `#` Protected
-- `~` Package/Internal
+**可见性修饰符（Visibility）：**
+- `+` 公开（Public）
+- `-` 私有（Private）
+- `#` 受保护（Protected）
+- `~` 包内访问 / 内部（Package/Internal）
 
-**Member syntax:**
-- `+type attribute` - Attribute with type
-- `+method(params) ReturnType` - Method with parameters and return type
+**成员语法格式：**
+- `+类型 属性名`：声明属性及其数据类型
+- `+方法名(参数列表) 返回值类型`：声明方法签名与返回类型
 
-## Relationships
+## 核心依赖关系语法
 
-### Association (`--`)
-Loose relationship where entities use each other but exist independently.
+### 关联关系（Association：`--`）
+松散的关联，彼此相互引用但生命周期完全独立。
 
 ```mermaid
 classDiagram
     Title -- Genre
 ```
 
-### Composition (`*--`)
-Strong ownership - child cannot exist without parent. When parent is deleted, children are deleted.
+### 组合关系（Composition：`*--`）
+强所属关系（生命周期绑定）。子对象不可脱离父对象单独存在；父对象销毁时子对象一并销毁。
 
 ```mermaid
 classDiagram
@@ -52,8 +52,8 @@ classDiagram
     House *-- Room
 ```
 
-### Aggregation (`o--`)
-Weaker ownership - child can exist independently. Represents "has-a" relationship.
+### 聚合关系（Aggregation：`o--`）
+弱所属关系（“包含/Has-a”）。子对象可以脱离聚合体独立存在。
 
 ```mermaid
 classDiagram
@@ -61,113 +61,47 @@ classDiagram
     Playlist o-- Song
 ```
 
-### Inheritance (`<|--`)
-"Is-a" relationship. Child class inherits from parent class.
+### 继承与泛化关系（Inheritance：`<|--`）
+面向对象的“Is-a”继承关系。子类派生自父类。
 
 ```mermaid
 classDiagram
     Animal <|-- Dog
     Animal <|-- Cat
-    
-    class Animal {
-        +String name
-        +makeSound()
-    }
-    
-    class Dog {
-        +bark()
-    }
 ```
 
-### Dependency (`<..`)
-One class depends on another, often as a parameter or local variable.
+### 接口实现关系（Realization：`<|..`）
+具体类实现声明的接口契约。
 
 ```mermaid
 classDiagram
-    OrderProcessor <.. PaymentGateway
+    PaymentProcessor <|.. StripeProcessor
+    PaymentProcessor <|.. PayPalProcessor
 ```
 
-### Realization/Implementation (`<|..`)
-Class implements an interface.
+### 依赖关系（Dependency：`..>`）
+单向临时使用关系。某个类的具体方法临时接收另一个类作为参数。
 
 ```mermaid
 classDiagram
-    class Drawable {
-        <<interface>>
-        +draw()
-    }
-    Drawable <|.. Circle
-    Drawable <|.. Rectangle
+    OrderService ..> EmailClient
 ```
 
-## Multiplicity
-
-Show how many instances participate in a relationship:
+## 基数与重数标注（Multiplicity）
 
 ```mermaid
 classDiagram
-    Customer "1" --> "0..*" Order : places
+    Customer "1" --> "*" Order : places
     Order "1" *-- "1..*" LineItem : contains
-    Author "1..*" -- "1..*" Book : writes
 ```
 
-**Common multiplicities:**
-- `1` - Exactly one
-- `0..1` - Zero or one
-- `0..*` or `*` - Zero or many
-- `1..*` - One or many
-- `m..n` - Between m and n
+常见基数标记：
+- `1`：恰好一个
+- `0..1`：零或一个（可选）
+- `*` 或 `0..*`：零或多个
+- `1..*`：一个或多个
 
-## Relationship Labels
-
-```mermaid
-classDiagram
-    Customer --> Order : places
-    Order --> Product : contains
-    Driver --> Vehicle : drives
-```
-
-## Class Stereotypes
-
-Mark special class types:
-
-```mermaid
-classDiagram
-    class IRepository {
-        <<interface>>
-        +save(entity)
-        +findById(id)
-    }
-    
-    class UserService {
-        <<service>>
-        +createUser()
-    }
-    
-    class UserDTO {
-        <<dataclass>>
-        +String name
-        +String email
-    }
-```
-
-## Abstract Classes and Methods
-
-```mermaid
-classDiagram
-    class Shape {
-        <<abstract>>
-        +int x
-        +int y
-        +draw()* abstract
-        +move(x, y)
-    }
-    
-    Shape <|-- Circle
-    Shape <|-- Rectangle
-```
-
-## Generic Classes
+## 泛型与注解标注
 
 ```mermaid
 classDiagram
@@ -175,187 +109,14 @@ classDiagram
         +add(item: T)
         +get(index: int) T
     }
-    
-    List~String~ <-- StringProcessor
-```
 
-## Comprehensive Example: E-Commerce Domain
-
-```mermaid
-classDiagram
-    %% Core entities
-    class Customer {
-        +UUID id
-        +String email
-        +String name
-        +Address shippingAddress
-        +placeOrder(cart: Cart) Order
-        +getOrderHistory() List~Order~
-    }
-    
-    class Order {
-        +UUID id
-        +DateTime orderDate
-        +OrderStatus status
-        +Decimal total
-        +calculateTotal() Decimal
-        +ship()
-        +cancel()
-    }
-    
-    class LineItem {
-        +int quantity
-        +Decimal pricePerUnit
-        +getSubtotal() Decimal
-    }
-    
-    class Product {
-        +UUID id
-        +String name
-        +String description
-        +Decimal price
-        +int stockQuantity
-        +reduceStock(quantity: int)
-        +isAvailable() bool
-    }
-    
-    class Category {
-        +String name
-        +String description
-    }
-    
-    class Cart {
-        +addItem(product: Product, quantity: int)
-        +removeItem(product: Product)
-        +getTotal() Decimal
-        +clear()
-    }
-    
-    %% Relationships
-    Customer "1" --> "0..*" Order : places
-    Customer "1" --> "1" Cart : has
-    Order "1" *-- "1..*" LineItem : contains
-    LineItem "1" --> "1" Product : references
-    Product "0..*" --> "1" Category : belongs to
-    Cart "1" o-- "0..*" Product : contains
-    
-    %% Enums
-    class OrderStatus {
-        <<enumeration>>
-        PENDING
-        PAID
-        SHIPPED
-        DELIVERED
-        CANCELLED
-    }
-    
-    Order --> OrderStatus
-```
-
-## Domain-Driven Design Patterns
-
-### Entities
-```mermaid
-classDiagram
-    class User {
-        <<entity>>
-        -UUID id
-        +String email
-        +String name
-    }
-```
-
-### Value Objects
-```mermaid
-classDiagram
-    class Money {
-        <<value object>>
-        +Decimal amount
-        +String currency
-        +add(other: Money) Money
-    }
-    
-    class Address {
-        <<value object>>
-        +String street
-        +String city
-        +String postalCode
-    }
-```
-
-### Aggregates
-```mermaid
-classDiagram
-    class Order {
-        <<aggregate root>>
-        -UUID id
-        +addLineItem(item)
-        +removeLineItem(item)
-    }
-    
-    Order *-- LineItem
-```
-
-## Tips for Effective Class Diagrams
-
-1. **Start with core entities** - Add attributes and methods incrementally
-2. **Show only relevant details** - Omit obvious getters/setters unless important
-3. **Use appropriate relationships** - Choose between association, aggregation, and composition carefully
-4. **Add multiplicity** - Clarifies how many instances participate
-5. **Group related classes** - Use notes or visual proximity
-6. **Document invariants** - Use notes to explain business rules
-
-## Common Patterns
-
-### Repository Pattern
-```mermaid
-classDiagram
-    class IRepository~T~ {
+    class Service {
         <<interface>>
-        +save(entity: T)
-        +findById(id: UUID) T
-        +delete(entity: T)
+        +execute()
     }
-    
-    class UserRepository {
-        +findByEmail(email: String) User
-    }
-    
-    IRepository~User~ <|.. UserRepository
-```
 
-### Factory Pattern
-```mermaid
-classDiagram
-    class ShapeFactory {
-        +createShape(type: String) Shape
-    }
-    
-    class Shape {
+    class Entity {
         <<abstract>>
-        +draw()*
+        +getId() Long
     }
-    
-    ShapeFactory ..> Shape : creates
-    Shape <|-- Circle
-    Shape <|-- Rectangle
-```
-
-### Strategy Pattern
-```mermaid
-classDiagram
-    class PaymentProcessor {
-        -PaymentStrategy strategy
-        +setStrategy(strategy: PaymentStrategy)
-        +processPayment(amount: Decimal)
-    }
-    
-    class PaymentStrategy {
-        <<interface>>
-        +pay(amount: Decimal)*
-    }
-    
-    PaymentStrategy <|.. CreditCardPayment
-    PaymentStrategy <|.. PayPalPayment
-    PaymentProcessor --> PaymentStrategy
 ```

@@ -1,60 +1,47 @@
-# Troubleshooting — Common Mistakes
+# 故障排查与高频避坑指南
 
-Read this when something looks wrong in the output (rendering, export, layout, edges) or when a CLI invocation fails. Most rows have a one-line fix.
+当产物出现渲染异常、导出失败、排版错位、连线畸变或 CLI 报错时查阅本文档。绝大部分问题可通过一行操作快速修复。
 
-| Mistake | Fix |
-|---------|-----|
-| Missing `id="0"` and `id="1"` root cells | Always include both at the top of `<root>` |
-| Shapes not connected | `source` and `target` on edge must match existing shape `id` values |
-| Self-closing edge `mxCell` (`<mxCell ... edge="1" />`) | Use the expanded form with `<mxGeometry relative="1" as="geometry" />` child — self-closing edges won't render |
-| `--` inside XML comments | Illegal per XML spec — use single hyphens or rephrase |
-| Special characters in `value` | Use XML entities: `&amp;` `&lt;` `&gt;` `&quot;` |
-| Literal `\n` in label text | Use `&#xa;` for line breaks in `value` attributes |
-| Overlapping shapes | Scale spacing with complexity (200–350px); leave routing corridors |
-| Edges crossing through shapes | Add waypoints, distribute entry/exit points, or increase spacing |
-| Arrowhead overlaps bend | Final edge segment before target must be ≥20px — increase spacing or add waypoints |
-| Iteration loop never ends | After 5 rounds, suggest user open .drawio in draw.io desktop for fine-tuning |
-| Export command not found on macOS | Try full path `/Applications/draw.io.app/Contents/MacOS/draw.io` |
-| Linux: blank/error output headlessly | Prefix command with `xvfb-run -a` |
-| Linux: `--no-sandbox` placed before input file (parsed as filename) | Move `--no-sandbox` to the very end of the command (drawio-desktop#249, #1056) |
-| Linux: `Failed to get 'appData' path` / `Home directory not accessible` | `export HOME=/tmp` before invoking drawio (drawio-desktop#127) |
-| Linux server: segfault / EGL / MESA `failed to load driver` errors | Add `--disable-gpu` (suppresses Chromium GL init when no GPU available) |
-| PDF export fails | Ensure Chromium is available (draw.io bundles it on desktop) |
-| Background color wrong in PNG export | Add `--transparent` / `-t` and ensure the source has no canvas-covering background shape. For SVG/PDF rules, read `export.md`. |
-| Vision returns 400 "Could not process image" on draft PNG | Re-export the preview without `-e` (issue #8). Root cause is a truncated IEND chunk in `-e` PNGs, not the `zTXt` chunk itself — but skipping `-e` for the preview is the simplest fix. |
-| Final `-e` PNG won't open in image viewers / vision APIs | Run `python3 <this-skill-dir>/scripts/repair_png.py <path>`. draw.io CLI emits `-e` PNGs with an 8-byte truncation at IEND. SVG/PDF unaffected. |
-| SVG consumer reports `text is not svg` | Embedded draw.io XML, XML/DOCTYPE preambles, `foreignObject`, and per-label fallback images can trip strict sniffers. For PPT/Office, use `scripts/export_ppt_svg.py` and keep the `.drawio` source separately. |
-| Fonts change after inserting SVG into PowerPoint | Native SVG `<text>` depends on fonts installed on the presentation machine. Do not fix this by only changing `font-family` or bulk-replacing `html=1`; export text as glyph paths with `scripts/export_ppt_svg.py`. |
-| PPT-safe SVG has the wrong glyph style | Path conversion locks whatever font Draw.io used on the export machine. Confirm the requested font is installed there and visually QA the Draw.io/PDF rendering before final export. |
-| PDF-to-SVG output has a white background | PDF export adds a page rectangle even when Draw.io shapes use transparent fills. Use `scripts/export_ppt_svg.py`, which removes only the generated clipped white page background and validates the result. |
-| Transparent PNG preview appears to lose black text | Some previewers composite alpha over black. Use an opaque temporary PNG for visual QA, then verify the transparent deliverable over its intended slide/page background. |
+| 故障现象 | 针对性修复方案 |
+|---|---|
+| 缺少 `id="0"` 和 `id="1"` 根节点 | 始终在 `<root>` 顶部显式包含这两个根元素 |
+| 图元之间连线断开未连接 | 连线上的 `source` 与 `target` 属性必须精确匹配现有图元的 `id` |
+| 连线使用了自闭合 `mxCell`（如 `<mxCell ... edge="1" />`） | 必须使用包含 `<mxGeometry relative="1" as="geometry" />` 子标签的完整展开形式，否则渲染引擎无法识别 |
+| XML 注释内出现 `--` 字符 | 违反 XML 标准规范，应替换为单短横线或调整表述 |
+| `value` 属性中包含特殊字符 | 必须进行 XML 实体转义：`&amp;` `&lt;` `&gt;` `&quot;` |
+| 标签文本中直接写了字面 `\n` | 属性中的文本换行统一使用 `&#xa;` |
+| 图元互相重叠穿插 | 根据复杂度拉大节点间距（建议 200–350px），并预留连线通道走廊 |
+| 连线直接横穿不相干图元 | 添加折点（Waypoints）、分散进出端口（Ports）或调整图元相对距离 |
+| 箭头与转折角重叠变形 | 连线在接入目标节点前的最后一段直线长度必须 ≥20px |
+| 审查反复迭代无法收敛 | 迭代超过 5 轮后，建议用户直接在 Draw.io Desktop 客户端中手工微调 |
+| macOS 下提示找不到导出命令 | 尝试使用绝对路径 `/Applications/draw.io.app/Contents/MacOS/draw.io` |
+| Linux 无头模式下输出全黑或报错 | 在命令前添加前缀 `xvfb-run -a` |
+| Linux 提示找不到文件名 | `--no-sandbox` 参数必须严格放置在命令的最末尾 |
+| Linux 提示无法获取 appData 路径 | 在调用命令前执行 `export HOME=/tmp` |
+| Linux 报驱动加载错误或段错误（segfault） | 增加 `--disable-gpu` 参数禁用 GPU 硬件加速 |
+| 导出的 PNG 背景颜色异常 | 增加 `--transparent` / `-t`，并确认源码中未放置全屏底色块 |
+| 视觉模型读取草稿 PNG 报 400 错误 | 导出预览图时移除 `-e` 参数，以规避内嵌 XML 时已知的 IEND 块截断 |
+| 最终 `-e` PNG 在外部看图工具中打不开 | 运行 `python3 <this-skill-dir>/scripts/repair_png.py <path>` 修复文件尾 |
+| 第三方工具解析 SVG 报 `text is not svg` | 属于严格 XML 校验拦截，改用 `scripts/export_ppt_svg.py` 导出矢量轮廓图 |
+| 将 SVG 插入 PowerPoint 后字体发生变化 | 原生 SVG `<text>` 依赖目标机器已安装字体，使用 `scripts/export_ppt_svg.py` 将文字轮廓化为绝对矢量路径 |
+| PDF 转 SVG 后自带纯白背景底板 | 运行 `scripts/export_ppt_svg.py`，它会自动剔除 PDF 生成的白底背景块并保留图表透明度 |
+| 透明 PNG 预览图中的黑色文字看似“消失” | 部分查看器将透明通道与黑底混合，应先用不透明预览图质检，再在目标幻灯片背景上实测透明图 |
 
-## PPT/Office-safe SVG with locked fonts
+## 锁定字体的 PPT / Office 安全矢量导出
 
-Use this flow when the target is PowerPoint, Office, a strict SVG renderer, or any consumer that substitutes fonts. A normal Draw.io SVG can contain editable diagram XML, XHTML `foreignObject` labels, fallback images, or native `<text>` nodes. Each is valid in some SVG viewers, but none guarantees Office compatibility and identical typography across machines.
+当目标场景为 PowerPoint、Office 办公套件、严格的 SVG 渲染器或任何容易引发字体替换的环境时，必须采用本流程。
 
-Preferred command:
+标准执行命令：
 
 ```bash
 python3 <this-skill-dir>/scripts/export_ppt_svg.py input.drawio output.svg
 ```
 
-The script requires Draw.io Desktop and Poppler's `pdftocairo`. It performs this deterministic pipeline:
+该工具通过以下确定性流水线运作：
+1. 调用 Draw.io Desktop 将指定图表页面导出为紧凑裁剪的 PDF；
+2. 借助 Poppler 的 `pdftocairo` 将 PDF 中的文字图元转换为可复用的 SVG 闭合矢量路径，杜绝任何 `<text>` 或 `<foreignObject>` 标签；
+3. 精准剔除 PDF 导出阶段引入的白色页面矩形，完整保留图表自身的透明填充；
+4. 保证输出文件以标准 `<svg>` 开头，兼容各类严苛的 MIME 嗅探器；
+5. 执行自动化断言：一旦发现遗留文本标签立即拦截报错。
 
-1. Export the approved Draw.io page to a cropped PDF, using Draw.io's actual font renderer.
-2. Convert the PDF to SVG; Poppler represents glyphs as reusable SVG paths instead of `<text>` or `foreignObject`.
-3. Remove the single clipped white page rectangle introduced by PDF export, preserving transparent diagram fills.
-4. Serialize the document with `<svg>` as the first bytes for strict MIME sniffers.
-5. Fail validation if text or `foreignObject` nodes remain.
-
-Before export, ensure the intended font exists on the export host. On Linux, use `fc-match '<font name>'`; the resulting paths faithfully preserve the font actually selected by Draw.io, including an unintended fallback.
-
-Validate the final artifact:
-
-```bash
-xmllint --noout output.svg
-file --mime-type output.svg
-rg -n '<text|foreignObject|fill="rgb\(100%, 100%, 100%\)"' output.svg
-```
-
-Expected result: MIME type `image/svg+xml`; the `rg` command prints nothing. Keep `input.drawio` as the editable source because outlined SVG text is no longer editable as text.
+导出前确保宿主机器已安装对应字体（在 Linux 下可用 `fc-match '<字体名>'` 检查）。请始终保留 `input.drawio` 作为可编辑源文件，因为轮廓化后的矢量路径在后续无法再作为纯文本直接修改。

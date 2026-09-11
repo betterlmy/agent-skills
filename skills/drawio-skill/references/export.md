@@ -1,41 +1,41 @@
-# Export modes, commands, and fallbacks
+# 导出模式、命令与降级策略
 
-Read this file whenever an image/PDF/SVG deliverable is requested or Draw.io CLI behavior matters.
+在涉及输出图片、PDF、SVG 交付物或排查 Draw.io CLI 行为时查阅本文档。
 
-## Choose the mode first
+## 导出模式选型决策
 
-| Mode | Use when | Embedded edit data | Font behavior |
+| 模式 | 适用场景 | 内嵌二次编辑数据 | 字体表现行为 |
 |---|---|---:|---|
-| Preview PNG | Visual QA and review | No | Rasterized |
-| Editable PNG/SVG/PDF | User wants to reopen the export in Draw.io | Yes, with `-e` | Renderer-dependent for SVG |
-| PPT/Office-safe SVG | PowerPoint, strict SVG consumer, exact cross-machine typography | No; keep `.drawio` separately | Glyphs outlined as paths |
+| **预览 PNG（Preview PNG）** | 视觉自检与用户快速审阅 | 否 | 栅格位图化 |
+| **可编辑格式（Editable PNG/SVG/PDF）** | 用户需要在 Draw.io 中重新打开并编辑 | 是（带 `-e` 参数） | SVG 依赖渲染宿主环境 |
+| **Office 安全格式（PPT/Office-safe SVG）** | PowerPoint、Office 嵌入、严苛跨机器字体排版 | 否（单独交付 `.drawio`） | 字体轮廓化转换为绝对矢量路径 |
 
-Do not promise one SVG can be both maximally editable and maximally compatible with Office. Deliver the `.drawio` source alongside a presentation-safe SVG when both needs exist.
+切勿承诺单个 SVG 文件既能无损二次直接编辑，又能在各类不同机器上的 Office 中保证绝对零排版错乱。当两者均需要时，将 `.drawio` 源码与 PPT 安全矢量图一同交付。
 
-## Dependencies
+## 外部运行依赖
 
-Find Draw.io Desktop using `draw.io`, `drawio`, the macOS application path, or the Windows installation path. On Linux headless hosts, prefer `xvfb-run` and append `--disable-gpu`. If running as root, append `--no-sandbox` at the end of the Draw.io command.
+通过 `draw.io`、`drawio`、macOS 应用程序绝对路径或 Windows 安装路径定位客户端。在 Linux 无头（Headless）环境中，使用 `xvfb-run` 并追加 `--disable-gpu`；若以 root 用户身份运行，在命令末尾追加 `--no-sandbox`。
 
-PPT-safe SVG additionally requires Poppler's `pdftocairo` on `PATH` and the intended fonts installed on the export host.
+生成 PPT 安全 SVG 额外需要系统中已安装 Poppler 的 `pdftocairo`，且导出宿主机器已安装所需字体。
 
-## Preview PNG
+## 预览 PNG 导出
 
-Do not use `-e`:
+**切勿携带 `-e` 参数：**
 
 ```bash
 draw.io -x -f png -s 2 -b 10 -o diagram.png input.drawio
 ```
 
-Linux headless:
+Linux 无头环境执行：
 
 ```bash
 xvfb-run -a --server-args="-screen 0 1920x1080x24" \
   draw.io -x -f png -s 2 -b 10 -o diagram.png input.drawio --disable-gpu
 ```
 
-Keep the review preview opaque so black text remains visible in vision tools that composite alpha over black. When transparency itself must be verified, export a second PNG with `-t` and inspect it over the intended slide/page background. For SVG, transparency comes from the source canvas and fills.
+质检预览图必须保持不透明底色，以防黑色文本在自动将透明通道叠加黑底的视觉模型中被误判为丢失。若需核实透明效果本身，另行导出一份带 `-t` 的测试图。
 
-## Editable final exports
+## 最终可编辑格式导出
 
 ```bash
 draw.io -x -f png -e -t -s 2 -b 10 -o diagram.drawio.png input.drawio
@@ -45,27 +45,23 @@ draw.io -x -f svg -e -b 10 -o diagram.drawio.svg input.drawio
 draw.io -x -f pdf -e -b 10 -o diagram.drawio.pdf input.drawio
 ```
 
-Use double extensions to signal embedded diagram data. After every `-e` PNG export, run `repair_png.py`; it validates the PNG signature and repairs only the known truncated-IEND form.
+统一采用双扩展名（如 `.drawio.png`）以明确标识包含内嵌 XML 数据。针对每个导出的带 `-e` 的 PNG，必须运行 `repair_png.py` 修复 CLI 已知的文件末尾 IEND 块截断缺陷。
 
-Embedded SVG may contain Draw.io XML, XHTML `foreignObject`, font fallbacks, or images. It is suitable for Draw.io round-tripping but can be rejected by strict consumers.
-
-## PPT/Office-safe SVG
+## PowerPoint / Office 安全矢量 SVG
 
 ```bash
 python3 <this-skill-dir>/scripts/export_ppt_svg.py input.drawio diagram.svg
 ```
 
-This deterministic pipeline exports Draw.io to cropped PDF, converts PDF glyphs to SVG paths, removes the generated white PDF page rectangle, and writes an SVG whose first bytes are `<svg`.
+该确定性流水线会自动完成：调用 Draw.io 渲染裁剪后的 PDF、将 PDF 文字字形直接转为 SVG 矢量闭合路径、移除 PDF 默认附加的纯白底面、生成以 `<svg` 开头的纯净文件。
 
-Before running it, verify the intended font is installed. On Linux:
+运行前确认机器已安装所需字体。在 Linux 下可使用：
 
 ```bash
 fc-match 'Noto Sans CJK SC'
 ```
 
-The script locks the font Draw.io actually selected, including an unintended fallback. Visually QA the preview before final export.
-
-## Structural and format checks
+## 结构与格式终检命令
 
 ```bash
 python3 <this-skill-dir>/scripts/validate_drawio.py input.drawio
@@ -73,35 +69,31 @@ xmllint --noout output.svg
 file --mime-type output.svg
 ```
 
-For a PPT-safe SVG, also verify that no editable text or XHTML remains:
+针对 PPT 安全 SVG，还必须断言文件中绝无遗留的 `<text>` 或 `<foreignObject>` 标签：
 
 ```bash
 rg -n '<text|foreignObject' output.svg
 ```
 
-Expected: no matches. Do not reject `<image>` globally because a diagram may intentionally contain raster assets.
+预期输出应为空。
 
-## CLI failure handling
+## CLI 异常处理梯度
 
-Use this order:
+遇到报错时按以下顺序排查解决：
 
-1. Verify the binary with `draw.io --version` or `drawio --version`.
-2. On Linux, retry under `xvfb-run -a`.
-3. Append `--disable-gpu`.
-4. If root, append `--no-sandbox` at the end.
-5. If the home directory is inaccessible, set a writable temporary home for that invocation.
-6. If a macOS sandbox crashes or returns no output, stop retrying inside that sandbox.
+1. 通过 `draw.io --version` 或 `drawio --version` 验证程序是否真实就绪；
+2. 在 Linux 上，包裹前缀 `xvfb-run -a`；
+3. 追加 `--disable-gpu` 参数；
+4. 若当前为 root 权限，在命令最末尾追加 `--no-sandbox`；
+5. 若用户家目录不可写，在执行当前命令前临时重定向 `HOME=/tmp`；
+6. 若 macOS 沙箱崩溃或无输出，立即停止在当前沙箱中盲目重试。
 
-Do not install system packages or start containers without the user's authorization.
+未经用户明确授权，严禁擅自安装系统包或拉取 Docker 容器。
 
-## Browser fallback
+## 桌面 CLI 缺失时的浏览器降级
 
-If the desktop CLI is unavailable but Python exists:
+若本地无桌面客户端但具备 Python 环境，使用包内脚本生成在线编辑链接：
 
 ```bash
 python3 <this-skill-dir>/scripts/encode_drawio_url.py input.drawio
 ```
-
-The diagram is encoded in the URL fragment and opens client-side. If Python is also unavailable, deliver only valid `.drawio` XML and explain how to open it manually.
-
-If `pdftocairo` is unavailable for a PPT-safe request, deliver `.drawio` plus PDF or an ordinary SVG with an explicit font-compatibility warning. Do not claim fonts are locked.

@@ -1,83 +1,83 @@
 ---
 name: drawio-skill
 version: 1.6.0
-description: Create, edit, review, validate, and export editable Draw.io diagrams. Use when the primary deliverable is `.drawio` XML, `.drawio.png`/`.drawio.svg`, Draw.io visual QA, transparent export, or PowerPoint/Office-safe SVG with stable fonts. Do not use when the user wants only Mermaid source or a branded standalone HTML/SVG/PNG redraw.
+description: 创建、编辑、审查、校验和导出可编辑的 Draw.io 图表。Use when 主要交付物为 `.drawio` XML、`.drawio.png` 或 `.drawio.svg`，需要对 Draw.io 图表进行视觉质检、透明背景导出，或生成字体稳定的 PowerPoint/Office 安全矢量图；不用于仅需要纯 Mermaid 源码或独立品牌化 HTML/SVG/PNG 重绘的场景。
 license: MIT
 homepage: https://github.com/Agents365-ai/drawio-skill
-compatibility: Requires Draw.io Desktop for local rendering; PPT-safe SVG additionally requires Poppler pdftocairo. Vision is optional for visual QA.
+compatibility: 本地渲染需要 Draw.io Desktop；PPT 安全 SVG 需额外依赖 Poppler pdftocairo。视觉模型（Vision）可用于视觉质检。
 external-cli: true
 cli-compatibility: references/cli-compatibility.md
 platforms: [macos, linux, windows]
 metadata: {"openclaw":{"requires":{"anyBins":["draw.io","drawio"]},"emoji":"📐","os":["darwin","linux","win32"],"install":[{"id":"brew-drawio","kind":"brew","formula":"drawio","bins":["draw.io"],"label":"Install draw.io via Homebrew","os":["darwin"]}]},"hermes":{"tags":["drawio","diagram","flowchart","architecture","visualization","uml"],"category":"design","requires_tools":["draw.io"],"related_skills":["mermaid","excalidraw","plantuml"]},"author":"Agents365-ai","version":"1.6.0"}
 ---
 
-# Draw.io diagrams
+# Draw.io 图表
 
-Produce editable `.drawio` source first, then export and QA the requested deliverables. Preserve existing diagram tuning during revisions and keep source/editability separate from presentation compatibility.
+优先生成可编辑的 `.drawio` 源文件，再按需导出并质检目标产物。在修改过程中保留图表已有的样式微调，始终将“源文件可编辑性”与“终端展示兼容性”解耦处理。
 
-## Route resources deliberately
+## 资源精准路由
 
-Read only the resources needed for the current request:
+仅在满足特定条件时读取对应参考资源：
 
-| Resource | Read when |
+| 参考资源 | 何时读取 |
 |---|---|
-| `references/workflow.md` | Creating a diagram, changing layout broadly, or running visual review |
-| `references/xml-authoring.md` | Writing or editing Draw.io XML, containers, edges, layout, or transparent fills |
-| `references/diagram-types.md` | ERD, UML class, sequence, architecture, ML/DL, or flowchart structure |
-| `references/style-presets.md` | Applying, learning, listing, renaming, deleting, or setting a saved style |
-| `references/style-extraction.md` | Extracting a style from Draw.io XML or an image |
-| `references/export.md` | Exporting PNG/SVG/PDF/JPG or choosing editable versus PPT-safe output |
-| `references/troubleshooting.md` | Rendering, CLI, layout, PNG, SVG, font, or background failures |
-| `references/cli-compatibility.md` | CLI 版本、必需导出能力或版本漂移 |
+| `references/workflow.md` | 创建新图表、进行全局布局调整或执行视觉审查时 |
+| `references/xml-authoring.md` | 编写或编辑 Draw.io XML、容器、连线、布局或透明填充时 |
+| `references/diagram-types.md` | 涉及 ERD、UML 类图、时序图、系统架构图、ML/DL 流水线或流程图结构时 |
+| `references/style-presets.md` | 应用、学习、列出、重命名、删除或设置预设样式时 |
+| `references/style-extraction.md` | 从现有 Draw.io XML 或参考图片中提取样式规范时 |
+| `references/export.md` | 导出 PNG/SVG/PDF/JPG，或权衡“保留可编辑性”与“Office/PPT 安全输出”时 |
+| `references/troubleshooting.md` | 遇到渲染崩溃、CLI 报错、布局错位、字体或背景透明度异常时 |
+| `references/cli-compatibility.md` | 查看 CLI 依赖版本、必需导出功能或版本漂移处理方案时 |
 
-Deterministic helpers:
+包内确定性辅助脚本：
 
-| Script | Purpose |
+| 脚本工具 | 用途说明 |
 |---|---|
-| `scripts/validate_drawio.py` | Validate root cells, IDs, parents, edge geometry, and references |
-| `scripts/repair_png.py` | Repair only the known truncated-IEND form of embedded PNG export |
-| `scripts/export_ppt_svg.py` | Create transparent Office-safe SVG with fonts outlined as paths |
-| `scripts/encode_drawio_url.py` | Build a client-side diagrams.net URL when Desktop CLI is unavailable |
+| `scripts/validate_drawio.py` | 验证根单元（root cell）、元素 ID 唯一性、父子嵌套、连线几何属性及引用有效性 |
+| `scripts/repair_png.py` | 修复内嵌 XML 导出 PNG 时已知的末尾 IEND 块截断问题 |
+| `scripts/export_ppt_svg.py` | 生成适用于 Office/PPT 的透明 SVG，将所有字体轮廓化为矢量路径以防缺字错位 |
+| `scripts/encode_drawio_url.py` | 在本地 Desktop CLI 不可用时，生成前端可直接打开编辑的 diagrams.net 链接 |
 
-## Workflow
+## 标准工作流程
 
-1. **Confirm scope.** Infer details already present in the prompt, attachment, or source file. Ask only when diagram purpose, required content, output format, destination, or fidelity target would materially change the result.
-2. **Resolve style.** Apply a clearly named saved preset; otherwise use the single user preset marked default; otherwise use built-in conventions. A component name is not a style name.
-3. **Plan.** Inventory nodes, containers, relationships, labels, direction, grid, and routing corridors before assigning geometry.
-4. **Generate or edit.** Follow `xml-authoring.md`. For existing files, make targeted edits and preserve IDs/coordinates unless a layout-wide change requires regeneration.
-5. **Validate.** Run `python3 <this-skill-dir>/scripts/validate_drawio.py <file.drawio>` before rendering.
-6. **Preview and QA.** Export a PNG without `-e`, inspect it visually when vision is available, and perform no more than two automatic fix rounds.
-7. **Review.** Apply user feedback to the existing XML and overwrite the same preview. After five review rounds, suggest Draw.io Desktop for fine tuning.
-8. **Finalize.** Choose the correct mode from `export.md`, retain the `.drawio` source, and report actual validation, skipped QA, and environment-dependent risks.
+1. **明确范围**：优先从用户 Prompt、附件或已有源文件中提取信息；仅在图表的核心目标、必须包含的实体、交付格式或保真度目标存在重大分歧且无法推断时才提问。
+2. **确定样式**：优先匹配明确指定的样式预设；未指定时采用用户标记为默认的单一套预设；再次降级到内置规范。组件名称不可当作样式名称。
+3. **构思规划**：在分配具体坐标前，先梳理节点清单、容器分层、连线拓扑、文本标签、流向方向、网格对齐和布线通道。
+4. **生成或编辑**：严格遵循 `xml-authoring.md`。针对已有文件，执行精准局部编辑并保留原有 ID 与坐标；除非用户要求全量重构，否则不整体重绘。
+5. **静态校验**：在渲染前必须运行 `python3 <this-skill-dir>/scripts/validate_drawio.py <file.drawio>`。
+6. **预览与质检**：导出一份不带 `-e` 参数的干净 PNG，在支持 Vision 的环境中进行视觉检查，自动修复轮次不得超过两轮。
+7. **用户反馈迭代**：在现有 XML 基础上应用用户修改意见，并覆盖原有预览文件。若迭代超过 5 轮，建议用户在桌面客户端中进行微调。
+8. **最终交付**：根据 `export.md` 选择适配的导出模式，完整保留 `.drawio` 源文件，并在交付总结中清晰报告校验结果、跳过的质检项及环境潜在风险。
 
-## Non-negotiable source rules
+## 源码硬性约束（不可妥协）
 
-- Include `mxCell` roots `0` and `1`; keep IDs unique per page.
-- Escape XML attributes and use `&#xa;` for label line breaks.
-- Keep editable labels as `html=1`; do not rewrite source text modes to fix PowerPoint.
-- Give every edge an expanded `<mxGeometry relative="1" as="geometry" />` child.
-- Use real parent-child containment for grouped content.
-- Never use `--` inside XML comments.
-- Use `fillColor=none` and no canvas-covering background shape when transparency is required.
-- Preserve unrelated user changes and do not overwrite source files outside the requested scope.
+- 每个页面必须包含 `0` 和 `1` 两个根级 `mxCell`；页面内所有元素 ID 必须唯一。
+- XML 属性必须合法转义，文本换行统一使用 `&#xa;`。
+- 保持可编辑标签的 `html=1` 属性；不得为了兼容 PowerPoint 而强行修改源文本模式。
+- 每条连线必须包含 `<mxGeometry relative="1" as="geometry" />` 子元素。
+- 分组内容必须使用真正的父子容器嵌套关系（parent 指定），而非单纯在视觉上叠放。
+- XML 注释中严禁连续出现 `--`。
+- 需要透明背景时，设置 `fillColor=none`，且不得添加覆盖全画布的底色矩形。
+- 严格保留用户在范围外的不相关修改，严禁覆盖用户指定范围外的源文件。
 
-## Export decisions
+## 导出决策原则
 
-- **Preview:** no `-e`; use a clean PNG for vision and review.
-- **Editable final:** use `-e`; use double extensions such as `.drawio.png` or `.drawio.svg` to signal embedded XML.
-- **Embedded PNG:** always run `scripts/repair_png.py` after export.
-- **PowerPoint/Office or exact fonts:** use `scripts/export_ppt_svg.py`; deliver the `.drawio` source separately because outlined SVG text is not editable.
-- **Strict SVG error such as `text is not svg`:** do not strip or mutate labels ad hoc; route to the PPT-safe export and `troubleshooting.md`.
+- **预览图**：不带 `-e` 参数；生成纯净 PNG 供视觉检查与用户确认。
+- **最终可编辑交付**：使用 `-e` 参数；文件命名使用双扩展名（如 `.drawio.png` 或 `.drawio.svg`）以标明包含内嵌 XML。
+- **嵌入式 PNG**：每次导出后必须运行 `scripts/repair_png.py` 修复文件末尾数据。
+- **PowerPoint/Office 或固定字体需求**：使用 `scripts/export_ppt_svg.py`；必须同时单独交付 `.drawio` 源文件（因为轮廓化后的矢量 SVG 文本无法再次直接编辑）。
+- **SVG 严格渲染报错（如 `text is not svg`）**：切勿临时手动剥离标签；应直接转用 PPT 安全导出方案，并参阅 `troubleshooting.md`。
 
-## QA and completion
+## 质检与交付核对
 
-Before handoff:
+在正式交付前必须完成：
 
-- structurally validate the `.drawio` source;
-- check content, hierarchy, overlap, clipping, alignment, routing, contrast, and canvas bounds;
-- validate final file type/XML where applicable;
-- verify PPT-safe SVG contains no `<text>` or `foreignObject` nodes;
-- report both source and export paths;
-- distinguish structural validation, visual QA, conditional skips, and untested target-environment behavior.
+- 对 `.drawio` 源文件执行结构有效性校验；
+- 检查内容完整性、层级结构、元素重叠、边缘截断、文本对齐、连线交叉、对比度及画布边界；
+- 验证最终产物的文件格式有效性；
+- 确保 PPT 安全 SVG 中不再包含 `<text>` 或 `foreignObject` 标签；
+- 同时清晰输出源文件路径与导出产物路径；
+- 明确区分已完成的静态校验、视觉质检、条件性跳过项以及尚未在目标运行环境中测试的潜在行为。
 
-If Draw.io Desktop is unavailable or crashes in a restricted sandbox, stop retrying in the same isolation. Use `scripts/encode_drawio_url.py` or deliver valid `.drawio` XML, and explain which exports still require a host environment.
+若 Draw.io Desktop 在沙箱隔离环境中不可用或崩溃，切勿在同一环境下盲目重试。使用 `scripts/encode_drawio_url.py` 或直接交付合法的 `.drawio` XML 源文件，并向用户说明哪些导出格式仍需宿主环境支持。

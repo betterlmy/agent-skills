@@ -1,90 +1,90 @@
-# Diagram workflow and review loop
+# 图表工作流与审查闭环
 
-Read this file when creating a new diagram, making broad layout changes, or running visual QA. For XML syntax use `xml-authoring.md`; for commands and deliverable modes use `export.md`.
+在创建新图表、进行全局布局调整或执行视觉质检（QA）时阅读本文档。XML 语法规范查阅 `xml-authoring.md`；命令行导出与交付模式查阅 `export.md`。
 
-## 1. Confirm the deliverable
+## 1. 确认交付目标
 
-Proceed without questions when the request already identifies the subject and output. Otherwise ask only for missing decisions that materially change the result:
+当用户诉求已清晰明确指明绘图主题与交付格式时，直接推进，无需冗余发问。仅在出现以下根本影响交付产物的缺失决策时发起询问：
 
-- diagram type or purpose;
-- required components and relationships;
-- output format and destination;
-- target consumer, especially Draw.io editing versus PowerPoint/Office;
-- fidelity constraints such as transparent background, exact palette, font, aspect ratio, or source-image matching.
+- 图表类型或核心表达目的；
+- 必须包含的核心组件实体与交互拓扑；
+- 目标输出格式与交付存储路径；
+- 最终消费场景（尤其是“需要在 Draw.io 中二次编辑”还是“嵌入 PowerPoint/Office 演示”）；
+- 保真度硬性要求（如透明背景、严格指定的企业色板、特定字体、宽高比或与参考图保持像素级一致）。
 
-Do not ask the user to repeat information visible in an attached diagram or existing `.drawio` file.
+切勿要求用户重复说明在已上传的参考图或现有 `.drawio` 文件中清晰可见的信息。
 
-## 2. Resolve style
+## 2. 解析样式预设
 
-1. If the user clearly names a saved style, load it using `style-presets.md`.
-2. Otherwise check `~/.drawio-skill/styles/` for one preset with `"default": true`.
-3. If neither applies, use the built-in conventions in `xml-authoring.md` or the relevant structure in `diagram-types.md`.
-4. A diagram-type preset supplies structure; a user style preset overrides colors, fonts, edge appearance, and extras.
+1. 若用户明确点名了某个已保存的样式名称，使用 `style-presets.md` 进行加载。
+2. 否则检查 `~/.drawio-skill/styles/` 目录下是否存在标记为 `"default": true` 的用户预设。
+3. 若均不满足，采用 `xml-authoring.md` 中的内置样式规范，或参考 `diagram-types.md` 中的对应结构。
+4. 图表类型预设提供的是“拓扑与结构骨架”；用户样式预设则用于覆盖“配色、字体、连线外观与附加视觉特性”。
 
-Do not treat a component name as a style name. For example, “with Redis” identifies content, not a preset.
+切勿将组件名称误当成样式名称（例如“包含 Redis”指的是业务内容，而非样式预设）。
 
-## 3. Plan before writing XML
+## 3. 编写 XML 前先整体规划
 
-- Inventory nodes, containers, edges, labels, and external systems.
-- Choose top-to-bottom or left-to-right flow based on the dominant relationship.
-- Assign a grid and reserve routing corridors before placing cells.
-- Put high-degree hub nodes centrally.
-- Use real parent-child containment for visible groups.
-- For an existing diagram, preserve IDs and tuned coordinates unless the requested change requires regeneration.
+- 全面盘点节点、容器、连线、文本标签以及外部关联系统；
+- 根据核心业务流向，决定采用自上而下（TB）还是自左向右（LR）的主流动线；
+- 在放置具体图元前，规划统一网格并预留连线通道走廊；
+- 将连接度高、处于枢纽位置的核心节点置于画面居中区域；
+- 对可视化的逻辑分组，采用真实的父子容器嵌套（parent-child）；
+- 针对修改已有图表，必须严格保留节点原有 ID 与微调过的坐标，除非用户的重绘需求明确需要推倒重来。
 
-## 4. Generate and validate source
+## 4. 生成并校验源码
 
-Write or edit `.drawio` XML using `xml-authoring.md`, then run:
+按照 `xml-authoring.md` 生成或编辑 `.drawio` XML，然后运行静态校验：
 
 ```bash
 python3 <this-skill-dir>/scripts/validate_drawio.py diagram.drawio
 ```
 
-Fix structural errors before export. A successful XML parse alone does not prove that edges reference valid cells or contain geometry; the validator checks those invariants.
+在导出渲染前必须修复所有结构性报错。单纯 XML 解析成功并不能保证连线引用的节点真实存在或包含合法几何信息，校验脚本会对这些硬性约束进行深度检查。
 
-## 5. Export a clean preview
+## 5. 导出纯净预览图
 
-Read `export.md` and export a PNG without `-e`. Embedded PNG previews can be rejected by vision systems and must not be used for self-check.
+阅读 `export.md` 并导出一份不带 `-e` 参数的纯净 PNG 图。内嵌 XML 的 PNG 预览图可能被视觉模型解析器拒绝，严禁用于自我检查闭环。
 
-Review the preview for:
+针对预览图排查以下维度：
 
-| Check | Failure signal | Typical correction |
+| 检查维度 | 典型缺陷表象 | 针对性修正手段 |
 |---|---|---|
-| Content | Missing, duplicated, stale, or ambiguous labels | Correct source text before styling |
-| Hierarchy | Layers or ownership are hard to scan | Strengthen grouping and title hierarchy |
-| Overlap | Shapes, labels, or arrowheads collide | Increase spacing or resize cells |
-| Routing | Edges cross unrelated nodes or stack | Add corridors, waypoints, or distinct ports |
-| Clipping | Text is cut off or wraps awkwardly | Increase width/height or shorten wording |
-| Alignment | Rows and columns drift | Snap coordinates and sizes to the grid |
-| Contrast | Text or borders disappear on target background | Test against the intended slide/page background |
-| Canvas | Shapes sit off-canvas or padding is uneven | Reposition and use a consistent export border |
+| 内容完整度 | 标签遗漏、重复、陈旧或表意模糊 | 在深入调优样式前先修正文本源数据 |
+| 层级关系 | 模块分层或归属边界难以辨识 | 强化分组容器视觉层次与标题字阶 |
+| 元素重叠 | 图元、文字或箭头发生视觉穿插挤压 | 拉大节点间距或自适应调整节点宽高 |
+| 连线布线 | 连线直接横穿不相关的节点或堆叠交叉 | 规划连线通道走廊、增加折点（Waypoints）或指定连接桩（Ports） |
+| 文本截断 | 文字超出边框被截断或异常折行 | 适度增加容器尺寸或精简文案字数 |
+| 对齐吸附 | 节点行列坐标发生微小漂移错位 | 将坐标与宽高强制吸附到规整的基准网格 |
+| 色彩对比度 | 文字或边框融入背景色难以阅读 | 针对预期的幻灯片/页面底色实测可读性 |
+| 画布边界 | 元素超出画布边缘或四周留白极不均匀 | 整体平移重定位并统一配置导出边距（Padding） |
 
-Run at most two automatic self-check/fix rounds. If vision is unavailable, perform structural validation and tell the user visual QA was not run.
+自动化的“质检-修复”循环最多执行两轮。若当前运行环境不支持视觉模型（Vision），完成结构校验后向用户明确说明已跳过视觉 QA。
 
-For transparent deliverables, use an opaque temporary preview for text/layout QA and separately inspect the transparent export over the intended background. Some viewers composite transparency over black and can make valid black labels appear missing.
+针对透明背景交付物，先生成一份不透明的临时预览图用于文字和布局质检，再在预期的底色上单独检查透明导出图。某些图片查看器会将透明通道默认叠加在纯黑背景上，导致原本正常的黑色文字看起来“丢失”。
 
-## 6. Review iteratively
+## 6. 迭代式评审
 
-Apply narrow feedback as targeted XML edits:
+将用户的局部修改意见转化为针对性的 XML 定向编辑：
 
-| Feedback | Edit |
+| 反馈类型 | 针对性修改操作 |
 |---|---|
-| Change color | Update matching cell `fillColor` / `strokeColor` |
-| Change text | Update the matching `value` |
-| Move or resize | Update the matching `mxGeometry` |
-| Add a node | Add one vertex and place it near related nodes |
-| Remove a node | Remove the vertex and all incident edges |
-| Add a relationship | Add one edge with valid source, target, and geometry |
-| Change overall direction | Regenerate the layout while preserving content |
+| 调整色彩 | 更新目标节点的 `fillColor` 与 `strokeColor` |
+| 调整文案 | 更新目标节点的 `value` 属性 |
+| 移动或缩放 | 更新目标节点的 `mxGeometry` 坐标与宽高 |
+| 新增节点 | 新建一个 vertex 节点并布局在关联节点临近区域 |
+| 删除节点 | 删除对应的 vertex 节点及其所有关联连线 |
+| 增补关联 | 新建带有合法 source、target 与 geometry 的 edge 连线 |
+| 全局改向 | 在完整保留节点内容的前提下重新生成拓扑布局 |
 
-Overwrite the same preview filename after each revision. After five review rounds, suggest Draw.io Desktop for pixel-level manual tuning.
+每次修改后覆盖同一份预览文件。若评审反复迭代超过 5 轮，建议用户直接在 Draw.io Desktop 客户端中进行像素级的手工微调。
 
-## 7. Finalize
+## 7. 正式交付收尾
 
-Choose the final mode from `export.md`:
+依据 `export.md` 决定最终交付形态：
 
-- editable embedded deliverable;
-- clean preview/image deliverable;
-- PowerPoint/Office-safe outlined SVG.
+- 支持二次编辑的内嵌式交付物（Embedded）；
+- 纯净的预览/位图交付物；
+- 适用于 PowerPoint/Office 的轮廓化矢量 SVG。
 
-Always retain and report the `.drawio` source. Report which checks actually ran, distinguish structural validation from visual QA, and state any environment-dependent risk such as unavailable fonts or skipped rendering.
+始终完整保留并向用户汇报 `.drawio` 源码文件路径。在总结中清晰区分已完成的结构校验与视觉质检，并说明由于运行环境限制可能存在的潜在风险（例如本地缺失字体或跳过渲染等）。

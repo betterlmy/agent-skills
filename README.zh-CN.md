@@ -58,6 +58,7 @@ npx skills add betterlmy/agent-skills --skill <skill-name> -a claude-code -g -y
 - `audit-overengineering` 对一个或多个仓库审计无必要抽象、透传层、重复能力、失效扩展点和可替代依赖，只输出有证据的精简候选，不直接修改代码。
 - `code-review-skill` 提供跨语言的架构、安全、性能、质量和正确性审查指南。
 - `codegraph` 封装代码库索引、符号定位、调用分析和改动影响分析工作流。
+- `commit` 根据用户说明或 Git 变更生成、检查规范的中文 commit message，并在明确授权后执行本地提交。
 - `go-dev` 先识别仓库约束和实际技术栈，再提供 Go 编码、错误、Context、日志、HTTP/gRPC、持久化、并发和测试规范；统一响应等偏好只在仓库无相反约定时作为推荐默认值。
 - `go-auditor` 可审计整个 Go 仓库、模块、package、目录、文件集、高风险域或本地与指定 revision 的 diff，产出边界明确、按优先级排序的证据报告；`go-dev` 用于落实代码修改。
 - `go-mcp-builder` 会先核对当前 MCP 日期版本与官方 Go SDK，再指导 Tool、Resource、Prompt、stdio 或 Streamable HTTP、认证、兼容和一致性验证。
