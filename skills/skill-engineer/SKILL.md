@@ -1,6 +1,6 @@
 ---
 name: skill-engineer
-description: 创建、改进和审查具备生产级可用性的 Agent Skill，确保其结构精炼、触发描述精准、自带完备资源、通过静态审计且经受真实前向评测。Use when 用户希望编写新 Skill、使现有 Skill 达到生产级标准、审计或审查 Skill 代码与文档、对比 Skill 设计方案，或评估 Skill 是否需要配套脚本、参考文档、资源模板、元数据、打包归档及前向评测。
+description: 创建、改进和审查具备生产级可用性的 Agent Skill，确保其结构精炼、触发描述精准、自带完备资源、通过静态审计且经受真实前向评测。Use when 用户希望编写新 Skill、使现有 Skill 达到生产级标准、审计或审查 Skill 代码与文档、对比 Skill 设计方案，或评估 Skill 是否需要配套脚本、参考文档、资源模板、元数据、打包归档及前向评测；不用于常规业务应用开发、非 Skill 类的普通项目设计文档编写或通用脚本编写。
 ---
 
 # Skill Engineer
@@ -22,10 +22,11 @@ description: 创建、改进和审查具备生产级可用性的 Agent Skill，�
 
 - **可发现性（Discoverable）**：frontmatter 中的 `description` 既明确说明“具备什么能力”，又使用 `Use when...` 给出具体的“触发上下文、文件类型与排除边界”；
 - **默认精炼（Small by default）**：`SKILL.md` 正文尽量保持紧凑（推荐在 100 行左右）；将深入细节、垂直领域知识拆分到单级 `references/` 目录中按需渐进加载；
+- **LLM 友好而非视觉友好（LLM-Native over Human-Visual）**：Skill 是给 LLM 消费的运行规约，而非面向人类的排版展品。严禁使用包含 `│`、`├─►`、`└─►` 等字符的 ASCII 流程画或装饰性制表树；决策分支与工作流统一采用高信息密度的“规则/动作列表（条件 -> 动作 -> 依据）”或紧凑表格，最大化 Token 经济性与指令触发准确率；
 - **可操作性（Operational）**：确定性或高频重复的操作提取为 `scripts/` 中的可执行脚本；可复用的模版与生成素材归档在 `assets/` 或 `templates/` 中；
 - **可移植性（Portable）**：坚决杜绝个人私有机器绝对路径、时效性易失效事实、隐式环境假设，以及当前环境未实际安装的工具调用；
-- **命令兼容（Command Compatibility）**：依赖外部命令行工具的 Skill 必须声明自包含的版本与能力契约，并在运行时动态探测命令可用性，严禁假设文档与用户机器环境天然一致；
-- **独立性（Independent）**：独立分发的 Skill 必须将所需资源完全闭环在自身包目录内；插件级 Skill 可在明确的插件分发根边界内共享资源。不得将单包打包规则生搬硬套到插件内部；
+- **命令兼容与篇幅防御（Command Compatibility & Budget）**：依赖外部命令行工具的 Skill 必须声明自包含的版本与能力契约，在运行时动态探测命令可用性，并提供低 Token 消耗的摘要/大纲模式（如 `--symbols-only`、`--no-code` 或限制行数/文件数），严禁无脑全量输出代码击穿上下文；
+- **零幽灵依赖与完全自包含（Zero Phantom Dependencies & Self-contained）**：独立分发的 Skill 必须将所需资源完全闭环在自身包目录内。严禁在指令中隐式依赖或建议 Agent 委托调用宿主未安装的第三方同级 Skill；若涉及可视化或数据交换，直接输出标准 Markdown、标准 Mermaid 文本或 JSON 格式；插件级 Skill 可在明确的分发根边界内共享资源；
 - **经过静态校验（Validated）**：运行可用的格式检查工具以及包内自带的静态审计脚本，确保无报错、无断链；
 - **经过前向评测（Forward-tested）**：重要 Skill 必须在真实 Prompt 场景下进行实际演练，优先与“无 Skill”或“旧版 Skill”进行对照测试。
 

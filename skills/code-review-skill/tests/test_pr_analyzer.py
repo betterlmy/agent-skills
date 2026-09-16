@@ -8,7 +8,7 @@ import unittest
 # The script has a hyphen in its name, so load it by path.
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _spec = importlib.util.spec_from_file_location(
-    'pr_analyzer', os.path.join(_HERE, 'pr-analyzer.py')
+    'pr_analyzer', os.path.join(os.path.dirname(_HERE), 'scripts', 'pr-analyzer.py')
 )
 pr_analyzer = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(pr_analyzer)

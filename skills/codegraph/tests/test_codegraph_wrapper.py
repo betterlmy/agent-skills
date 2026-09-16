@@ -60,13 +60,13 @@ class CodeGraphWrapperTest(unittest.TestCase):
     def test_check_warns_when_version_differs_from_verified_baseline(self) -> None:
         result = self.run_wrapper("check")
 
-        self.assertIn("本机验证版本为 1.4.1", result.stderr)
+        self.assertIn("本机验证版本为 1.6.0", result.stderr)
 
     def test_check_rejects_missing_required_capability(self) -> None:
         self.write_executable(
             self.fake_bin,
             """#!/usr/bin/env bash
-if [[ "${1:-}" == "--version" ]]; then printf '1.4.1\n'; exit 0; fi
+if [[ "${1:-}" == "--version" ]]; then printf '1.6.0\n'; exit 0; fi
 if [[ "${1:-}" == "node" && "${2:-}" == "--help" ]]; then exit 2; fi
 exit 0
 """,
@@ -95,10 +95,14 @@ exit 0
             with self.subTest(arguments=arguments):
                 self.assertEqual(expected, self.output(*arguments))
 
-    def test_explore_and_node_forward_native_text_commands(self) -> None:
+    def test_explore_context_and_node_forward_native_text_commands(self) -> None:
         self.assertEqual(
             ["explore", "--path", "project path", "auth flow", "--max-files", "8"],
             self.output("explore", "project path", "auth flow", "--max-files", "8"),
+        )
+        self.assertEqual(
+            ["context", "--path", "project path", "hybrid search", "--no-code"],
+            self.output("context", "project path", "hybrid search", "--no-code"),
         )
         self.assertEqual(
             ["node", "--path", "project path", "--file", "src/file name.ts", "--limit", "20"],

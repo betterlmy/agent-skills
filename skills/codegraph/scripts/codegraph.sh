@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-verified_codegraph_version="1.4.1"
+verified_codegraph_version="1.6.0"
 
 usage() {
   cat <<'EOF'
@@ -16,6 +16,7 @@ CodeGraph CLI wrapper
   codegraph.sh sync <project> [--quiet]
   codegraph.sh status <project> [--no-json]
   codegraph.sh explore <project> <query...> [--max-files N]
+  codegraph.sh context <project> <task...> [--no-code] [--format markdown|json] [--max-nodes N]
   codegraph.sh node <project> [name] [--file FILE] [--offset N] [--limit N] [--symbols-only]
   codegraph.sh query <project> <search> [--limit N] [--kind KIND] [--no-json]
   codegraph.sh files <project> [--filter DIR] [--pattern GLOB] [--format tree|flat|grouped] [--max-depth N] [--no-metadata] [--no-json]
@@ -24,6 +25,7 @@ CodeGraph CLI wrapper
   codegraph.sh impact <project> <symbol> [--depth N] [--no-json]
   codegraph.sh affected <project> [files...] [--stdin] [--depth N] [--filter GLOB] [--quiet] [--no-json]
   codegraph.sh unlock <project>
+  codegraph.sh daemons
   codegraph.sh upgrade [version] [--check] [--force]
 
 环境变量:
@@ -31,6 +33,7 @@ CodeGraph CLI wrapper
 
 说明:
   查询类命令默认输出 JSON；需要原始可读输出时加 --no-json。
+  --kind 支持: function, method, struct, interface, class, route, import, constant, variable, type_alias
 EOF
 }
 
@@ -86,7 +89,7 @@ case "$cmd" in
             printf '警告: 当前 CodeGraph 版本为 %s，本 Skill 本机验证版本为 %s；将继续检查关键能力。\n' \
                 "$current_version" "$verified_codegraph_version" >&2
         fi
-        for capability in status explore node affected; do
+        for capability in status explore context node affected; do
             if ! "$bin" "$capability" --help >/dev/null 2>&1; then
                 fail "当前 CodeGraph 缺少必需能力: $capability --help"
             fi
@@ -146,6 +149,13 @@ case "$cmd" in
         shift || true
         [[ "$#" -gt 0 ]] || fail "explore 缺少 query 参数。"
         exec "$bin" explore --path "$project" "$@"
+    ;;
+
+    context)
+        project="$(require_project "${1:-}")"
+        shift || true
+        [[ "$#" -gt 0 ]] || fail "context 缺少 task 参数。"
+        exec "$bin" context --path "$project" "$@"
     ;;
 
     node)
@@ -292,6 +302,10 @@ case "$cmd" in
         shift || true
         [[ "$#" -eq 0 ]] || fail "unlock 不接受额外参数。"
         exec "$bin" unlock "$project"
+    ;;
+
+    daemon|daemons)
+        exec "$bin" daemons "$@"
     ;;
 
     upgrade)

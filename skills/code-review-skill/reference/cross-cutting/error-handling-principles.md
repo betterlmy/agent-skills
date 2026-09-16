@@ -211,21 +211,9 @@ if (!dict.TryGetValue("key", out var value))
 
 ### 三层错误架构
 
-```
-┌─────────────────────────────────────────────────┐
-│ Application Errors（应用级）                      │
-│   - AppError / ServiceError                      │
-│   - 全局异常处理器捕获，返回用户友好的响应          │
-├─────────────────────────────────────────────────┤
-│ Module Errors（模块级）                            │
-│   - PaymentError, AuthError, ValidationError     │
-│   - 每个业务模块定义自己的错误类型                  │
-├─────────────────────────────────────────────────┤
-│ Infrastructure Errors（基础设施级）                │
-│   - IOError, NetworkError, DatabaseError         │
-│   - 来自操作系统、网络、数据库的底层错误            │
-└─────────────────────────────────────────────────┘
-```
+1. **Application Errors（应用级）**：如 `AppError`、`ServiceError`；由全局异常处理器统一捕获，转换并返回对调用端友好的错误响应。
+2. **Module Errors（模块级）**：如 `PaymentError`、`AuthError`、`ValidationError`；由各业务领域模块定义自身具体的错误类型。
+3. **Infrastructure Errors（基础设施级）**：如 `IOError`、`NetworkError`、`DatabaseError`；来自操作系统、网络通信或数据库驱动的底层原生错误。
 
 ### 设计规则
 

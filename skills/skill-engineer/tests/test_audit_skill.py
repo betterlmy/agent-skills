@@ -236,5 +236,31 @@ class InstructionAuditRegressionTest(unittest.TestCase):
             self.assertIsNone(AUDIT_SKILL.read_text(text))
 
 
+class AsciiDiagramAuditTest(unittest.TestCase):
+    def test_warns_when_ascii_flow_diagram_is_present(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            skill = write_skill(
+                Path(temp_dir),
+                "alpha-tool",
+                "Decision Flow:\n\n├─► Option A\n└─► Option B\n",
+            )
+
+            results = AUDIT_SKILL.audit(skill)
+
+        self.assertTrue(any("ascii diagram detected" in item for item in results))
+
+    def test_allows_clean_markdown_tables_and_bullet_lists(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            skill = write_skill(
+                Path(temp_dir),
+                "alpha-tool",
+                "| Header | Value |\n| --- | --- |\n| Key | 123 |\n\n- [Condition] -> Action\n",
+            )
+
+            results = AUDIT_SKILL.audit(skill)
+
+        self.assertFalse(any("ascii diagram detected" in item for item in results))
+
+
 if __name__ == "__main__":
     unittest.main()

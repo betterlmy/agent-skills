@@ -29,7 +29,7 @@ license: MIT
 | 0. 首次设置与风格门禁 | [guide-00.md](references/guide-00.md) | 设计系统门禁、样式规范提取 |
 | 1. 设计哲学 | [guide-01.md](references/guide-01.md) | 图表核心表达原则、高品质视觉基准 |
 | 2. 适用场景与边界 | [guide-02.md](references/guide-02.md) | 格式选择判定、适用与不适用场景 |
-| 3. 图表选型：语义模式与视觉形态 | [guide-03.md](references/guide-03.md) | 流程、时序、架构、对比等图表模式匹配 |
+| 3. 图表选型：语义模式与视觉形态 | [guide-03.md](references/guide-03.md) | 流程、时序、架构、对比等图表模式匹配；具体类型指南详见 `references/type-*.md` 族 |
 | 4. 通用视觉反模式 | [guide-04.md](references/guide-04.md) | 避免视觉杂乱、无效装饰与廉价质感 |
 | 5. 设计系统规范 | [guide-05.md](references/guide-05.md) | 配色板、对比度、字体层级与间距体系 |
 | 6. 核心 SVG 图元 | [guide-06.md](references/guide-06.md) | 几何容器、路径、连接线与端点标记 |
@@ -37,7 +37,7 @@ license: MIT
 | 8. 摘要卡片模式 | [guide-08.md](references/guide-08.md) | 关键数据看板、统计摘要与标注卡片 |
 | 9. 产出前品味门禁清单 | [guide-09.md](references/guide-09.md) | 交付前严苛视觉与信息自查清单 |
 | 10. 模板与变体 | [guide-10.md](references/guide-10.md) | 现成经典布局模板与变体库 |
-| 11. 导入已有图表（Draw.io 与 Mermaid） | [guide-11.md](references/guide-11.md) | 将 Draw.io XML 或 Mermaid 文本重构为精美图表 |
+| 11. 导入已有图表（Draw.io 与 Mermaid） | [guide-11.md](references/guide-11.md) | 将 Draw.io XML 或 Mermaid 文本重构为精美图表；提取辅助脚本参见 `scripts/drawio_extract.py` 与 `scripts/mermaid_extract.py` |
 | 12. 最终输出与导出 | [guide-12.md](references/guide-12.md) | HTML、SVG、PNG 交付标准与导出技巧 |
 
 ## 验证与交付

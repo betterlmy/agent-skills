@@ -19,6 +19,14 @@ TEXT_SUFFIXES = {".md", ".txt", ".py", ".sh", ".ps1", ".js", ".mjs", ".cjs", ".t
 AMBIGUOUS_SKILL_NAMES = {"commit", "test", "develop", "index", "share", "audit", "research"}
 CLI_MENTION = re.compile(r"\bcli\b", re.IGNORECASE)
 CLI_CONTRACT_MARKER = "<!-- cli-compatibility-contract:v1 -->"
+ASCII_FLOW_PATTERNS = (
+    re.compile(r"[├└┌]─+►"),
+    re.compile(r"◄─+[┤┘┐]"),
+    re.compile(r"^\s*│\s*[▲▼]"),
+    re.compile(r"[┌╔]═{3,}[┐╗]|[└╚]═{3,}[┘╝]"),
+    re.compile(r"^\s*┌─{3,}┐"),
+    re.compile(r"^\s*└─{3,}┘"),
+)
 TRIGGER_WORDING = re.compile(
     r"\b(?:"
     r"use(?:\s+this\s+skill)?\s+(?:when|for)"
@@ -254,6 +262,24 @@ def cli_compatibility_results(
     return results
 
 
+def ascii_diagram_results(skill_dir: Path) -> list[str]:
+    results: list[str] = []
+    for path in package_files(skill_dir):
+        if path.is_symlink() or path.suffix != ".md":
+            continue
+        text = read_text(path)
+        if text is None:
+            continue
+        relative = path.relative_to(skill_dir)
+        for line_number, line in enumerate(text.splitlines(), 1):
+            clean_line = re.sub(r"`[^`\n]*`", " ", line)
+            if any(pattern.search(clean_line) for pattern in ASCII_FLOW_PATTERNS):
+                results.append(
+                    warn(f"ascii diagram detected: {relative}:{line_number}; use structured action lists or markdown tables for LLM token efficiency")
+                )
+    return results
+
+
 def audit(skill_dir: Path, package_root: Path | None = None) -> list[str]:
     results: list[str] = []
     skill_md = skill_dir / "SKILL.md"
@@ -307,9 +333,16 @@ def audit(skill_dir: Path, package_root: Path | None = None) -> list[str]:
     references_dir = skill_dir / "references"
     if references_dir.exists():
         refs = sorted(p for p in references_dir.iterdir() if p.is_file())
+        primary_texts = [text]
         for ref in refs:
-            if ref.name not in text:
-                results.append(warn(f"reference file is not mentioned from SKILL.md: references/{ref.name}"))
+            if ref.name in text and ref.suffix == ".md":
+                sub_text = read_text(ref)
+                if sub_text:
+                    primary_texts.append(sub_text)
+        referenced_corpus = "\n".join(primary_texts)
+        for ref in refs:
+            if ref.name not in referenced_corpus:
+                results.append(warn(f"reference file is not reachable from SKILL.md or primary references: references/{ref.name}"))
         nested = [p for p in references_dir.rglob("*") if p.is_file() and p.parent != references_dir]
         if nested:
             results.append(warn("references/ contains nested files; keep references one level deep unless necessary"))
@@ -336,6 +369,7 @@ def audit(skill_dir: Path, package_root: Path | None = None) -> list[str]:
     if package_root is None or package_root.resolve() == skill_dir.resolve():
         results.extend(cross_skill_reference_results(skill_dir))
     results.extend(external_link_results(skill_dir, package_root))
+    results.extend(ascii_diagram_results(skill_dir))
     for path in package_files(skill_dir):
         if not path.is_symlink() and path.suffix in TEXT_SUFFIXES and path.stat().st_size > MAX_TEXT_BYTES:
             results.append(warn(f"text scan skipped (> {MAX_TEXT_BYTES} bytes): {path.relative_to(skill_dir)}"))

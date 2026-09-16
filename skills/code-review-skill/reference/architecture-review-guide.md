@@ -188,20 +188,14 @@
 
 ## 分层架构审查
 
-### Clean Architecture 层次检查
+### Clean Architecture 层次检查（依赖方向严格由外向内）
 
-```
-┌─────────────────────────────────────┐
-│         Frameworks & Drivers        │ ← 最外层：Web、DB、UI
-├─────────────────────────────────────┤
-│         Interface Adapters          │ ← Controllers、Gateways、Presenters
-├─────────────────────────────────────┤
-│          Application Layer          │ ← Use Cases、Application Services
-├─────────────────────────────────────┤
-│            Domain Layer             │ ← Entities、Domain Services
-└─────────────────────────────────────┘
-          ↑ 依赖方向只能向内 ↑
-```
+1. **Frameworks & Drivers（最外层）**：Web 框架、数据库连接、外部 UI、外部设备驱动。
+2. **Interface Adapters**：Controllers、Gateways、Presenters，负责数据格式与外部接口适配。
+3. **Application Layer**：Use Cases、Application Services，负责编排核心用例流程。
+4. **Domain Layer（最内核心）**：Entities、Domain Services，封装最核心的业务实体与领域规则。
+
+- **依赖约束规则**：外层只能单向依赖内层，内层严禁反向依赖外层。
 
 ### 依赖规则检查
 

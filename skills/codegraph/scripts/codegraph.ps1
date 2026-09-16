@@ -3,7 +3,7 @@
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = "Stop"
 $CliArgs = @($args)
-$VerifiedCodeGraphVersion = "1.4.1"
+$VerifiedCodeGraphVersion = "1.6.0"
 
 function Show-Usage {
     @"
@@ -18,6 +18,7 @@ CodeGraph CLI wrapper
   codegraph.ps1 sync <project> [--quiet]
   codegraph.ps1 status <project> [--no-json]
   codegraph.ps1 explore <project> <query...> [--max-files N]
+  codegraph.ps1 context <project> <task...> [--no-code] [--format markdown|json] [--max-nodes N]
   codegraph.ps1 node <project> [name] [--file FILE] [--offset N] [--limit N] [--symbols-only]
   codegraph.ps1 query <project> <search> [--limit N] [--kind KIND] [--no-json]
   codegraph.ps1 files <project> [options] [--no-json]
@@ -25,10 +26,15 @@ CodeGraph CLI wrapper
   codegraph.ps1 impact <project> <symbol> [--depth N] [--no-json]
   codegraph.ps1 affected <project> [files...] [options] [--no-json]
   codegraph.ps1 unlock <project>
+  codegraph.ps1 daemons
   codegraph.ps1 upgrade [version] [--check] [--force]
 
 环境变量:
   CODEGRAPH_BIN  指定 codegraph 可执行文件，默认从 PATH 查找。
+
+说明:
+  查询类命令默认输出 JSON；需要原始可读输出时加 --no-json。
+  --kind 支持: function, method, struct, interface, class, route, import, constant, variable, type_alias
 "@
 }
 
@@ -108,7 +114,7 @@ switch ($CommandName) {
         if ($CurrentVersion.TrimStart("v") -ne $VerifiedCodeGraphVersion) {
             [Console]::Error.WriteLine("警告: 当前 CodeGraph 版本为 $CurrentVersion，本 Skill 本机验证版本为 $VerifiedCodeGraphVersion；将继续检查关键能力。")
         }
-        foreach ($Capability in @("status", "explore", "node", "affected")) {
+        foreach ($Capability in @("status", "explore", "context", "node", "affected")) {
             & $script:CodeGraphBin $Capability --help *> $null
             if ($LASTEXITCODE -ne 0) {
                 Fail "当前 CodeGraph 缺少必需能力: $Capability --help"
@@ -144,6 +150,12 @@ switch ($CommandName) {
         $Forward = @(Get-Tail $Rest 1)
         if ($Forward.Count -eq 0) { Fail "explore 缺少 query 参数。" }
         Invoke-CodeGraph (@("explore", "--path", $Project) + $Forward)
+    }
+    "context" {
+        $Project = Require-Value $Rest 0 "project"
+        $Forward = @(Get-Tail $Rest 1)
+        if ($Forward.Count -eq 0) { Fail "context 缺少 task 参数。" }
+        Invoke-CodeGraph (@("context", "--path", $Project) + $Forward)
     }
     "node" {
         $Project = Require-Value $Rest 0 "project"
@@ -198,6 +210,10 @@ switch ($CommandName) {
         $Project = Require-Value $Rest 0 "project"
         if ($Rest.Count -ne 1) { Fail "unlock 不接受额外参数。" }
         Invoke-CodeGraph @("unlock", $Project)
+    }
+    { $_ -in @("daemon", "daemons") } {
+        $Forward = @(Get-Tail $Rest 1)
+        Invoke-CodeGraph (@("daemons") + $Forward)
     }
     "upgrade" {
         & $script:CodeGraphBin upgrade --help *> $null

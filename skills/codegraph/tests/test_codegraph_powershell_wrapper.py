@@ -59,6 +59,10 @@ class CodeGraphPowerShellWrapperTest(unittest.TestCase):
             self.run_wrapper("explore", "project path", "auth flow"),
         )
         self.assertEqual(
+            ["context", "--path", "project path", "hybrid search", "--no-code"],
+            self.run_wrapper("context", "project path", "hybrid search", "--no-code"),
+        )
+        self.assertEqual(
             ["node", "--path", "project path", "--file", "src/a file.ts"],
             self.run_wrapper("node", "project path", "--file", "src/a file.ts"),
         )
