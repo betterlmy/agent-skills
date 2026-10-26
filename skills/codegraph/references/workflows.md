@@ -49,7 +49,7 @@ npm i -g @colbymchenry/codegraph@1.6.0
 git check-ignore -q --no-index -- .codegraph/.ignore-check
 ```
 
-如果未忽略，编辑适用作用域的 `.gitignore`：
+用户级 Git ignore 中已有 `.codegraph/` 且检查通过时，无需修改仓库文件。如果未忽略，仅在已有明确授权下编辑用户级忽略配置或适用作用域的 `.gitignore`；未获修改授权时，不初始化索引，降级到文本检索与源码阅读。可添加：
 
 ```gitignore
 .codegraph/

@@ -76,7 +76,7 @@ Omit `--skill <skill-name>` to use the interactive selection provided by the Ski
 
 ### Automation and Content
 
-- `playwright-cli-cdp` launches or reuses local Chrome debugging endpoints and drives attached browsers exclusively through CDP.
+- `playwright-cli-cdp` creates task-isolated Chrome profiles with OS-assigned ports and unique CLI sessions, or attaches to an explicitly supplied endpoint, exclusively through CDP.
 - `rag-agent-builder` provides examples and utilities for document Q&A, knowledge bases, enterprise search, retrieval, and evaluation.
 - `tavily-web` retrieves live web data through the Tavily REST API (search, extract, map, crawl, research) using the `TAVILY_API_KEY` environment variable; pure standard-library script, no third-party dependencies.
 - `web-clone` turns website reproduction into a repeatable flow: obtain the real source code first, pick a path (static site, React/Vue/Next content site, or WebGL/Canvas-heavy front end), reverse-engineer the effects, scaffold the project, and replace the content; executable code from AI second-hand analyses must be verified against the real source. Depends on Node.js and a system Chrome/Edge/Chromium browser, with `gh` optional.

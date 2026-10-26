@@ -3,8 +3,8 @@ metadata:
   external-cli: "true"
   cli-compatibility: "references/cli-compatibility.md"
 name: playwright-cli-cdp
-description: 纯 CDP（Chrome DevTools Protocol）方式的浏览器控制工具，基于 playwright-cli。Use when 需要以远程调试模式启动 Chrome、仅通过 --cdp 端点挂载、驱动已挂载的页面、检查控制台/网络/存储，或发送原生 Chrome DevTools Protocol 协议指令；不得用于普通 playwright-cli open、非 CDP 浏览器启动、浏览器插件调试或 Playwright test debug 挂载工作流。
-allowed-tools: Bash(playwright-cli:*) Bash(npx:*) Bash(npm:*) Bash(bash:*) Bash(curl:*) Bash(lsof:*) Bash(pgrep:*) Bash(mkdir:*) Bash(pwsh:*) Bash(powershell:*) Bash(powershell.exe:*)
+description: 纯 CDP（Chrome DevTools Protocol）浏览器控制，基于 playwright-cli，支持多 Agent 独立 Profile、动态端口和唯一会话。Use when 需要以远程调试模式启动 Chrome、仅通过 --cdp 端点挂载、驱动已挂载的页面、检查控制台/网络/存储，或发送原生 Chrome DevTools Protocol 协议指令；不得用于普通 playwright-cli open、非 CDP 浏览器启动、浏览器插件调试或 Playwright test debug 挂载工作流。
+allowed-tools: Bash(python3:*) Bash(playwright-cli:*) Bash(npx:*) Bash(npm:*) Bash(bash:*) Bash(curl:*) Bash(lsof:*) Bash(pgrep:*) Bash(mkdir:*) Bash(pwsh:*) Bash(powershell:*) Bash(powershell.exe:*)
 ---
 
 # playwright-cli CDP
@@ -13,7 +13,12 @@ allowed-tools: Bash(playwright-cli:*) Bash(npx:*) Bash(npm:*) Bash(bash:*) Bash(
 
 本 Skill 专为**纯 CDP 模式**设计。所有浏览器自动化操作必须通过 Chrome DevTools Protocol 调试端点以及 `playwright-cli attach --cdp=...` 进行连接。
 
-严禁使用 `playwright-cli open`、`--browser=...`、直接启动 Firefox/WebKit、安装插件，或使用 Playwright test debug 调试工作流。若当前已存在可连通的 CDP 端点，直接复用该端点；若无可用端点，则在本地 `127.0.0.1:9222` 启动 Chrome 远程调试模式，并使用 `cdp` 作为默认会话名称挂载 `playwright-cli`。
+严禁使用 `playwright-cli open`、`--browser=...`、直接启动 Firefox/WebKit、安装插件，或使用 Playwright test debug 调试工作流。
+
+- 用户明确提供端点 -> 连接该端点，使用本任务唯一 CLI 会话，不新建浏览器；共享端点不代表状态隔离。
+- 当前任务已有专属实例 -> 复用已记录的 `session`、`endpoint`、`profile`；不要每条命令重新启动。
+- 否则 -> 使用启动脚本创建新 Profile，以 `--remote-debugging-port=0` 让系统分配端口，并读取 `DevToolsActivePort`。不得因为发现可用的 `9222` 就接管其他任务浏览器。
+- 启动成功仅输出 JSON `{session, endpoint, profile}`；在任务记录中保存这三项，不保存 Cookie 或凭据。所有命令固定使用返回的 session。详情见 [独立实例与并发测试](references/isolated-instances.md)。
 
 保持 CDP 端点仅限本地。严禁将调试端口绑定到 `0.0.0.0` 或任何公网接口，除非用户明确要求且知晓安全风险。
 
@@ -26,110 +31,54 @@ allowed-tools: Bash(playwright-cli:*) Bash(npx:*) Bash(npm:*) Bash(bash:*) Bash(
 
 仅在必要时通过环境变量覆盖超时时长：`PLAYWRIGHT_CLI_CDP_PAGE_TIMEOUT_MS=<毫秒数>`。若页面导航超时，直接汇报超时详情并通过现有 CDP 会话检查当前页面状态，切勿擅自重启端点。
 
-包装脚本会自动将 playwright-cli 的输出（控制台日志 `console-*.log`、页面快照 `page-*.yml`）重定向到专用临时目录（macOS/Linux/WSL2 为 `$TMPDIR/playwright-cli-cdp`，Windows 为 `%TEMP%\playwright-cli-cdp`），保持工作目录整洁。playwright-cli 在 skill 模式下总会将快照与日志写入临时文件并返回链接，需要查看快照时使用 `read` 读取该文件。内置存储容量上限（`PLAYWRIGHT_MCP_OUTPUT_MAX_SIZE`，默认 50 MiB）会自动清理跨会话的历史文件，但绝不会误删当前命令写入的文件。可通过环境变量自定义配置。
+包装脚本把日志和快照写入临时目录的 `playwright-cli-cdp/<session>`，容量预算默认每会话 50 MiB，避免跨任务清理。使用 `-s=<session>` 或 `--session=<session>` 的等号形式；会话名限 1–80 位 ASCII 字母、数字、下划线、连字符。显式 `PLAYWRIGHT_MCP_OUTPUT_DIR` 会覆盖隔离目录。需要查看快照时用 `read` 读取返回文件。
 
 ## 快速上手
 
 运行内置脚本前，先基于本 Skill 目录解析脚本的相对路径。
 先阅读 [CLI 兼容性契约](references/cli-compatibility.md)；环境检查脚本会排查命令可用性并报告潜在版本漂移。
 
-macOS、Linux 或带有 Linux 浏览器的 WSL2：
+macOS / Linux / WSL2（WSL 自动调用宿主 Windows PowerShell；原生 Linux/macOS 需要 Python 3）：
 
 ```bash
-bash scripts/check-environment.sh
-bash scripts/open-chrome-remote.sh
+instance="$(bash scripts/open-chrome-remote.sh)" || exit 1
+session="$(printf '%s' "$instance" | python3 -c 'import json,sys; print(json.load(sys.stdin)["session"])')"
+endpoint="$(printf '%s' "$instance" | python3 -c 'import json,sys; print(json.load(sys.stdin)["endpoint"])')"
+CDP_ENDPOINT="$endpoint" bash scripts/check-environment.sh
+bash scripts/playwright-cdp.sh -s="$session" attach --cdp="$endpoint"
+bash scripts/playwright-cdp.sh -s="$session" goto https://example.com
+bash scripts/playwright-cdp.sh -s="$session" snapshot
 ```
 
 Windows PowerShell：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\check-environment.ps1
-powershell -ExecutionPolicy Bypass -File scripts\open-chrome-remote.ps1
+$instance = & .\scripts\open-chrome-remote.ps1 | ConvertFrom-Json
+if (-not $instance.endpoint) { throw 'CDP startup failed' }
+& .\scripts\check-environment.ps1 -Endpoint $instance.endpoint
+& .\scripts\playwright-cdp.ps1 "-s=$($instance.session)" attach "--cdp=$($instance.endpoint)"
 ```
 
-WSL2 环境调用宿主 Windows Chrome：
+启动脚本也接受初始 URL。启动失败时停止，不使用其他浏览器兜底；保存报错中的 session/profile 以供排查。WSL 若找不到 `powershell.exe`，脚本会尝试系统标准挂载路径；不猜测用户目录。
 
-```bash
-win_script="$(wslpath -w scripts/open-chrome-remote.ps1)"
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$win_script"
-```
-
-当 PowerShell 脚本存储在 WSL 文件系统内时，不要猜测 `C:\Users\...` 路径。优先使用 `wslpath -w`；若必须传递字面 `\\wsl.localhost\...` 路径，用单引号包裹 PowerShell 命令以避免转义消耗。
-
-挂载并驱动 CDP 会话：
-
-```bash
-bash scripts/playwright-cdp.sh -s=cdp attach --cdp=http://127.0.0.1:9222
-bash scripts/playwright-cdp.sh -s=cdp goto https://example.com
-bash scripts/playwright-cdp.sh -s=cdp snapshot
-bash scripts/playwright-cdp.sh -s=cdp click e15
-bash scripts/playwright-cdp.sh -s=cdp eval "document.title"
-```
-
-Windows PowerShell 等价命令：
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts\playwright-cdp.ps1 -s=cdp attach --cdp=http://127.0.0.1:9222
-powershell -ExecutionPolicy Bypass -File scripts\playwright-cdp.ps1 -s=cdp goto https://example.com
-powershell -ExecutionPolicy Bypass -File scripts\playwright-cdp.ps1 -s=cdp snapshot
-```
-
-启动时直接打开指定目标 URL：
-
-macOS、Linux 或 WSL2：
-
-```bash
-bash scripts/check-environment.sh
-bash scripts/open-chrome-remote.sh https://example.com
-```
-
-Windows PowerShell：
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts\check-environment.ps1
-powershell -ExecutionPolicy Bypass -File scripts\open-chrome-remote.ps1 https://example.com
-```
-
-然后执行挂载：
-
-```bash
-bash scripts/playwright-cdp.sh -s=cdp attach --cdp=http://127.0.0.1:9222
-```
-
-若用户直接给出了现成的端点地址，直接连入，切勿启动新浏览器：
-
-```bash
-bash scripts/playwright-cdp.sh -s=cdp attach --cdp=http://127.0.0.1:9223
-bash scripts/playwright-cdp.sh -s=prod attach --cdp=https://debug.example.internal
-```
+用户指定端点时跳过启动，生成唯一会话后 attach。以下命令速查中的 `-s=cdp` **仅是占位示例**，执行时必须替换为本任务 session，不是共享默认名。
 
 ## 端点健康检查
 
-除非当前任务已在正常运行的活动 CDP 会话中，否则在启动或连接前先执行环境检查：
+已有本任务活动会话可跳过重复检查。用户指定端点时先检查；新建实例时启动后传入实际 endpoint 检查（默认 9222 不可达不应阻止独立实例启动）：
 
 ```bash
-bash scripts/check-environment.sh
+CDP_ENDPOINT="$endpoint" bash scripts/check-environment.sh
 ```
 
-可提前验证端点健康状态：
+检查当前任务返回的端点，而不是固定探测 9222：
 
 ```bash
-curl -fsS http://127.0.0.1:9222/json/version
-curl -fsS http://127.0.0.1:9222/json/list
+curl -fsS --max-time 3 "$endpoint/json/version"
+curl -fsS --max-time 3 "$endpoint/json/list"
 ```
 
-若端点未就绪，使用内置脚本启动远程模式 Chrome。若端口已被非 CDP 进程占用，排查并指定其他 `CDP_PORT`：
-
-```bash
-lsof -iTCP:9222 -sTCP:LISTEN
-CDP_PORT=9333 bash scripts/open-chrome-remote.sh
-```
-
-挂载到自定义端口：
-
-```bash
-bash scripts/playwright-cdp.sh -s=cdp attach --cdp=http://127.0.0.1:9333
-```
+动态端口无需预扫描。只有用户明确需要固定端口时才使用 `CDP_PORT`（PowerShell `-Port`）；固定端口的空闲预检查不是原子保留，不适用于并发分配。启动器不复用任何已有 Profile 或已占用端口。
 
 ## 挂载后的核心交互命令
 
@@ -165,7 +114,9 @@ bash scripts/playwright-cdp.sh -s=cdp click "getByRole('button', { name: 'Submit
 bash scripts/playwright-cdp.sh -s=cdp click "getByTestId('submit-button')"
 ```
 
-若普通 `click` 持续等待可见元素，或组合框/弹窗等复合组件键盘行为不一致，参阅 [交互失败排查与验收边界](references/interaction-troubleshooting.md) 检查活动页面、点击命中区、动效与替代路径。切勿通过直接操作 DOM 或直接发起 API 请求掩盖指针交互失败。
+若普通 `click` 持续等待可见元素，或组合框/弹窗等复合组件键盘行为不一致，参阅 [交互失败排查与验收边界](references/interaction-troubleshooting.md) 检查活动页面、点击命中区、动效与替代路径。完整 UI 验收还须执行其中的长数据、低高度桌面、嵌套 Escape 与真实服务／Fixture 证据清单；默认短数据点击通过不能替代这些边界。切勿通过直接操作 DOM 或直接发起 API 请求掩盖指针交互失败。
+
+将已挂载浏览器交给用户手动验收前，按该参考的“文件选择窗口被自动化拦截”步骤，在所有挂载同一页面的 CLI 会话中释放文件选择拦截；保持 Chrome 和 CDP 连接运行。页面上传点击触发 `File chooser` 而系统窗口不出现时，先排查这一工具状态。
 
 ## 标签页管理与导航控制
 
@@ -300,12 +251,7 @@ CDP 命令与参数严格区分大小写。主要用于探测浏览器底层机�
 
 仅在用户明确发出指令时才断开连接或关闭浏览器。若用户要求清理，优先选用 `bash scripts/playwright-cdp.sh -s=<session> detach`，以确保外部浏览器和调试端口不受影响。
 
-使用多个 CDP 端点时，按端点或用途命名会话：
-
-```bash
-bash scripts/playwright-cdp.sh -s=local attach --cdp=http://127.0.0.1:9222
-bash scripts/playwright-cdp.sh -s=staging attach --cdp=http://127.0.0.1:9333
-```
+多个 Agent 使用各自返回的 session/endpoint/profile，禁止接管其他任务实例。不同 Profile 不共享登录状态；同一业务账号的服务端数据仍可能互相影响。保留实例会消耗资源，关闭浏览器和删除 Profile 必须另获用户授权。
 
 ## 安装与降级策略
 
@@ -313,7 +259,7 @@ bash scripts/playwright-cdp.sh -s=staging attach --cdp=http://127.0.0.1:9333
 
 ```bash
 npx --no-install playwright-cli --version
-bash scripts/playwright-cdp.sh -s=cdp attach --cdp=http://127.0.0.1:9222
+bash scripts/playwright-cdp.sh -s="$session" attach --cdp="$endpoint"
 ```
 
 当全局 `playwright-cli` 二进制缺失时，包装脚本会自动无缝降级到 `npx --no-install playwright-cli`。

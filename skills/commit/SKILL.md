@@ -1,6 +1,6 @@
 ---
 name: commit
-description: 根据用户说明或 Git 变更生成、检查中文 commit message，并在用户明确要求时执行本地提交。Use when 用户要求编写、优化或检查 commit message，或要求暂存并提交本地变更；支持 git commit；用户明确要求时可 git push，遵循全局 Git 策略（禁止 force，禁止在 master/main 分支推送）。
+description: 根据用户说明或 Git 变更生成、检查中文 commit message，并在用户明确要求时执行本地提交。Use when 用户要求编写、优化或检查 commit message，或要求暂存并提交本地变更；支持 git commit；用户明确要求时可 git push，遵循全局 Git 策略（禁止 force；默认禁止向 master/main 推送，用户明确授权该分支时按指示执行）。
 user-invocable: true
 argument-hint: "[提交范围或补充要求]"
 ---
@@ -19,10 +19,10 @@ argument-hint: "[提交范围或补充要求]"
 4. 用户明确要求执行提交时：
    - 提交已有暂存变更；
    - 用户明确指定提交范围时，可以使用 `git add` 暂存该范围；
-   - 暂存区为空且提交范围不明确时，必须先向用户确认，不要自行暂存全部变更；
+   - 暂存区为空时，若提交范围可由当前任务上下文明确推断（如本会话刚完成的全部变更），视为范围明确，可自行暂存；无法推断时先向用户确认，不要自行暂存全部变更；
    - 使用生成并校验后的消息执行 `git commit`，完成后检查最新提交和工作区状态；
    - 除非用户明确要求，否则不执行 `git commit --amend`，不使用 `--no-verify` 跳过 hooks；
-   - 仅在用户明确要求时执行 `git push`，并遵守全局 Git 策略：禁止 `--force`/`-f`，禁止在 `master` 或 `main` 分支上推送。
+   - 仅在用户明确要求时执行 `git push`，并遵守全局 Git 策略：禁止 `--force`/`-f`；默认禁止向 `master` 或 `main` 分支推送，但用户明确授权该分支（如指定“提交到 main”、“直接 push main”）时按指示执行并记录。
 5. 输出前逐项检查格式、语言、长度和标点。
 
 ## Type 选择
@@ -78,4 +78,4 @@ fix: 修复 UpdateConfig 内部版本号不一致问题
 - 长行是否合理换行，标点是否统一为中文标点；
 - 用户是否仅要求生成消息；如果是，输出中是否只有 commit message 本身；
 - 如果执行提交，提交范围是否明确，提交结果是否已经验证；
-- 若执行过 `git push`，是否仅在用户明确要求且满足全局策略（无 `--force`/`-f`，非 `master`/`main` 分支）时执行。
+- 若执行过 `git push`，是否仅在用户明确要求且满足全局策略（无 `--force`/`-f`；默认非 `master`/`main` 分支，或用户已明确授权该分支）时执行。

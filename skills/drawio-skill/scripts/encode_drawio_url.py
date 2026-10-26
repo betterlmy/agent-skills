@@ -16,11 +16,12 @@ from pathlib import Path
 
 
 def encode(xml: str) -> str:
-    # Raw deflate (no zlib header) — diagrams.net uses mxGraph's raw inflate
+    # JavaScript encodeURIComponent equivalent before raw deflate to avoid "URI malformed" on UTF-8 in diagrams.net
+    quoted = urllib.parse.quote(xml, safe="~()*!.'")
     c = zlib.compressobj(9, zlib.DEFLATED, -zlib.MAX_WBITS)
-    compressed = c.compress(xml.encode("utf-8")) + c.flush()
+    compressed = c.compress(quoted.encode("ascii")) + c.flush()
     # Standard base64 (atob rejects url-safe -/_); strip newlines
-    encoded = base64.b64encode(compressed).decode("utf-8").replace("\n", "")
+    encoded = base64.b64encode(compressed).decode("ascii").replace("\n", "")
     return (
         "https://viewer.diagrams.net/?tags=%7B%7D&lightbox=1&edit=_blank#R"
         + urllib.parse.quote(encoded, safe="")

@@ -44,7 +44,7 @@ cg check
 
 1. 确认目标项目和索引写入范围。
 2. 如果是 Git 项目，使用 `git check-ignore` 确认 `.codegraph/` 已被忽略。
-3. 未忽略时，在适用作用域的 `.gitignore` 中加入 `.codegraph/`；需要覆盖嵌套项目时加入 `**/.codegraph/`。这项修改是 Git 项目初始化索引的前置处理。
+3. 若用户级 Git ignore 已忽略 `.codegraph/`，无需修改仓库文件；未忽略时，仅在已有明确授权下修改用户级忽略配置或适用作用域的 `.gitignore`，加入 `.codegraph/`（需要覆盖嵌套项目时可用 `**/.codegraph/`），再用 `git check-ignore` 确认。未获修改授权时，不初始化索引，降级到文本检索与源码阅读；不为只读任务擅自修改 `.gitignore`。
 4. 运行 `cg init .`；wrapper 会拒绝在未忽略索引目录的 Git 项目中初始化。
 5. 用 `cg status .` 确认索引状态。
 
@@ -120,7 +120,7 @@ cg unlock .
 - HTTP 路径字符串、动态 URL 拼接、前后端跨语言消费者、ORM 字段和业务状态关系不保证形成图边；结合 `rg`、源码、迁移和测试补齐影响面。
 - `affected` 为空不等于没有回归风险；检查测试命名、过滤条件、语言支持和索引覆盖。
 - CLI 不存在、语言不支持、索引损坏或 wrapper 不兼容时，退回常规文件检索，不要阻塞任务。
-- 安装、升级和 `uninit` 都会改变用户环境或清理索引，执行前遵循用户授权边界；Git 项目初始化时为忽略 `.codegraph/` 而进行的 `.gitignore` 编辑除外。
+- 安装、升级和 `uninit` 都会改变用户环境或清理索引，执行前遵循用户授权边界；修改 Git 忽略配置同样需要明确授权，不能因初始化索引而豁免。
 
 更多安装、跨平台命令、降级和评估场景见 [工作流参考](references/workflows.md)；版本漂移和能力探测见 [CLI 兼容性契约](references/cli-compatibility.md)。
 

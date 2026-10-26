@@ -27,7 +27,7 @@
 | 审计 Go 仓库、模块、package、目录、文件集、高风险域或 diff | `go-auditor` | 输出证据报告但不直接修改代码；落实修复用 `go-dev` |
 | 开发、修改、审查或调试 Go MCP Server、Tool、Resource、Prompt、stdio 或 Streamable HTTP | `go-mcp-builder` | 先核对官方当前协议与 SDK；不用于普通 Go HTTP API |
 | 使用 Mermaid 创建可维护的文本图 | `mermaid-diagrams` | 需要品牌化 HTML/SVG/PNG 重绘时使用 `diagram-design`；需要 `.drawio` 文件或 Draw.io 专项导出时使用 `drawio-skill` |
-| 通过 CDP 启动或控制 Chrome、检查页面状态 | `playwright-cli-cdp` | 只允许 CDP 工作流，不使用普通 `playwright-cli open` |
+| 通过 CDP 启动或控制 Chrome、检查页面状态、多 Agent 独立浏览器 | `playwright-cli-cdp` | 默认独立 Profile/动态端口/唯一会话；仅显式端点复用，不使用普通 `playwright-cli open` |
 | 构建文档问答、知识库、企业搜索或其他 RAG 应用 | `rag-agent-builder` | 普通数据库查询或不涉及检索增强的搜索不触发 |
 | 创建、改进、审查或生产化 Agent Skill | `skill-engineer` | 单纯发现现有 Skill 时优先使用 `find-skills` |
 | 根据需求编写软件设计文档，或根据代码、配置、Schema 和测试逆向现状设计 | `software-designer` | 只画单张图、只做代码审查、只写需求或直接实现功能时不使用 |

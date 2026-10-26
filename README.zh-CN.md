@@ -76,7 +76,7 @@ npx skills add betterlmy/agent-skills --skill <skill-name> -a claude-code -g -y
 
 ### 自动化与内容
 
-- `playwright-cli-cdp` 启动或复用本地 Chrome 调试端点，并仅通过 CDP 操作已连接的浏览器。
+- `playwright-cli-cdp` 默认创建每任务独立 Profile、系统分配端口及唯一 CLI 会话，或连接用户显式指定的端点，仅通过 CDP 操作浏览器。
 - `rag-agent-builder` 提供文档问答、知识库、企业搜索、检索与评估相关示例和工具。
 - `tavily-web` 通过 Tavily REST API 获取实时网页数据（search/extract/map/crawl/research），凭据读 `TAVILY_API_KEY` 环境变量，纯标准库脚本无第三方依赖。
 - `web-clone` 把“复刻一个网站”做成可重复流程：先拿真源码，再判路径（静态站 / React、Vue、Next 内容站 / WebGL、Canvas 重前端站）、逆向拆解、搭工程、替换内容；AI 二手分析中的可执行代码必须逐行用真源码核对。依赖 Node.js 与系统 Chrome/Edge/Chromium 浏览器，`gh` 可选。

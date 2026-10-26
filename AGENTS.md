@@ -81,6 +81,8 @@ Run commands from the repository root unless another directory is specified.
 
   Run this only when that directory exists and its tests use `unittest`.
 
+- `playwright-cli-cdp` additionally has Windows PowerShell checks in `tests/test-launcher.ps1` and an opt-in real-browser test in `tests/forward-isolation.py`; the latter operates on two explicitly supplied disposable instance JSON files and leaves browsers running. See its `references/isolated-instances.md` before running it.
+
 - To inspect the files that would be packaged, run from `skills/`:
 
   ```bash

@@ -1,123 +1,95 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-HOST="${CDP_HOST:-127.0.0.1}"
-PORT="${CDP_PORT:-9222}"
-USER_DATA_DIR="${CDP_USER_DATA_DIR:-$HOME/.cache/playwright-cli-cdp/chrome-profile}"
-START_URL="${1:-about:blank}"
-LOG_FILE="${CDP_LOG_FILE:-/tmp/playwright-cli-cdp-chrome.log}"
-TIMEOUT_SECONDS="${CDP_TIMEOUT_SECONDS:-15}"
-
-endpoint="http://${HOST}:${PORT}"
-
-case "$TIMEOUT_SECONDS" in
-  ''|*[!0-9]*) TIMEOUT_SECONDS=15 ;;
-esac
-if (( TIMEOUT_SECONDS < 1 )); then
-  TIMEOUT_SECONDS=15
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# WSL uses the established Windows host browser, not a second Linux browser.
+if grep -qi microsoft /proc/version 2>/dev/null; then
+  powershell_bin="$(command -v powershell.exe || true)"
+  powershell_bin="${powershell_bin:-/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe}"
+  [[ -x "$powershell_bin" ]] || { echo 'Windows PowerShell is unavailable.' >&2; exit 1; }
+  params=(-NoProfile -ExecutionPolicy Bypass -File "$(wslpath -w "$script_dir/open-chrome-remote.ps1")" -StartUrl "${1:-about:blank}")
+  [[ -z "${CDP_SESSION:-}" ]] || params+=(-Session "$CDP_SESSION")
+  [[ -z "${CDP_PORT:-}" ]] || params+=(-Port "$CDP_PORT")
+  [[ -z "${CDP_HOST:-}" ]] || params+=(-HostName "$CDP_HOST")
+  [[ -z "${CDP_USER_DATA_DIR:-}" ]] || params+=(-UserDataDir "$CDP_USER_DATA_DIR")
+  [[ -z "${CHROME_BIN:-}" ]] || params+=(-ChromeBin "$CHROME_BIN")
+  [[ -z "${CDP_TIMEOUT_SECONDS:-}" ]] || params+=(-TimeoutSeconds "$CDP_TIMEOUT_SECONDS")
+  exec "$powershell_bin" "${params[@]}"
 fi
 
-probe_endpoint() {
-  curl -fsS --max-time 1 "${endpoint}/json/version" >/dev/null 2>&1
-}
-
-wait_for_endpoint() {
-  local deadline=$((SECONDS + TIMEOUT_SECONDS))
-  while (( SECONDS < deadline )); do
-    if probe_endpoint; then
-      return 0
-    fi
-    sleep 0.2
-  done
-  probe_endpoint
-}
+HOST="${CDP_HOST:-127.0.0.1}"
+PORT="${CDP_PORT:-0}"
+TIMEOUT_SECONDS="${CDP_TIMEOUT_SECONDS:-15}"
+[[ "$HOST" == 127.0.0.1 ]] || { echo 'Only loopback 127.0.0.1 is supported.' >&2; exit 1; }
+[[ "$PORT" =~ ^[0-9]{1,5}$ ]] && (( 10#$PORT <= 65535 )) || { echo 'Invalid CDP_PORT.' >&2; exit 1; }
+[[ "$TIMEOUT_SECONDS" =~ ^[0-9]+$ ]] && (( TIMEOUT_SECONDS > 0 )) || { echo 'Invalid CDP_TIMEOUT_SECONDS.' >&2; exit 1; }
+command -v python3 >/dev/null || { echo 'python3 is required for endpoint JSON validation.' >&2; exit 1; }
+SESSION="${CDP_SESSION:-agent-$(python3 -c 'import uuid; print(uuid.uuid4().hex)')}"
+[[ "$SESSION" =~ ^[a-zA-Z0-9][a-zA-Z0-9_-]{0,79}$ ]] || { echo 'Invalid CDP_SESSION.' >&2; exit 1; }
+USER_DATA_DIR="${CDP_USER_DATA_DIR:-$HOME/.cache/playwright-cli-cdp/profiles/$SESSION}"
+LOG_FILE="${CDP_LOG_FILE:-${TMPDIR:-/tmp}/playwright-cli-cdp-$SESSION.log}"
 
 find_chrome() {
   if [[ -n "${CHROME_BIN:-}" ]]; then
-    printf '%s\n' "$CHROME_BIN"
-    return 0
+    [[ -x "$CHROME_BIN" ]] && printf '%s\n' "$CHROME_BIN"
+    return
   fi
-
-  local candidates=(
-    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-    "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary"
-    "/Applications/Chromium.app/Contents/MacOS/Chromium"
-    "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"
-    "google-chrome"
-    "google-chrome-stable"
-    "chromium"
-    "chromium-browser"
-    "microsoft-edge"
-    "microsoft-edge-stable"
-  )
-
   local candidate
-  for candidate in "${candidates[@]}"; do
+  for candidate in "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" "/Applications/Chromium.app/Contents/MacOS/Chromium" "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge" google-chrome google-chrome-stable chromium chromium-browser microsoft-edge microsoft-edge-stable; do
     if [[ "$candidate" == */* && -x "$candidate" ]]; then
-      printf '%s\n' "$candidate"
-      return 0
-    fi
-    if [[ "$candidate" != */* ]] && command -v "$candidate" >/dev/null 2>&1; then
-      command -v "$candidate"
-      return 0
+      printf '%s\n' "$candidate"; return
+    elif command -v "$candidate" >/dev/null 2>&1; then
+      command -v "$candidate"; return
     fi
   done
-
   return 1
 }
-
-launch_chrome() {
-  local args=(
-    "--remote-debugging-address=$HOST"
-    "--remote-debugging-port=$PORT"
-    "--user-data-dir=$USER_DATA_DIR"
-    "--no-first-run"
-    "--no-default-browser-check"
-    "$START_URL"
-  )
-
-  if [[ "$(uname -s 2>/dev/null || true)" == "Darwin" && "$chrome_bin" == *.app/Contents/MacOS/* ]]; then
-    local app_path="${chrome_bin%%.app/*}.app"
-    if [[ -d "$app_path" && -x /usr/bin/open ]]; then
-      /usr/bin/open -n -a "$app_path" --args "${args[@]}" >>"$LOG_FILE" 2>&1
-      return 0
-    fi
-  fi
-
-  if command -v setsid >/dev/null 2>&1; then
-    setsid "$chrome_bin" "${args[@]}" >"$LOG_FILE" 2>&1 </dev/null &
-  else
-    nohup "$chrome_bin" "${args[@]}" >"$LOG_FILE" 2>&1 </dev/null &
-  fi
-}
-
-if probe_endpoint; then
-  printf 'Chrome remote debugging is already available: %s\n' "$endpoint"
-  exit 0
+chrome_bin="$(find_chrome)" || { echo 'Chrome not found; set CHROME_BIN.' >&2; exit 1; }
+# Reject an occupied fixed port rather than silently adopting someone else's browser.
+if (( 10#$PORT != 0 )); then
+  python3 - "$PORT" <<'PY'
+import socket, sys
+with socket.socket() as sock:
+    sock.bind(('127.0.0.1', int(sys.argv[1])))
+PY
+fi
+mkdir -p "$(dirname "$USER_DATA_DIR")"
+mkdir "$USER_DATA_DIR" # exclusive: never reuse a profile or a stale port file
+USER_DATA_DIR="$(cd "$USER_DATA_DIR" && pwd)"
+args=("--remote-debugging-address=$HOST" "--remote-debugging-port=$PORT" "--user-data-dir=$USER_DATA_DIR" --no-first-run --no-default-browser-check "${1:-about:blank}")
+if [[ "$(uname -s)" == Darwin && "$chrome_bin" == *.app/Contents/MacOS/* ]]; then
+  /usr/bin/open -n -a "${chrome_bin%%.app/*}.app" --args "${args[@]}" >>"$LOG_FILE" 2>&1
+elif command -v setsid >/dev/null 2>&1; then
+  setsid "$chrome_bin" "${args[@]}" >"$LOG_FILE" 2>&1 </dev/null &
+else
+  nohup "$chrome_bin" "${args[@]}" >"$LOG_FILE" 2>&1 </dev/null &
 fi
 
-chrome_bin="$(find_chrome || true)"
-if [[ -z "$chrome_bin" ]]; then
-  cat >&2 <<'EOF'
-Could not find Chrome, Chromium, or Edge.
-Set CHROME_BIN to the browser executable path and retry, for example:
-  CHROME_BIN="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" bash scripts/open-chrome-remote.sh
-EOF
-  exit 1
-fi
-
-mkdir -p "$USER_DATA_DIR"
-
-launch_chrome
-
-if wait_for_endpoint; then
-  printf 'Chrome remote debugging is available: %s\n' "$endpoint"
-  printf 'User data dir: %s\n' "$USER_DATA_DIR"
-  exit 0
-fi
-
-cat >&2 <<EOF
-Chrome was started but CDP did not become ready at ${endpoint} within ${TIMEOUT_SECONDS}s.
-Log file: ${LOG_FILE}
-EOF
-exit 1
+# Validate both the dynamic port file and the browser identity at that endpoint.
+python3 - "$USER_DATA_DIR" "$PORT" "$SESSION" "$TIMEOUT_SECONDS" <<'PY'
+import json, pathlib, sys, time, urllib.request
+profile, requested, session, timeout = sys.argv[1:]
+deadline = time.monotonic() + int(timeout)
+opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+while time.monotonic() < deadline:
+    try:
+        browser_path = None
+        port = int(requested)
+        if port == 0:
+            lines = (pathlib.Path(profile) / 'DevToolsActivePort').read_text().splitlines()
+            port, browser_path = int(lines[0]), lines[1]
+            if not 1 <= port <= 65535 or not browser_path.startswith('/devtools/browser/'):
+                raise ValueError('Incomplete port file')
+        endpoint = f'http://127.0.0.1:{port}'
+        with opener.open(endpoint + '/json/version', timeout=1) as response:
+            version = json.load(response)
+        websocket = version['webSocketDebuggerUrl']
+        if browser_path and not websocket.endswith(browser_path):
+            raise ValueError('CDP browser identity mismatch')
+        print(json.dumps(dict(session=session, endpoint=endpoint, profile=profile)))
+        break
+    except (OSError, ValueError, KeyError, IndexError):
+        time.sleep(.2)
+else:
+    sys.exit(f'CDP startup timed out. Session={session} Profile={profile}; resources retained.')
+PY

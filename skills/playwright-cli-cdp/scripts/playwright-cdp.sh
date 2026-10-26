@@ -12,11 +12,16 @@ fi
 
 export PLAYWRIGHT_MCP_TIMEOUT_NAVIGATION="$page_timeout_ms"
 
-# Redirect playwright-cli output (console logs, page snapshots) to a dedicated
-# temp directory so the working directory stays clean. A fixed subdirectory lets
-# the built-in outputMaxSize budget reclaim old files across runs; the budget
-# never deletes files written by the current command. Both vars stay overridable.
-: "${PLAYWRIGHT_MCP_OUTPUT_DIR:=${TMPDIR:-/tmp}/playwright-cli-cdp}"
+# Separate artifacts and their cleanup budgets for explicitly named sessions.
+session=default
+for arg in "$@"; do
+  case "$arg" in -s=*|--session=*) session="${arg#*=}" ;; esac
+done
+if [[ ! "$session" =~ ^[a-zA-Z0-9][a-zA-Z0-9_-]{0,79}$ ]]; then
+  echo 'Invalid session name; use 1-80 ASCII letters, digits, underscores or hyphens.' >&2
+  exit 2
+fi
+: "${PLAYWRIGHT_MCP_OUTPUT_DIR:=${TMPDIR:-/tmp}/playwright-cli-cdp/$session}"
 : "${PLAYWRIGHT_MCP_OUTPUT_MAX_SIZE:=52428800}"  # 50 MiB
 export PLAYWRIGHT_MCP_OUTPUT_DIR PLAYWRIGHT_MCP_OUTPUT_MAX_SIZE
 mkdir -p "$PLAYWRIGHT_MCP_OUTPUT_DIR"

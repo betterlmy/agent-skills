@@ -20,6 +20,18 @@ bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
 
 `bringToFront()` 只修正前置状态，不证明任何按钮或表单交互成功。
 
+多个独立窗口并行时，宿主可能把后台/被遮挡页面标记为 `hidden`，使普通点击卡在稳定性检查。若页面可见性与调用日志支持这一判断，且测试不要求真实前后台行为，可显式启用页面级焦点模拟：
+
+```js
+async page => {
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('Emulation.setFocusEmulationEnabled', { enabled: true });
+  return await page.evaluate(() => document.visibilityState);
+}
+```
+
+这是模拟环境，不是桌面窗口已前置的证明；不能用于验收真实焦点、失焦、可见性或后台节流行为。启用后仍必须正常 locator 点击并断言结果，禁止用 force/DOM 点击代替。若应用依赖真实前后台状态，应串行前台验收。禁用时用同一 CDP session 发送 `enabled:false`；不要假设新连接能解除旧连接的模拟。
+
 ## 2. 检查 actionability 和命中区域
 
 先使用稳定 locator，记录数量、可见性、启用状态、元素边界和中心点实际命中的 DOM 元素：
@@ -124,3 +136,38 @@ bash scripts/playwright-cdp.sh -s=cdp run-code "async page => {
 - 仅 DOM 或接口路径成功时，报告具体通过的层级，不要写成 UI 验收通过。
 - 保存失败 call log、关键 DOM 状态、console、相关请求和可用截图；截图失败时说明原因，并使用其他证据继续判断。
 - 一个 UI 路径失败不等于后端功能失败；接口成功也不等于 UI 可用。
+
+## 6. 完整 UI 验收的边界数据与操作清单
+
+仅短名称、单行列表和鼠标点击通过，不得概括为“全页面交互通过”。按任务授权选取真实服务或隔离 Fixture，并至少覆盖：
+
+- **真实内容形态**：长不可断标识、同名对象、历史未命名数据、超过首屏／首分页的列表。选中候选后再切换依赖字段、展开下一层，检查 label、完整 ID、对象身份是否仍可区分；未命名历史数据不能未经证据归因于当前创建逻辑。
+- **浮层层级**：弹窗内候选打开后按一次 Escape，应仅收起顶层候选、外层表单保留；再按一次才触发外层关闭／放弃修改确认。用元素存在性和 `aria-expanded` 分别断言，不以最终截图推断按键序列。
+- **宽高与滚动**：检查 document、dialog、候选各自的 `scrollWidth/clientWidth` 和边界，不能只测整页无横溢出；在约定的低高度桌面视口验证长列表末尾、关闭按钮、提交区及表头可达。用户明确桌面范围时不擅自扩大成手机适配。
+- **状态往返**：搜索后清除、详情返回、刷新页签、手动关闭通知后再发下一条；等待明确状态变化后断言，避免把路由尚未完成的即时读值当缺陷。
+- **首个使用任务**：空状态区分无数据、无搜索结果和无授权候选；权限提示须核对当前角色与可执行下一步。不要为了顺畅测试而自动授权、签发 Key 或绕过登录。
+
+证据按来源分别记录：源码／单测、Fixture 浏览器交互、真实服务只读流程、已授权写入及持久化核对。Fixture 覆盖可证明前端边界，不证明真实身份、授权数据或外部上游；真实服务无写入则不声称提交成功。焦点模拟和超时另列，不能把工具故障定性为应用卡死。至少保存关键前后截图、实际视口和复现步骤，读图确认后再评价视觉，不以截图文件存在代替视觉检查。
+
+## 7. 文件选择窗口被自动化拦截
+
+CLI 挂载页面时会注册 `filechooser` 监听，启用 Playwright 的系统文件选择窗口拦截。用户手动点击上传可能只累积 `File chooser` 状态，而看不到系统窗口。多个 CLI 会话挂载同一页面时，应逐个释放；只在新 CDP session 中发送 `Page.setInterceptFileChooserDialog(enabled:false)` 不足以释放其他连接的拦截。
+
+在交给用户前、尚无待处理选择框时，通过 `run-code` 对已核实的目标页面执行：
+
+```js
+async page => {
+  for (const listener of page.listeners('filechooser'))
+    page.off('filechooser', listener);
+  // 已用 removeAllListeners 清空本地监听时，显式触发订阅取消。
+  const release = () => {};
+  page.on('filechooser', release);
+  page.off('filechooser', release);
+  await page.evaluate(() => document.visibilityState);
+  return { fileChooserListenerCount: page.listenerCount('filechooser') };
+}
+```
+
+本机 CLI 0.1.17 的 `removeAllListeners('filechooser')` 可能只清本地监听，不发送协议订阅取消；应使用逐个 `off` 或上述显式取消。释放后保持浏览器与连接，不关闭、detach 或重启。继续自动化文件上传前需重新注册相应监听，不能假设 `upload` 仍可处理选择框。
+
+已有待处理状态时，CLI 会阻止 `eval`、截图和 `run-code`；先核实当前工具支持的取消能力。后端 `browser_file_upload` 支持省略 paths 取消，但 CLI 0.1.17 的 `upload` 要求 files 参数，不提供等价的稳定无参数取消入口，这是工具能力缺口。恢复验证应包含正常 locator 点击及宿主系统选择窗口可见性；页面截图或监听数为零均不足以证明系统窗口已出现。
